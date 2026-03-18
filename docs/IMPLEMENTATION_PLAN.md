@@ -19,7 +19,7 @@
 
 ## Phase 0 — Project Scaffold
 
-### 0.1 Initialize Tauri + Svelte project
+### 0.1 Initialize Tauri + Svelte project (Done)
 
 ```bash
 pnpm create tauri-app plantracker \
@@ -90,9 +90,9 @@ In `src-tauri/capabilities/default.json`, enable:
 - `oauth:default`
 
 ### Verification checklist
-- [ ] `cargo tauri dev` launches without errors
-- [ ] Svelte HMR works (edit `App.svelte`, see instant update)
-- [ ] `.env` variables accessible as `import.meta.env.VITE_AZURE_CLIENT_ID`
+- [x] `cargo tauri dev` launches without errors
+- [x] Svelte HMR works (edit `App.svelte`, see instant update)
+- [x] `.env` variables accessible as `import.meta.env.VITE_AZURE_CLIENT_ID`
 
 ---
 
