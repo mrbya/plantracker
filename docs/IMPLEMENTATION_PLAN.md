@@ -702,10 +702,10 @@ In `src-tauri/tauri.conf.json`:
 ```
 
 ### Verification checklist
-- [ ] Settings persist across app restarts
-- [ ] Toast notifications appear for errors and successes
-- [ ] Loading skeletons visible during data fetches
-- [ ] Window respects min dimensions
+- [x] Settings persist across app restarts
+- [x] Toast notifications appear for errors and successes
+- [x] Loading skeletons visible during data fetches
+- [x] Window respects min dimensions
 
 ---
 
