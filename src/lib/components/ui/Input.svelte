@@ -4,11 +4,13 @@
     value = $bindable(''),
     label,
     error,
+    onblur,
   }: {
     type?: string;
     value?: string;
     label?: string;
     error?: string;
+    onblur?: () => void;
   } = $props();
 </script>
 
@@ -20,6 +22,7 @@
     {type}
     bind:value
     class:has-error={!!error}
+    {onblur}
   />
   {#if error}
     <span class="error-msg">{error}</span>

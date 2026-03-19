@@ -127,3 +127,11 @@ export async function generateReport(params: {
     toMonth: params.toMonth,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
+export async function getDataDir(): Promise<string> {
+  return invoke<string>('get_data_dir');
+}

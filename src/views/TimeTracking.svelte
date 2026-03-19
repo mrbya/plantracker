@@ -16,6 +16,7 @@
     tasksByPlan,
   } from '$lib/stores/planner';
   import { elapsedSeconds, isRunning, start, stop } from '$lib/stores/timer';
+  import { entriesLimit } from '$lib/stores/settings';
   import type { TimeEntry } from '$lib/types';
   import { formatDuration } from '$lib/utils/duration';
 
@@ -73,7 +74,7 @@
       entries = await getRecentEntries({
         taskId: selectedTaskId || undefined,
         planId: !selectedTaskId && selectedPlanId ? selectedPlanId : undefined,
-        limit: 20,
+        limit: $entriesLimit,
       });
     } catch (e) {
       addError('Failed to load entries: ' + String(e));
