@@ -384,11 +384,11 @@ Create `src/views/Login.svelte`:
 Conditionally render `Login.svelte` vs `Layout.svelte` in `App.svelte` based on `isAuthenticated`.
 
 ### Verification checklist
-- [ ] Clicking "Sign in" opens system browser to Microsoft login
-- [ ] After login, app shows main layout
-- [ ] Refreshing the app re-uses stored tokens without re-login
-- [ ] "Sign out" clears tokens and returns to login screen
-- [ ] Expired tokens auto-refresh transparently
+- [x] Clicking "Sign in" opens system browser to Microsoft login
+- [x] After login, app shows main layout
+- [x] Refreshing the app re-uses stored tokens without re-login
+- [x] "Sign out" clears tokens and returns to login screen
+- [x] Expired tokens auto-refresh transparently
 
 ---
 
@@ -449,9 +449,9 @@ export function selectTask(task: Task) { ... }
 Call `sync_plans_and_tasks` on app startup (after auth) and expose a manual refresh action.
 
 ### Verification checklist
-- [x] After login, plans and tasks populate from Graph and are saved to SQLite
-- [x] Subsequent launches use cached SQLite data immediately, sync in background
-- [x] Selecting a task in any dropdown auto-selects its parent plan
+- [ ] After login, plans and tasks populate from Graph and are saved to SQLite
+- [ ] Subsequent launches use cached SQLite data immediately, sync in background
+- [ ] Selecting a task in any dropdown auto-selects its parent plan
 
 ---
 
