@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { open } from '@tauri-apps/plugin-opener';
+  import { openPath } from '@tauri-apps/plugin-opener';
 
   import { getDataDir } from '$lib/api';
   import Button from '$lib/components/ui/Button.svelte';
@@ -93,7 +93,7 @@
   async function handleOpenFolder() {
     if (dataDir) {
       try {
-        await open(dataDir);
+        await openPath(dataDir);
       } catch (e) {
         addError('Could not open folder: ' + String(e));
       }
