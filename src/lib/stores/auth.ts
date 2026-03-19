@@ -2,6 +2,7 @@ import { derived, writable } from 'svelte/store';
 
 import { getAuthStatus, login as apiLogin, logout as apiLogout } from '$lib/api';
 import { addError } from '$lib/stores/notifications';
+import { syncAndLoad } from '$lib/stores/planner';
 import type { AuthStatus } from '$lib/types';
 
 export const authStatus = writable<AuthStatus | null>(null);
@@ -14,6 +15,9 @@ export async function initAuth(): Promise<void> {
   try {
     const status = await getAuthStatus();
     authStatus.set(status);
+    if (status.isAuthenticated) {
+      syncAndLoad();
+    }
   } catch {
     authStatus.set(null);
   }
@@ -23,6 +27,9 @@ export async function login(): Promise<void> {
   try {
     const status = await apiLogin();
     authStatus.set(status);
+    if (status.isAuthenticated) {
+      syncAndLoad();
+    }
   } catch (e) {
     addError('Sign in failed: ' + String(e));
   }

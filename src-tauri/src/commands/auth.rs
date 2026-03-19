@@ -16,10 +16,9 @@ pub async fn login(
     app: tauri::AppHandle,
     auth: State<'_, Arc<AuthManager>>,
 ) -> Result<AuthStatus, String> {
-    let client_id = env!("VITE_AZURE_CLIENT_ID");
-    let tenant_id = env!("VITE_AZURE_TENANT_ID");
+    let (client_id, tenant_id) = auth.credentials();
 
-    let tokens = start_login(&app, client_id, tenant_id)
+    let tokens = start_login(&app, &client_id, &tenant_id)
         .await
         .map_err(|e| e.to_string())?;
 

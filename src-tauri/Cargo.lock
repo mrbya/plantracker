@@ -3285,6 +3285,7 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "csv",
+ "dotenvy",
  "hex",
  "keyring",
  "rand 0.8.5",

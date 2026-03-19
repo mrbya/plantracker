@@ -27,6 +27,19 @@ export interface AuthStatus {
   userDisplayName: string | null;
 }
 
+export interface SyncResult {
+  plansCount: number;
+  tasksCount: number;
+  syncedAt: string;
+}
+
+export interface ActiveTimerInfo {
+  entryId: string;
+  taskId: string;
+  startTime: string;
+  elapsedSeconds: number;
+}
+
 export interface MonthlyTotal {
   year: number;
   month: number;

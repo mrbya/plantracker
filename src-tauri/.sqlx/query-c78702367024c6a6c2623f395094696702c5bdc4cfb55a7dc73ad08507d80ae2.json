@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO tasks (id, graph_id, plan_id, title, synced_at)\n        VALUES (?, ?, ?, ?, ?)\n        ON CONFLICT(graph_id) DO UPDATE SET\n            plan_id   = excluded.plan_id,\n            title     = excluded.title,\n            synced_at = excluded.synced_at\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "c78702367024c6a6c2623f395094696702c5bdc4cfb55a7dc73ad08507d80ae2"
+}

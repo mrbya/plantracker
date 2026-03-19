@@ -88,4 +88,9 @@ impl AuthManager {
     pub async fn set_display_name(&self, name: String) {
         *self.display_name.lock().await = Some(name);
     }
+
+    /// Returns the Azure AD client_id and tenant_id stored in this manager.
+    pub fn credentials(&self) -> (String, String) {
+        (self.client_id.clone(), self.tenant_id.clone())
+    }
 }

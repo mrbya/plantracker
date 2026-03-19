@@ -384,11 +384,11 @@ Create `src/views/Login.svelte`:
 Conditionally render `Login.svelte` vs `Layout.svelte` in `App.svelte` based on `isAuthenticated`.
 
 ### Verification checklist
-- [ ] Clicking "Sign in" opens system browser to Microsoft login
-- [ ] After login, app shows main layout
-- [ ] Refreshing the app re-uses stored tokens without re-login
-- [ ] "Sign out" clears tokens and returns to login screen
-- [ ] Expired tokens auto-refresh transparently
+- [x] Clicking "Sign in" opens system browser to Microsoft login
+- [x] After login, app shows main layout
+- [x] Refreshing the app re-uses stored tokens without re-login
+- [x] "Sign out" clears tokens and returns to login screen
+- [x] Expired tokens auto-refresh transparently
 
 ---
 
@@ -509,11 +509,11 @@ Create `src/views/TimeTracking.svelte`:
 - `EmptyState` when no entries
 
 ### Verification checklist
-- [ ] Start timer creates DB entry with no end_time
-- [ ] Elapsed time counts up in real time
-- [ ] Stop timer saves end_time and refreshes entry list
-- [ ] Cannot start a second timer if one is already running (button disabled, tooltip shown)
-- [ ] App restart correctly restores active timer if `end_time` is NULL
+- [x] Start timer creates DB entry with no end_time
+- [x] Elapsed time counts up in real time
+- [x] Stop timer saves end_time and refreshes entry list
+- [x] Cannot start a second timer if one is already running (button disabled, tooltip shown)
+- [x] App restart correctly restores active timer if `end_time` is NULL
 
 ---
 
@@ -557,10 +557,10 @@ Create `src/views/ManualEntry.svelte`:
 - Edit button per row: populates form with entry data, submit updates instead of creates
 
 ### Verification checklist
-- [ ] Submitting valid form creates entry and refreshes list
-- [ ] Validation prevents: missing task, end before start
-- [ ] Edit flow pre-fills form and updates on submit
-- [ ] Delete removes entry with confirmation
+- [x] Submitting valid form creates entry and refreshes list
+- [x] Validation prevents: missing task, end before start
+- [x] Edit flow pre-fills form and updates on submit
+- [x] Delete removes entry with confirmation
 
 ---
 
@@ -730,11 +730,11 @@ cargo tauri icon assets/icon.png
 
 ### 9.3 Updater (optional)
 
-Configure `tauri-plugin-updater` pointing to a GitHub Releases endpoint.
+Configure `tauri-plugin-updater` pointing to a Gitlab Releases endpoint.
 
-### 9.4 CI pipeline (GitHub Actions)
+### 9.4 CI pipeline (Gitlab CI/CD)
 
-Create `.github/workflows/build.yml` with jobs for:
+Create `.gitlab-ci.yml` with jobs for:
 - `ubuntu-latest` — produces `.deb` and `.AppImage`
 - `windows-latest` — produces `.msi` and `.exe` (NSIS)
 
