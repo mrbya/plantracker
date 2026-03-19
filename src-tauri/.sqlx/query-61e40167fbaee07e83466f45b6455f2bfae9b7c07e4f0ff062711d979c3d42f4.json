@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT te.id as \"id!\", te.task_id as \"task_id!\", te.start_time as \"start_time!\", te.end_time, te.notes, te.created_at as \"created_at!\"\n        FROM time_entries te\n        INNER JOIN tasks t ON t.id = te.task_id\n        WHERE t.plan_id = ?\n        ORDER BY te.start_time DESC\n        LIMIT ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "task_id!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_time!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "end_time",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "notes",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 5,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "61e40167fbaee07e83466f45b6455f2bfae9b7c07e4f0ff062711d979c3d42f4"
+}

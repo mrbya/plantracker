@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id as \"id!\", graph_id as \"graph_id!\", plan_id as \"plan_id!\", title as \"title!\", synced_at as \"synced_at!\" FROM tasks WHERE graph_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "graph_id!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "plan_id!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "title!",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "synced_at!",
+        "ordinal": 4,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e084076b8fcbe02a6b11fe5cd5246163417f2c80c476610796f4291713329e2f"
+}
