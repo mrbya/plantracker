@@ -287,9 +287,9 @@ app.manage(db_pool);
 Pass `State<SqlitePool>` into all command functions.
 
 ### Verification checklist
-- [ ] App starts and creates `plantracker.db` in correct platform directory
-- [ ] `sqlx migrate run` applies all migrations cleanly
-- [ ] `cargo sqlx prepare` generates `.sqlx/` query cache without errors
+- [x] App starts and creates `plantracker.db` in correct platform directory
+- [x] `sqlx migrate run` applies all migrations cleanly
+- [x] `cargo sqlx prepare` generates `.sqlx/` query cache without errors
 
 ---
 
