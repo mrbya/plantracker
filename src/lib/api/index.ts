@@ -4,7 +4,7 @@
  */
 import { invoke } from '@tauri-apps/api/core';
 
-import type { AuthStatus, Plan, SyncResult, Task } from '$lib/types';
+import type { ActiveTimerInfo, AuthStatus, Plan, SyncResult, Task, TimeEntry } from '$lib/types';
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -36,4 +36,32 @@ export async function listPlans(): Promise<Plan[]> {
 
 export async function listTasksForPlan(planId: string): Promise<Task[]> {
   return invoke<Task[]>('list_tasks_for_plan', { planId });
+}
+
+// ---------------------------------------------------------------------------
+// Timer
+// ---------------------------------------------------------------------------
+
+export async function startTimer(taskId: string): Promise<TimeEntry> {
+  return invoke<TimeEntry>('start_timer', { taskId });
+}
+
+export async function stopTimer(): Promise<TimeEntry> {
+  return invoke<TimeEntry>('stop_timer');
+}
+
+export async function getActiveTimer(): Promise<ActiveTimerInfo | null> {
+  return invoke<ActiveTimerInfo | null>('get_active_timer');
+}
+
+export async function getRecentEntries(opts: {
+  taskId?: string;
+  planId?: string;
+  limit: number;
+}): Promise<TimeEntry[]> {
+  return invoke<TimeEntry[]>('get_recent_entries', {
+    taskId: opts.taskId ?? null,
+    planId: opts.planId ?? null,
+    limit: opts.limit,
+  });
 }

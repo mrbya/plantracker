@@ -3,14 +3,18 @@
     options,
     value = $bindable(''),
     placeholder,
+    id,
+    onchange,
   }: {
     options: { value: string; label: string }[];
     value?: string;
     placeholder?: string;
+    id?: string;
+    onchange?: () => void;
   } = $props();
 </script>
 
-<select bind:value>
+<select {id} bind:value {onchange}>
   {#if placeholder}
     <option value="" disabled hidden>{placeholder}</option>
   {/if}

@@ -33,6 +33,13 @@ export interface SyncResult {
   syncedAt: string;
 }
 
+export interface ActiveTimerInfo {
+  entryId: string;
+  taskId: string;
+  startTime: string;
+  elapsedSeconds: number;
+}
+
 export interface MonthlyTotal {
   year: number;
   month: number;

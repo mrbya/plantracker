@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id as \"id!\", task_id as \"task_id!\", start_time as \"start_time!\", end_time, notes, created_at as \"created_at!\" FROM time_entries WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "task_id!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_time!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "end_time",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "notes",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 5,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "40795ed54a1c1088301855d39fbd628f917a987ddb1b861a255facb142d5ea21"
+}

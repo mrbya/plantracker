@@ -7,6 +7,9 @@ pub mod models;
 use std::sync::Arc;
 
 use tauri::Manager;
+use tokio::sync::Mutex;
+
+use commands::timer::ActiveTimer;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -27,7 +30,7 @@ pub fn run() {
             // Database
             let pool = tauri::async_runtime::block_on(db::init_db(app.handle()))
                 .expect("Failed to initialise database");
-            app.manage(pool);
+            app.manage(pool.clone());
 
             // Auth manager — loads any cached tokens from the OS keychain on startup
             let client_id = std::env::var("VITE_AZURE_CLIENT_ID").unwrap_or_default();
@@ -37,8 +40,38 @@ pub fn run() {
             let auth_manager = auth::manager::AuthManager::new(client_id, tenant_id);
             app.manage(Arc::clone(&auth_manager));
 
-            // TODO: restore active timer — query for time_entries WHERE end_time IS NULL
-            // and re-populate ActiveTimer managed state (added in Phase 5).
+            // Active timer state — restore from DB if a timer was running before shutdown.
+            let timer_state: Mutex<Option<ActiveTimer>> =
+                tauri::async_runtime::block_on(async {
+                    let active = db::entries::find_active_entry(&pool).await;
+                    match active {
+                        Ok(Some(entry)) => {
+                            match entry.start_time.parse::<chrono::DateTime<chrono::Utc>>() {
+                                Ok(start_time) => {
+                                    tracing::info!(
+                                        entry_id = %entry.id,
+                                        "Restored active timer from DB"
+                                    );
+                                    Mutex::new(Some(ActiveTimer {
+                                        entry_id: entry.id,
+                                        task_id: entry.task_id,
+                                        start_time,
+                                    }))
+                                }
+                                Err(e) => {
+                                    tracing::warn!("Could not parse active entry start_time: {e}");
+                                    Mutex::new(None)
+                                }
+                            }
+                        }
+                        Ok(None) => Mutex::new(None),
+                        Err(e) => {
+                            tracing::warn!("Could not query for active timer on startup: {e}");
+                            Mutex::new(None)
+                        }
+                    }
+                });
+            app.manage(timer_state);
 
             Ok(())
         })
@@ -49,6 +82,10 @@ pub fn run() {
             commands::sync::sync_plans_and_tasks,
             commands::sync::list_plans,
             commands::sync::list_tasks_for_plan,
+            commands::timer::start_timer,
+            commands::timer::stop_timer,
+            commands::timer::get_active_timer,
+            commands::timer::get_recent_entries,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

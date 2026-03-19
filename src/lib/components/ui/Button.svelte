@@ -8,7 +8,7 @@
     onclick,
     children,
   }: {
-    variant?: 'primary' | 'ghost' | 'danger';
+    variant?: 'primary' | 'ghost' | 'danger' | 'success';
     disabled?: boolean;
     loading?: boolean;
     onclick?: (e: MouseEvent) => void;
@@ -78,6 +78,16 @@
   }
 
   .danger:hover:not(:disabled) {
+    opacity: 0.85;
+  }
+
+  .success {
+    background: var(--success);
+    color: var(--bg);
+    border-color: var(--success);
+  }
+
+  .success:hover:not(:disabled) {
     opacity: 0.85;
   }
 </style>

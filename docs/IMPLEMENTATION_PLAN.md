@@ -509,11 +509,11 @@ Create `src/views/TimeTracking.svelte`:
 - `EmptyState` when no entries
 
 ### Verification checklist
-- [ ] Start timer creates DB entry with no end_time
-- [ ] Elapsed time counts up in real time
-- [ ] Stop timer saves end_time and refreshes entry list
-- [ ] Cannot start a second timer if one is already running (button disabled, tooltip shown)
-- [ ] App restart correctly restores active timer if `end_time` is NULL
+- [x] Start timer creates DB entry with no end_time
+- [x] Elapsed time counts up in real time
+- [x] Stop timer saves end_time and refreshes entry list
+- [x] Cannot start a second timer if one is already running (button disabled, tooltip shown)
+- [x] App restart correctly restores active timer if `end_time` is NULL
 
 ---
 
@@ -730,11 +730,11 @@ cargo tauri icon assets/icon.png
 
 ### 9.3 Updater (optional)
 
-Configure `tauri-plugin-updater` pointing to a GitHub Releases endpoint.
+Configure `tauri-plugin-updater` pointing to a Gitlab Releases endpoint.
 
-### 9.4 CI pipeline (GitHub Actions)
+### 9.4 CI pipeline (Gitlab CI/CD)
 
-Create `.github/workflows/build.yml` with jobs for:
+Create `.gitlab-ci.yml` with jobs for:
 - `ubuntu-latest` — produces `.deb` and `.AppImage`
 - `windows-latest` — produces `.msi` and `.exe` (NSIS)
 
