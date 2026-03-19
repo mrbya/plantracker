@@ -3,15 +3,11 @@
   import { login } from '$lib/stores/auth';
 
   let loading = $state(false);
-  let error = $state('');
 
   async function handleLogin() {
     loading = true;
-    error = '';
     try {
       await login();
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Login failed.';
     } finally {
       loading = false;
     }
@@ -23,11 +19,7 @@
     <h1 class="app-name">PlanTracker</h1>
     <p class="tagline">Track time spent on Microsoft Planner tasks.</p>
 
-    {#if error}
-      <p class="error">{error}</p>
-    {/if}
-
-    <Button variant="primary" {loading} onclick={handleLogin}>
+    <Button variant="primary" {loading} disabled={loading} onclick={handleLogin}>
       Sign in with Microsoft
     </Button>
   </div>
@@ -63,10 +55,5 @@
   .tagline {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
-  }
-
-  .error {
-    font-size: var(--font-size-sm);
-    color: var(--danger);
   }
 </style>

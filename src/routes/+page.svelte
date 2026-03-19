@@ -1,8 +1,14 @@
 <script lang="ts">
-  import { isAuthenticated } from '$lib/stores/auth';
+  import { onMount } from 'svelte';
+  import { isAuthenticated, initAuth } from '$lib/stores/auth';
   import Layout from '$lib/components/Layout.svelte';
   import Login from '../views/Login.svelte';
+  import ToastContainer from '$lib/components/ToastContainer.svelte';
+
+  onMount(() => { initAuth(); });
 </script>
+
+<ToastContainer />
 
 {#if $isAuthenticated}
   <Layout />

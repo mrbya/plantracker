@@ -449,9 +449,9 @@ export function selectTask(task: Task) { ... }
 Call `sync_plans_and_tasks` on app startup (after auth) and expose a manual refresh action.
 
 ### Verification checklist
-- [ ] After login, plans and tasks populate from Graph and are saved to SQLite
-- [ ] Subsequent launches use cached SQLite data immediately, sync in background
-- [ ] Selecting a task in any dropdown auto-selects its parent plan
+- [x] After login, plans and tasks populate from Graph and are saved to SQLite
+- [x] Subsequent launches use cached SQLite data immediately, sync in background
+- [x] Selecting a task in any dropdown auto-selects its parent plan
 
 ---
 
