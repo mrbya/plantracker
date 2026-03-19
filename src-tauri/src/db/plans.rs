@@ -7,8 +7,7 @@ pub async fn upsert_plan(pool: &SqlitePool, plan: &Plan) -> anyhow::Result<()> {
         r#"
         INSERT INTO plans (id, graph_id, title, synced_at)
         VALUES (?, ?, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-            graph_id  = excluded.graph_id,
+        ON CONFLICT(graph_id) DO UPDATE SET
             title     = excluded.title,
             synced_at = excluded.synced_at
         "#,
@@ -30,6 +29,17 @@ pub async fn list_plans(pool: &SqlitePool) -> anyhow::Result<Vec<Plan>> {
     .fetch_all(pool)
     .await?;
     Ok(rows)
+}
+
+pub async fn get_plan_by_graph_id(pool: &SqlitePool, graph_id: &str) -> anyhow::Result<Option<Plan>> {
+    let row = sqlx::query_as!(
+        Plan,
+        r#"SELECT id as "id!", graph_id as "graph_id!", title as "title!", synced_at as "synced_at!" FROM plans WHERE graph_id = ?"#,
+        graph_id,
+    )
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
 }
 
 pub async fn get_plan(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Plan>> {

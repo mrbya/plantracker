@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod commands;
 pub mod db;
+pub mod graph;
 pub mod models;
 
 use std::sync::Arc;
@@ -45,6 +46,9 @@ pub fn run() {
             commands::auth::login,
             commands::auth::logout,
             commands::auth::get_auth_status,
+            commands::sync::sync_plans_and_tasks,
+            commands::sync::list_plans,
+            commands::sync::list_tasks_for_plan,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

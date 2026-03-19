@@ -4,7 +4,7 @@
  */
 import { invoke } from '@tauri-apps/api/core';
 
-import type { AuthStatus } from '$lib/types';
+import type { AuthStatus, Plan, SyncResult, Task } from '$lib/types';
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -20,4 +20,20 @@ export async function logout(): Promise<void> {
 
 export async function getAuthStatus(): Promise<AuthStatus> {
   return invoke<AuthStatus>('get_auth_status');
+}
+
+// ---------------------------------------------------------------------------
+// Sync & Planner
+// ---------------------------------------------------------------------------
+
+export async function syncPlansAndTasks(): Promise<SyncResult> {
+  return invoke<SyncResult>('sync_plans_and_tasks');
+}
+
+export async function listPlans(): Promise<Plan[]> {
+  return invoke<Plan[]>('list_plans');
+}
+
+export async function listTasksForPlan(planId: string): Promise<Task[]> {
+  return invoke<Task[]>('list_tasks_for_plan', { planId });
 }

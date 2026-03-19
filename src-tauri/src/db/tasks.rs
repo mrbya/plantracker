@@ -7,8 +7,7 @@ pub async fn upsert_task(pool: &SqlitePool, task: &Task) -> anyhow::Result<()> {
         r#"
         INSERT INTO tasks (id, graph_id, plan_id, title, synced_at)
         VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-            graph_id  = excluded.graph_id,
+        ON CONFLICT(graph_id) DO UPDATE SET
             plan_id   = excluded.plan_id,
             title     = excluded.title,
             synced_at = excluded.synced_at
