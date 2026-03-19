@@ -9,8 +9,12 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Load .env file if present (dev convenience). Silently ignored if missing.
-    dotenvy::dotenv().ok();
+    // Load .env file if present (dev convenience). Uses override so values from
+    // .env take precedence over any empty vars already present in the environment.
+    match dotenvy::dotenv_override() {
+        Ok(path) => eprintln!("[plantracker] loaded .env from: {}", path.display()),
+        Err(e) => eprintln!("[plantracker] .env not loaded: {e} (cwd: {:?})", std::env::current_dir()),
+    }
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -27,6 +31,8 @@ pub fn run() {
             // Auth manager — loads any cached tokens from the OS keychain on startup
             let client_id = std::env::var("VITE_AZURE_CLIENT_ID").unwrap_or_default();
             let tenant_id = std::env::var("VITE_AZURE_TENANT_ID").unwrap_or_default();
+            eprintln!("[plantracker] client_id loaded: {}", if client_id.is_empty() { "EMPTY" } else { "OK" });
+            eprintln!("[plantracker] tenant_id loaded: {}", if tenant_id.is_empty() { "EMPTY" } else { "OK" });
             let auth_manager = auth::manager::AuthManager::new(client_id, tenant_id);
             app.manage(Arc::clone(&auth_manager));
 
