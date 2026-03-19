@@ -557,10 +557,10 @@ Create `src/views/ManualEntry.svelte`:
 - Edit button per row: populates form with entry data, submit updates instead of creates
 
 ### Verification checklist
-- [ ] Submitting valid form creates entry and refreshes list
-- [ ] Validation prevents: missing task, end before start
-- [ ] Edit flow pre-fills form and updates on submit
-- [ ] Delete removes entry with confirmation
+- [x] Submitting valid form creates entry and refreshes list
+- [x] Validation prevents: missing task, end before start
+- [x] Edit flow pre-fills form and updates on submit
+- [x] Delete removes entry with confirmation
 
 ---
 
