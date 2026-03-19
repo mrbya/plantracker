@@ -1,10 +1,10 @@
 ---
 id: TASK-38
 title: Phase 9.4 — GitLab CI/CD pipeline
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-19 16:15'
-updated_date: '2026-03-19 16:20'
+updated_date: '2026-03-19 16:51'
 labels:
   - ci
   - devops
@@ -53,12 +53,25 @@ Create `.gitlab-ci.yml` with build jobs for Linux and Windows targets.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `.gitlab-ci.yml` exists at repo root
-- [ ] #2 linux-build job installs all required system dependencies for Tauri on Ubuntu
-- [ ] #3 windows-build job builds successfully on Windows runner
-- [ ] #4 Both jobs run `cargo sqlx prepare --check` to validate the offline cache
-- [ ] #5 Artifacts are uploaded: .deb, .AppImage (Linux) and .msi, .exe (Windows)
-- [ ] #6 SQLX_OFFLINE=true is set in the pipeline environment
-- [ ] #7 VITE_AZURE_CLIENT_ID and VITE_AZURE_TENANT_ID are injected from CI/CD variables
-- [ ] #8 Pipeline runs on master branch and merge requests
+- [x] #1 `.gitlab-ci.yml` exists at repo root
+- [x] #2 linux-build job installs all required system dependencies for Tauri on Ubuntu
+- [x] #3 windows-build job builds successfully on Windows runner
+- [x] #4 Both jobs run `cargo sqlx prepare --check` to validate the offline cache
+- [x] #5 Artifacts are uploaded: .deb, .AppImage (Linux) and .msi, .exe (Windows)
+- [x] #6 SQLX_OFFLINE=true is set in the pipeline environment
+- [x] #7 VITE_AZURE_CLIENT_ID and VITE_AZURE_TENANT_ID are injected from CI/CD variables
+- [x] #8 Pipeline runs on master branch and merge requests
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `.gitlab-ci.yml` at repo root with:
+- `workflow` rules limiting pipeline to `master` branch and merge requests
+- `SQLX_OFFLINE=true` set globally
+- Shared cache for `~/.cargo/registry`, `~/.cargo/git`, and `node_modules` keyed on lockfiles
+- `linux-build` job on `ubuntu:24.04` image: installs all Tauri system deps (libwebkit2gtk-4.1-dev, libappindicator3-dev, librsvg2-dev, patchelf, etc.), Node.js 20, pnpm, Rust stable, and tauri-cli; runs `cargo sqlx prepare --check`, `pnpm install`, `cargo tauri build`; uploads .deb and .AppImage artifacts
+- `windows-build` job on Windows runner (tagged `windows`): installs Node.js, pnpm via Chocolatey, Rust stable via rustup; same build steps; uploads .msi and .exe artifacts
+- `VITE_AZURE_CLIENT_ID` and `VITE_AZURE_TENANT_ID` injected from CI/CD variables in both jobs
+- Artifacts expire after 7 days
+<!-- SECTION:FINAL_SUMMARY:END -->
