@@ -2,12 +2,12 @@
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
 
-  import { getRecentEntries } from '$lib/api';
+  import { deleteEntry, getRecentEntries } from '$lib/api';
   import Button from '$lib/components/ui/Button.svelte';
   import EmptyState from '$lib/components/ui/EmptyState.svelte';
   import Select from '$lib/components/ui/Select.svelte';
   import Spinner from '$lib/components/ui/Spinner.svelte';
-  import { addError } from '$lib/stores/notifications';
+  import { addError, addSuccess } from '$lib/stores/notifications';
   import {
     plans,
     selectTask,
@@ -139,9 +139,14 @@
   // ---------------------------------------------------------------------------
 
   async function handleDelete(id: string) {
-    // TODO: call deleteEntry(id) once Phase 6 (TASK-31) is implemented.
     confirmDeleteId = null;
-    addError('Delete is not yet available (Phase 6).');
+    try {
+      await deleteEntry(id);
+      addSuccess('Entry deleted');
+      await loadEntries();
+    } catch (e) {
+      addError('Failed to delete entry: ' + String(e));
+    }
   }
 
   // ---------------------------------------------------------------------------

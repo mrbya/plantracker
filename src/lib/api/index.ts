@@ -65,3 +65,39 @@ export async function getRecentEntries(opts: {
     limit: opts.limit,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Manual entries
+// ---------------------------------------------------------------------------
+
+export async function createManualEntry(params: {
+  taskId: string;
+  startTime: string;
+  endTime: string;
+  notes?: string;
+}): Promise<TimeEntry> {
+  return invoke<TimeEntry>('create_manual_entry', {
+    taskId: params.taskId,
+    startTime: params.startTime,
+    endTime: params.endTime,
+    notes: params.notes ?? null,
+  });
+}
+
+export async function updateEntry(params: {
+  id: string;
+  startTime: string;
+  endTime: string;
+  notes?: string;
+}): Promise<TimeEntry> {
+  return invoke<TimeEntry>('update_entry', {
+    id: params.id,
+    startTime: params.startTime,
+    endTime: params.endTime,
+    notes: params.notes ?? null,
+  });
+}
+
+export async function deleteEntry(id: string): Promise<void> {
+  return invoke('delete_entry', { id });
+}

@@ -167,6 +167,25 @@ pub async fn list_entries_in_range(
     Ok(rows)
 }
 
+pub async fn update_entry(
+    pool: &SqlitePool,
+    id: &str,
+    start_time: &str,
+    end_time: &str,
+    notes: Option<&str>,
+) -> anyhow::Result<()> {
+    sqlx::query!(
+        "UPDATE time_entries SET start_time = ?, end_time = ?, notes = ? WHERE id = ?",
+        start_time,
+        end_time,
+        notes,
+        id,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 pub async fn get_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<TimeEntry>> {
     let row = sqlx::query_as!(
         TimeEntry,

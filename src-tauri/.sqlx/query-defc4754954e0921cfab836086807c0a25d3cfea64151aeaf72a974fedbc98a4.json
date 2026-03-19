@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE time_entries SET start_time = ?, end_time = ?, notes = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "defc4754954e0921cfab836086807c0a25d3cfea64151aeaf72a974fedbc98a4"
+}

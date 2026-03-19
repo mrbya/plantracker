@@ -86,6 +86,9 @@ pub fn run() {
             commands::timer::stop_timer,
             commands::timer::get_active_timer,
             commands::timer::get_recent_entries,
+            commands::entries::create_manual_entry,
+            commands::entries::update_entry,
+            commands::entries::delete_entry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
