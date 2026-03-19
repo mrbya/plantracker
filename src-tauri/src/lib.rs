@@ -9,6 +9,9 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Load .env file if present (dev convenience). Silently ignored if missing.
+    dotenvy::dotenv().ok();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
@@ -22,10 +25,9 @@ pub fn run() {
             app.manage(pool);
 
             // Auth manager — loads any cached tokens from the OS keychain on startup
-            let auth_manager = auth::manager::AuthManager::new(
-                env!("VITE_AZURE_CLIENT_ID").to_string(),
-                env!("VITE_AZURE_TENANT_ID").to_string(),
-            );
+            let client_id = std::env::var("VITE_AZURE_CLIENT_ID").unwrap_or_default();
+            let tenant_id = std::env::var("VITE_AZURE_TENANT_ID").unwrap_or_default();
+            let auth_manager = auth::manager::AuthManager::new(client_id, tenant_id);
             app.manage(Arc::clone(&auth_manager));
 
             // TODO: restore active timer — query for time_entries WHERE end_time IS NULL
