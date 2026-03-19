@@ -193,10 +193,10 @@ Create `src/lib/components/Layout.svelte`:
 - User avatar / sign-out at the bottom of sidebar
 
 ### Verification checklist
-- [ ] App renders with dark Catppuccin Mocha background
-- [ ] All base components render correctly in isolation
-- [ ] Font is JetBrains Mono throughout
-- [ ] Layout shell navigates between placeholder views
+- [x] App renders with dark Catppuccin Mocha background
+- [x] All base components render correctly in isolation
+- [x] Font is JetBrains Mono throughout
+- [x] Layout shell navigates between placeholder views
 
 ---
 
