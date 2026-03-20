@@ -34,6 +34,10 @@ cache:
 linux-build:
   stage: build
   image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
+  rules:
+    - if: $[[ inputs.run_image ]] == true
+      when: never
+    - when: on_success
   variables:
     VITE_AZURE_CLIENT_ID: $VITE_AZURE_CLIENT_ID
     VITE_AZURE_TENANT_ID: $VITE_AZURE_TENANT_ID
@@ -51,6 +55,10 @@ windows-build:
   tags:
     - windows
   image: registry.gitlab.com/family-treasure/plantracker/windows-build:latest
+  rules:
+    - if: $[[ inputs.run_image ]] == true
+      when: never
+    - when: on_success
   variables:
     VITE_AZURE_CLIENT_ID: $VITE_AZURE_CLIENT_ID
     VITE_AZURE_TENANT_ID: $VITE_AZURE_TENANT_ID
@@ -72,6 +80,8 @@ upload-release:
     - job: windows-build
       artifacts: true
   rules:
+    - if: $[[ inputs.run_image ]] == true
+      when: never
     - if: '$CI_COMMIT_TAG'
   script:
     - apk add --no-cache curl
