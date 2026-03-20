@@ -8,7 +8,7 @@ Project-specific footguns. Check this list before implementing any of the affect
 
 **Problem:** CI builds without a live database fail to compile after query changes.
 
-**Rule:** Run `cargo sqlx prepare --workspace` after every query addition or change and commit the updated `.sqlx/` directory. Never merge a query change without this step.
+**Rule:** Run `just precache` after every query addition or change and commit the updated `.sqlx/` directory. Never merge a query change without this step.
 
 **Detect:** `cargo build` in an environment with `SQLX_OFFLINE=true` set will fail immediately if the cache is stale.
 

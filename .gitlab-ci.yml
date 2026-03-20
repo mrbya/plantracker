@@ -1,7 +1,22 @@
+spec:
+  inputs:
+    run_image:
+      type: boolean
+      default: false
+      description: "Build and push the windows-build Docker image."
+
+---
+
 workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_TAG'
+
+stages:
+  - build
+  - release
+  - image
 
 variables:
   SQLX_OFFLINE: "true"
@@ -18,37 +33,12 @@ cache:
 
 linux-build:
   stage: build
-  image: ubuntu:24.04
+  image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
   variables:
     VITE_AZURE_CLIENT_ID: $VITE_AZURE_CLIENT_ID
     VITE_AZURE_TENANT_ID: $VITE_AZURE_TENANT_ID
-  before_script:
-    - apt-get update -qq
-    - apt-get install -y --no-install-recommends
-        curl
-        ca-certificates
-        pkg-config
-        libwebkit2gtk-4.1-dev
-        libappindicator3-dev
-        librsvg2-dev
-        patchelf
-        libssl-dev
-        libgtk-3-dev
-        libayatana-appindicator3-dev
-    # Install Node.js
-    - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    - apt-get install -y nodejs
-    # Install pnpm
-    - npm install -g pnpm
-    # Install Rust stable
-    - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-    - source "$HOME/.cargo/env"
-    # Install Tauri CLI
-    - cargo install tauri-cli --locked
   script:
-    - cargo sqlx prepare --check --workspace
-    - pnpm install --frozen-lockfile
-    - cargo tauri build
+    - just ci-build
   artifacts:
     name: "platracker-linux-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -60,26 +50,82 @@ windows-build:
   stage: build
   tags:
     - windows
+  image: registry.gitlab.com/family-treasure/plantracker/windows-build:latest
   variables:
     VITE_AZURE_CLIENT_ID: $VITE_AZURE_CLIENT_ID
     VITE_AZURE_TENANT_ID: $VITE_AZURE_TENANT_ID
-  before_script:
-    # Install Node.js via winget or choco (assumes chocolatey on runner)
-    - choco install nodejs-lts -y
-    - choco install pnpm -y
-    # Install Rust stable
-    - Invoke-WebRequest -Uri "https://win.rustup.rs/x86_64" -OutFile rustup-init.exe
-    - .\rustup-init.exe -y --default-toolchain stable
-    - $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
-    # Install Tauri CLI
-    - cargo install tauri-cli --locked
   script:
-    - cargo sqlx prepare --check --workspace
-    - pnpm install --frozen-lockfile
-    - cargo tauri build
+    - just ci-build
   artifacts:
     name: "platracker-windows-$CI_COMMIT_SHORT_SHA"
     paths:
       - src-tauri/target/release/bundle/msi/*.msi
       - src-tauri/target/release/bundle/nsis/*.exe
     expire_in: 7 days
+
+upload-release:
+  stage: release
+  image: alpine:latest
+  needs:
+    - job: linux-build
+      artifacts: true
+    - job: windows-build
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  script:
+    - apk add --no-cache curl
+    - |
+      PACKAGE_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/platracker/${CI_COMMIT_TAG}"
+      LINKS_JSON=""
+      for f in \
+          src-tauri/target/release/bundle/deb/*.deb \
+          src-tauri/target/release/bundle/appimage/*.AppImage \
+          src-tauri/target/release/bundle/nsis/*.exe; do
+        [ -f "$f" ] || continue
+        filename=$(basename "$f")
+        echo "Uploading ${filename}..."
+        curl --fail \
+             --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+             --upload-file "$f" \
+             "${PACKAGE_URL}/${filename}"
+        [ -z "${LINKS_JSON}" ] || LINKS_JSON="${LINKS_JSON},"
+        LINKS_JSON="${LINKS_JSON}{\"name\":\"${filename}\",\"url\":\"${PACKAGE_URL}/${filename}\"}"
+      done
+      echo "Creating release ${CI_COMMIT_TAG}..."
+      curl --fail \
+           --request POST \
+           --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+           --header "Content-Type: application/json" \
+           --data "{\"name\":\"PlanTracker ${CI_COMMIT_TAG}\",\"tag_name\":\"${CI_COMMIT_TAG}\",\"assets\":{\"links\":[${LINKS_JSON}]}}" \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases"
+
+windows-image:
+  stage: image
+  tags:
+    - windows
+  rules:
+    - if: $[[ inputs.run_image ]] == true
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+  script:
+    - |
+      $ImageTag = (git rev-parse --short HEAD).Trim()
+      $ImageBase = "$env:CI_REGISTRY_IMAGE/windows-build"
+      $Image = "${ImageBase}:${ImageTag}"
+      $ImageLatest = "${ImageBase}:latest"
+      $Revision = (git rev-parse HEAD).Trim()
+      $Created = (Get-Date -Format 'o')
+      docker build `
+        -f "devops/windows-build/Dockerfile" `
+        -t $Image `
+        --label "org.opencontainers.image.revision=$Revision" `
+        --label "org.opencontainers.image.created=$Created" `
+        --label "org.opencontainers.image.version=$ImageTag" `
+        .
+      docker tag $Image $ImageLatest
+      docker push $Image
+      docker push $ImageLatest
+
