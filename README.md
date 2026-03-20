@@ -2,7 +2,7 @@
 
 > A cross-platform desktop app for tracking time spent on Microsoft Planner tasks.
 
-Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the frontend. Stores all data locally in SQLite and integrates with the Microsoft Graph Tasks API.
+Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the frontend. Stores all data locally in an SQLite database and integrates with the Microsoft Graph Tasks API to sync MS Planner plans and task.
 
 ## Index
 
@@ -88,12 +88,26 @@ Requires `just` to bootstrap all tools and configuration
 ```bash
 cargo install just
 just init # setup repo and all required tools
+```
 
-# Run in development
+Run in development:
+```bash
 just dev
+```
 
-# Build for release
+Build for release:
+```bash
 just build
+```
+
+Before committing work:
+```bash
+just pre-commit
+```
+
+To see all available commands:
+```bash
+just list
 ```
 
 ---
