@@ -47,3 +47,14 @@ pub async fn get_task_by_graph_id(
     .await?;
     Ok(row)
 }
+
+pub async fn get_task(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Task>> {
+    let row = sqlx::query_as!(
+        Task,
+        r#"SELECT id as "id!", graph_id as "graph_id!", plan_id as "plan_id!", title as "title!", synced_at as "synced_at!" FROM tasks WHERE id = ?"#,
+        id,
+    )
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}

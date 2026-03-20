@@ -634,11 +634,11 @@ Create `src/views/Reports.svelte`:
 - `formatDurationCSV(seconds: number): string` → `"2:34:00"`
 
 ### Verification checklist
-- [ ] Report generates correct totals (manually verify with known entries)
-- [ ] Selecting task only shows entries for that task
-- [ ] Selecting plan with no task shows all task entries for that plan
-- [ ] CSV export produces correct file and opens save dialog
-- [ ] Date range spanning year boundary works correctly
+- [x] Report generates correct totals (manually verify with known entries)
+- [x] Selecting task only shows entries for that task
+- [x] Selecting plan with no task shows all task entries for that plan
+- [x] CSV export produces correct file and opens save dialog
+- [x] Date range spanning year boundary works correctly
 
 ---
 
@@ -702,10 +702,10 @@ In `src-tauri/tauri.conf.json`:
 ```
 
 ### Verification checklist
-- [ ] Settings persist across app restarts
-- [ ] Toast notifications appear for errors and successes
-- [ ] Loading skeletons visible during data fetches
-- [ ] Window respects min dimensions
+- [x] Settings persist across app restarts
+- [x] Toast notifications appear for errors and successes
+- [x] Loading skeletons visible during data fetches
+- [x] Window respects min dimensions
 
 ---
 

@@ -4,7 +4,7 @@
  */
 import { invoke } from '@tauri-apps/api/core';
 
-import type { ActiveTimerInfo, AuthStatus, Plan, SyncResult, Task, TimeEntry } from '$lib/types';
+import type { ActiveTimerInfo, AuthStatus, Plan, ReportResult, SyncResult, Task, TimeEntry } from '$lib/types';
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -100,4 +100,38 @@ export async function updateEntry(params: {
 
 export async function deleteEntry(id: string): Promise<void> {
   return invoke('delete_entry', { id });
+}
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+
+export async function exportReportCsv(report: ReportResult): Promise<string> {
+  return invoke<string>('export_report_csv', { report });
+}
+
+export async function generateReport(params: {
+  planId?: string;
+  taskId?: string;
+  fromYear: number;
+  fromMonth: number;
+  toYear: number;
+  toMonth: number;
+}): Promise<ReportResult> {
+  return invoke<ReportResult>('generate_report', {
+    planId: params.planId ?? null,
+    taskId: params.taskId ?? null,
+    fromYear: params.fromYear,
+    fromMonth: params.fromMonth,
+    toYear: params.toYear,
+    toMonth: params.toMonth,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
+export async function getDataDir(): Promise<string> {
+  return invoke<string>('get_data_dir');
 }

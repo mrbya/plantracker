@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "plantracker",
-        "width": 800,
-        "height": 600
+        "title": "PlanTracker",
+        "width": 1024,
+        "height": 700,
+        "minWidth": 800,
+        "minHeight": 600,
+        "decorations": true
       }
     ],
     "security": {

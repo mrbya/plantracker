@@ -89,6 +89,9 @@ pub fn run() {
             commands::entries::create_manual_entry,
             commands::entries::update_entry,
             commands::entries::delete_entry,
+            commands::reports::generate_report,
+            commands::reports::export_report_csv,
+            commands::settings::get_data_dir,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

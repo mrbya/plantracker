@@ -16,7 +16,7 @@ Always use the compile-time checked macros:
 
 **After adding or changing any query:**
 ```bash
-cargo sqlx prepare --workspace
+just precache
 ```
 
 Commit the updated `.sqlx/` directory. CI builds without a live database will fail if the cache is stale.

@@ -2,6 +2,7 @@ import { get, writable } from 'svelte/store';
 
 import { listPlans, listTasksForPlan, syncPlansAndTasks } from '$lib/api';
 import { addError, addSuccess } from '$lib/stores/notifications';
+import { saveLastSyncedAt } from '$lib/stores/settings';
 import type { Plan, Task } from '$lib/types';
 
 export const plans = writable<Plan[]>([]);
@@ -21,6 +22,7 @@ export async function syncAndLoad(): Promise<void> {
   try {
     const result = await syncPlansAndTasks();
     addSuccess(`Synced ${result.plansCount} plans and ${result.tasksCount} tasks`);
+    saveLastSyncedAt(new Date().toISOString());
   } catch (e) {
     addError('Sync failed: ' + String(e));
     // Fall through to still load whatever is cached in SQLite.

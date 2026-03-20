@@ -83,8 +83,8 @@ All data is stored locally — no cloud sync, no telemetry.
 
 | Platform | Path |
 |---|---|
-| Linux | `~/.local/share/PlanTracker/` |
-| Windows | `%USERPROFILE%\Documents\PlanTracker\` |
+| Linux | `~/.local/share/com.siemens.plantracker/` |
+| Windows | `%USERPROFILE%\Documents\com.siemens.plantracker\` |
 
 The directory contains:
 - `plantracker.db` — SQLite database (time entries, cached task/plan metadata)

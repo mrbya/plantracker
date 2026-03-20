@@ -67,6 +67,9 @@ plantracker/
 # Start dev server (Vite HMR + Rust hot-recompile)
 cargo tauri dev
 
+# Install node dependencies
+just deps
+
 # Type-check frontend without building
 pnpm tsc --noEmit
 
@@ -74,10 +77,13 @@ pnpm tsc --noEmit
 cargo clippy -- -D warnings
 
 # Regenerate sqlx offline query cache — run after ANY query change
-cargo sqlx prepare --workspace
+just precache
 
 # Build release binaries
-cargo tauri build
+just build
+
+# Full CI build (validates cache, installs deps, builds)
+just ci-build
 
 # Generate all icon sizes from a 1024×1024 PNG
 cargo tauri icon assets/icon.png
