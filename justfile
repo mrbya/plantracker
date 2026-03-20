@@ -71,6 +71,10 @@ precache *FLAGS:
 precache-check:
     @just precache --check
 
+# Run app in development.
+dev *FLAGS:
+    cargo tauri dev {{FLAGS}}
+
 # Builds app release.
 build:
     cargo tauri build
@@ -83,6 +87,10 @@ thorough-check:
     @just check-js
     @just check-rs -- -D warnings
 
+# Indexes README.
+index:
+    markdown-toc -i README.md
+
 # Runs all checks neccesary before a commit.
 # Checks formatting, code quality, and more
 pre-commit:
@@ -90,6 +98,7 @@ pre-commit:
     @just audit
     @just precache-check
     @just build
+    @just index
 
 # Full app build used by ci.
 ci-build:
@@ -97,10 +106,6 @@ ci-build:
     @just precache-check
     @just deps-ci
     @just build
-
-# Indexes README.
-index:
-    markdown-toc -i README.md
 
 # Build linux-build-image.
 docker-linux:

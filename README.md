@@ -83,23 +83,17 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 
 ## Getting Started
 
+Requires `just` to bootstrap all tools and configuration
+
 ```bash
-# Clone
-git clone https://github.com/yourname/plantracker
-cd plantracker
-
-# Install frontend dependencies
-pnpm install
-
-# Copy environment config
-cp .env.example .env
-# → Edit .env and add your Azure App Client ID
+cargo install just
+just init # setup repo and all required tools
 
 # Run in development
-cargo tauri dev
+just dev
 
 # Build for release
-cargo tauri build
+just build
 ```
 
 ---
