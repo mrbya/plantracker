@@ -8,19 +8,26 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 
 <!-- toc -->
 
-- [Installation](#installation)
-- [Usage](#usage)
-  * [Starting the server](#starting-the-server)
-  * [Connecting a client](#connecting-a-client)
-  * [Chat commands](#chat-commands)
-- [Crates](#crates)
-- [Protocol](#protocol)
-  * [Frame format](#frame-format)
-  * [Client packets and server packets](#client-packets-and-server-packets)
-- [Similar projects](#similar-projects)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+  * [Platform-specific dependencies](#platform-specific-dependencies)
+- [Getting Started](#getting-started)
+- [Data Storage](#data-storage)
+  * [Database Schema (overview)](#database-schema-overview)
+- [Authentication Setup](#authentication-setup)
+  * [1. Register an Azure AD Application](#1-register-an-azure-ad-application)
+  * [2. Configure API Permissions](#2-configure-api-permissions)
+  * [3. Configure the App](#3-configure-the-app)
+  * [Auth Flow (how it works at runtime)](#auth-flow-how-it-works-at-runtime)
+- [Views](#views)
+  * [Time Tracking](#time-tracking)
+  * [Manual Entry](#manual-entry)
+  * [Reports](#reports)
+- [Project Structure](#project-structure)
+- [Development Notes](#development-notes)
+- [Roadmap](#roadmap)
 - [License](#license)
-- [Contribution](#contribution)
-- [Development](#development)
 
 <!-- tocstop -->
 

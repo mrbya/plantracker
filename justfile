@@ -75,6 +75,8 @@ precache-check:
 build:
     cargo tauri build
 
+# A thorough codebase check ran before
+# commiting and ci builds.
 thorough-check:
     @just fmt-js-check
     @just fmt-rs --check
@@ -95,6 +97,10 @@ ci-build:
     @just precache-check
     @just deps-ci
     @just build
+
+# Indexes README.
+index:
+    markdown-toc -i README.md
 
 # Build linux-build-image.
 docker-linux:
