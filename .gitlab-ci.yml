@@ -40,7 +40,6 @@ windows-build:
   stage: build
   tags:
     - saas-windows-medium-amd64
-  image: registry.gitlab.com/family-treasure/plantracker/windows-build:latest
   rules:
     - if: '$CI_COMMIT_TAG'
   variables:

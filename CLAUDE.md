@@ -58,35 +58,69 @@ plantracker/
 │       ├── graph.md
 │       ├── ui.md
 │       └── pitfalls.md
+├── devops/
+│   ├── linux-build/Dockerfile     ← CI image for linux-build job
+│   └── windows-build/Dockerfile   ← CI image for windows-build job
+├── justfile                       ← all dev workflow recipes
 └── .env.example                   ← VITE_AZURE_CLIENT_ID, VITE_AZURE_TENANT_ID
 ```
 
 ## Development Commands
 
+All common tasks are managed through [just](https://just.systems/) recipes. Run `just` or `just list` to see all available recipes.
+
+### First-time setup
+
 ```bash
-# Start dev server (Vite HMR + Rust hot-recompile)
-cargo tauri dev
+just init        # install all required tooling (run once)
+just deps        # install node dependencies
+```
 
-# Install node dependencies
-just deps
+### Daily development
 
-# Type-check frontend without building
-pnpm tsc --noEmit
+```bash
+just dev         # start dev server (Vite HMR + Rust hot-recompile)
+just fmt         # format all sources (JS/TS/Svelte + Rust)
+just fmt-js      # format JS/TS/Svelte sources only
+just fmt-rs      # format Rust sources only (requires nightly)
+just check       # run all linter checks (svelte-check + clippy)
+just check-js    # svelte-check only
+just check-rs    # clippy only
+just precache    # regenerate sqlx offline query cache — run after ANY query change
+just build       # build release binaries
+```
 
-# Lint Rust (warnings are errors)
-cargo clippy -- -D warnings
+### Before committing
 
-# Regenerate sqlx offline query cache — run after ANY query change
-just precache
+```bash
+just pre-commit  # format check + lint + audit + sqlx cache check + build + index README
+```
 
-# Build release binaries
-just build
+### Auditing
 
-# Full CI build (validates cache, installs deps, builds)
-just ci-build
+```bash
+just audit       # check for vulnerabilities and unused dependencies
+just audit-js    # JS/TS vulnerability audit only
+just audit-rs    # Rust unused deps + vulnerability audit only
+```
 
-# Generate all icon sizes from a 1024×1024 PNG
-cargo tauri icon assets/icon.png
+### CI
+
+```bash
+just ci-build    # thorough checks + sqlx cache validation + install deps + build
+```
+
+### Docker CI images
+
+```bash
+just docker-linux   # build and push linux-build image (requires GITLAB_IMAGE_REGISTRY in .env)
+```
+
+### Miscellaneous
+
+```bash
+just index                         # update README table of contents
+cargo tauri icon assets/icon.png   # generate all icon sizes from a 1024×1024 PNG
 ```
 
 ## Rules Index
