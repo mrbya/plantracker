@@ -24,7 +24,7 @@ precache-check:
 
 # Builds app release
 build:
-    cargo tauri build
+    NO_STRIP=true cargo tauri build
 
 # Build linux-build-image.
 docker-linux:
