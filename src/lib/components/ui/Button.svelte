@@ -1,26 +1,22 @@
 <script lang="ts">
-  import Spinner from './Spinner.svelte';
+  import Spinner from "./Spinner.svelte";
 
   let {
-    variant = 'primary',
+    variant = "primary",
     disabled = false,
     loading = false,
     onclick,
     children,
   }: {
-    variant?: 'primary' | 'ghost' | 'danger' | 'success';
+    variant?: "primary" | "ghost" | "danger" | "success";
     disabled?: boolean;
     loading?: boolean;
     onclick?: (e: MouseEvent) => void;
-    children?: import('svelte').Snippet;
+    children?: import("svelte").Snippet;
   } = $props();
 </script>
 
-<button
-  class="btn {variant}"
-  disabled={disabled || loading}
-  {onclick}
->
+<button class="btn {variant}" disabled={disabled || loading} {onclick}>
   {#if loading}
     <Spinner size="sm" />
   {/if}
@@ -41,7 +37,11 @@
     font-size: var(--font-size-base);
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s,
+      opacity 0.15s;
     white-space: nowrap;
   }
 

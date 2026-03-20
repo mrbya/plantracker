@@ -4,6 +4,26 @@
 
 Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the frontend. Stores all data locally in SQLite and integrates with the Microsoft Graph Tasks API.
 
+## Index
+
+<!-- toc -->
+
+- [Installation](#installation)
+- [Usage](#usage)
+  * [Starting the server](#starting-the-server)
+  * [Connecting a client](#connecting-a-client)
+  * [Chat commands](#chat-commands)
+- [Crates](#crates)
+- [Protocol](#protocol)
+  * [Frame format](#frame-format)
+  * [Client packets and server packets](#client-packets-and-server-packets)
+- [Similar projects](#similar-projects)
+- [License](#license)
+- [Contribution](#contribution)
+- [Development](#development)
+
+<!-- tocstop -->
+
 ---
 
 ## Features

@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { color }: { color: 'green' | 'red' | 'yellow' } = $props();
+  let { color }: { color: "green" | "red" | "yellow" } = $props();
 </script>
 
 <span class="badge {color}">

@@ -1,7 +1,7 @@
 <script lang="ts">
   let {
-    type = 'text',
-    value = $bindable(''),
+    type = "text",
+    value = $bindable(""),
     label,
     error,
     onblur,
@@ -18,12 +18,7 @@
   {#if label}
     <label class="label">{label}</label>
   {/if}
-  <input
-    {type}
-    bind:value
-    class:has-error={!!error}
-    {onblur}
-  />
+  <input {type} bind:value class:has-error={!!error} {onblur} />
   {#if error}
     <span class="error-msg">{error}</span>
   {/if}

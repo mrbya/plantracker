@@ -1,9 +1,9 @@
-import { get, writable } from 'svelte/store';
+import { get, writable } from "svelte/store";
 
-import { listPlans, listTasksForPlan, syncPlansAndTasks } from '$lib/api';
-import { addError, addSuccess } from '$lib/stores/notifications';
-import { saveLastSyncedAt } from '$lib/stores/settings';
-import type { Plan, Task } from '$lib/types';
+import { listPlans, listTasksForPlan, syncPlansAndTasks } from "$lib/api";
+import { addError, addSuccess } from "$lib/stores/notifications";
+import { saveLastSyncedAt } from "$lib/stores/settings";
+import type { Plan, Task } from "$lib/types";
 
 export const plans = writable<Plan[]>([]);
 export const tasksByPlan = writable<Record<string, Task[]>>({});
@@ -21,10 +21,12 @@ export function selectTask(task: Task): void {
 export async function syncAndLoad(): Promise<void> {
   try {
     const result = await syncPlansAndTasks();
-    addSuccess(`Synced ${result.plansCount} plans and ${result.tasksCount} tasks`);
+    addSuccess(
+      `Synced ${result.plansCount} plans and ${result.tasksCount} tasks`,
+    );
     saveLastSyncedAt(new Date().toISOString());
   } catch (e) {
-    addError('Sync failed: ' + String(e));
+    addError("Sync failed: " + String(e));
     // Fall through to still load whatever is cached in SQLite.
   }
 
@@ -38,6 +40,6 @@ export async function syncAndLoad(): Promise<void> {
     }
     tasksByPlan.set(byPlan);
   } catch (e) {
-    addError('Failed to load plans from local storage: ' + String(e));
+    addError("Failed to load plans from local storage: " + String(e));
   }
 }

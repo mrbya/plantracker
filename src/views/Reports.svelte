@@ -1,41 +1,52 @@
 <script lang="ts">
-  import { exportReportCsv, generateReport } from '$lib/api';
-  import Button from '$lib/components/ui/Button.svelte';
-  import EmptyState from '$lib/components/ui/EmptyState.svelte';
-  import Input from '$lib/components/ui/Input.svelte';
-  import Select from '$lib/components/ui/Select.svelte';
-  import { addError, addSuccess } from '$lib/stores/notifications';
+  import { exportReportCsv, generateReport } from "$lib/api";
+  import Button from "$lib/components/ui/Button.svelte";
+  import EmptyState from "$lib/components/ui/EmptyState.svelte";
+  import Input from "$lib/components/ui/Input.svelte";
+  import Select from "$lib/components/ui/Select.svelte";
+  import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
     selectTask,
     selectedPlan,
     selectedTask,
     tasksByPlan,
-  } from '$lib/stores/planner';
-  import type { ReportResult } from '$lib/types';
+  } from "$lib/stores/planner";
+  import type { ReportResult } from "$lib/types";
 
   // ---------------------------------------------------------------------------
   // Month helpers
   // ---------------------------------------------------------------------------
 
   const MONTH_OPTIONS = [
-    { value: '1', label: 'January' },
-    { value: '2', label: 'February' },
-    { value: '3', label: 'March' },
-    { value: '4', label: 'April' },
-    { value: '5', label: 'May' },
-    { value: '6', label: 'June' },
-    { value: '7', label: 'July' },
-    { value: '8', label: 'August' },
-    { value: '9', label: 'September' },
-    { value: '10', label: 'October' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'December' },
+    { value: "1", label: "January" },
+    { value: "2", label: "February" },
+    { value: "3", label: "March" },
+    { value: "4", label: "April" },
+    { value: "5", label: "May" },
+    { value: "6", label: "June" },
+    { value: "7", label: "July" },
+    { value: "8", label: "August" },
+    { value: "9", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
   ];
 
   const SHORT_MONTHS = [
-    '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    "",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
 
   // ---------------------------------------------------------------------------
@@ -52,34 +63,43 @@
   // Plan / task filter state
   // ---------------------------------------------------------------------------
 
-  let selectedPlanId = $state($selectedPlan?.id ?? '');
-  let selectedTaskId = $state($selectedTask?.id ?? '');
+  let selectedPlanId = $state($selectedPlan?.id ?? "");
+  let selectedTaskId = $state($selectedTask?.id ?? "");
 
   const planOptions = $derived(
-    $plans.map((p) => ({ value: p.id, label: p.title }))
+    $plans.map((p) => ({ value: p.id, label: p.title })),
   );
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({ value: t.id, label: t.title }))
-      : []
+      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+          value: t.id,
+          label: t.title,
+        }))
+      : [],
   );
 
   function onPlanChange() {
-    selectedTaskId = '';
+    selectedTaskId = "";
     selectedPlan.set($plans.find((p) => p.id === selectedPlanId) ?? null);
     selectedTask.set(null);
   }
 
   function onTaskChange() {
-    const task = ($tasksByPlan[selectedPlanId] ?? []).find((t) => t.id === selectedTaskId);
+    const task = ($tasksByPlan[selectedPlanId] ?? []).find(
+      (t) => t.id === selectedTaskId,
+    );
     if (task) {
       selectTask(task);
       selectedPlanId = task.planId;
     }
   }
 
-  $effect(() => { selectedPlanId = $selectedPlan?.id ?? ''; });
-  $effect(() => { selectedTaskId = $selectedTask?.id ?? ''; });
+  $effect(() => {
+    selectedPlanId = $selectedPlan?.id ?? "";
+  });
+  $effect(() => {
+    selectedTaskId = $selectedTask?.id ?? "";
+  });
 
   // ---------------------------------------------------------------------------
   // Report state
@@ -104,7 +124,7 @@
       });
       generated = true;
     } catch (e) {
-      addError('Failed to generate report: ' + String(e));
+      addError("Failed to generate report: " + String(e));
     } finally {
       generating = false;
     }
@@ -115,11 +135,11 @@
     exporting = true;
     try {
       const path = await exportReportCsv(report);
-      addSuccess('Exported to ' + path);
+      addSuccess("Exported to " + path);
     } catch (e) {
       const msg = String(e);
-      if (!msg.includes('Export cancelled')) {
-        addError('Export failed: ' + msg);
+      if (!msg.includes("Export cancelled")) {
+        addError("Export failed: " + msg);
       }
     } finally {
       exporting = false;
@@ -131,10 +151,10 @@
   // ---------------------------------------------------------------------------
 
   const grandHours = $derived(
-    report ? Math.floor(report.grandTotalSeconds / 3600) : 0
+    report ? Math.floor(report.grandTotalSeconds / 3600) : 0,
   );
   const grandMinutes = $derived(
-    report ? Math.floor((report.grandTotalSeconds % 3600) / 60) : 0
+    report ? Math.floor((report.grandTotalSeconds % 3600) / 60) : 0,
   );
 </script>
 
@@ -184,7 +204,7 @@
           id="task-select"
           options={taskOptions}
           bind:value={selectedTaskId}
-          placeholder={selectedPlanId ? 'All tasks' : 'Select a plan first'}
+          placeholder={selectedPlanId ? "All tasks" : "Select a plan first"}
           onchange={onTaskChange}
         />
       </div>
@@ -230,11 +250,15 @@
                 </tr>
               </thead>
               <tbody>
-                {#each report.monthlyTotals as row (row.year + '-' + row.month)}
+                {#each report.monthlyTotals as row (row.year + "-" + row.month)}
                   <tr>
                     <td>{SHORT_MONTHS[row.month]} {row.year}</td>
-                    <td class="num-col muted">{Math.floor(row.totalSeconds / 3600)}</td>
-                    <td class="num-col muted">{Math.floor((row.totalSeconds % 3600) / 60)}</td>
+                    <td class="num-col muted"
+                      >{Math.floor(row.totalSeconds / 3600)}</td
+                    >
+                    <td class="num-col muted"
+                      >{Math.floor((row.totalSeconds % 3600) / 60)}</td
+                    >
                   </tr>
                 {/each}
               </tbody>
@@ -291,7 +315,7 @@
   }
 
   /* Year input — compact width */
-  .range-fields :global(input[type='number']) {
+  .range-fields :global(input[type="number"]) {
     width: 5rem;
   }
 

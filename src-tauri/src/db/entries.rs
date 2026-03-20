@@ -3,7 +3,6 @@ use sqlx::SqlitePool;
 
 use crate::models::TimeEntry;
 
-
 pub async fn insert_entry(pool: &SqlitePool, entry: &TimeEntry) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
@@ -101,10 +100,7 @@ pub async fn list_entries_in_range(
 ) -> anyhow::Result<Vec<TimeEntry>> {
     // Build ISO 8601 range bounds for lexicographic TEXT comparison in SQLite.
     let from_str = format!("{}T00:00:00Z", from.format("%Y-%m-%d"));
-    let to_str = format!(
-        "{}T00:00:00Z",
-        (to + Duration::days(1)).format("%Y-%m-%d")
-    );
+    let to_str = format!("{}T00:00:00Z", (to + Duration::days(1)).format("%Y-%m-%d"));
 
     if let Some(tid) = task_id {
         let rows = sqlx::query_as!(

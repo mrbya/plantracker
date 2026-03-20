@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { notifications } from '$lib/stores/notifications';
+  import { notifications } from "$lib/stores/notifications";
 </script>
 
 <div class="toast-container">
@@ -44,12 +44,24 @@
     flex-shrink: 0;
   }
 
-  .toast--success .toast__dot { background: var(--success); }
-  .toast--error   .toast__dot { background: var(--danger); }
-  .toast--warning .toast__dot { background: var(--warning); }
+  .toast--success .toast__dot {
+    background: var(--success);
+  }
+  .toast--error .toast__dot {
+    background: var(--danger);
+  }
+  .toast--warning .toast__dot {
+    background: var(--warning);
+  }
 
   @keyframes slide-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 </style>

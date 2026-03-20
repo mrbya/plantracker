@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { openPath } from '@tauri-apps/plugin-opener';
+  import { onMount } from "svelte";
+  import { openPath } from "@tauri-apps/plugin-opener";
 
-  import { getDataDir } from '$lib/api';
-  import Button from '$lib/components/ui/Button.svelte';
-  import Input from '$lib/components/ui/Input.svelte';
-  import Select from '$lib/components/ui/Select.svelte';
-  import { logout, userDisplayName } from '$lib/stores/auth';
-  import { addError } from '$lib/stores/notifications';
-  import { syncAndLoad } from '$lib/stores/planner';
+  import { getDataDir } from "$lib/api";
+  import Button from "$lib/components/ui/Button.svelte";
+  import Input from "$lib/components/ui/Input.svelte";
+  import Select from "$lib/components/ui/Select.svelte";
+  import { logout, userDisplayName } from "$lib/stores/auth";
+  import { addError } from "$lib/stores/notifications";
+  import { syncAndLoad } from "$lib/stores/planner";
   import {
     entriesLimit,
     lastSyncedAt,
@@ -17,7 +17,7 @@
     saveSyncFrequency,
     syncFrequency,
     type SyncFrequency,
-  } from '$lib/stores/settings';
+  } from "$lib/stores/settings";
 
   // ---------------------------------------------------------------------------
   // Entries limit
@@ -43,9 +43,9 @@
   // ---------------------------------------------------------------------------
 
   const SYNC_OPTIONS = [
-    { value: 'manual', label: 'Manual only' },
-    { value: '30min', label: 'Every 30 minutes' },
-    { value: '1hour', label: 'Every hour' },
+    { value: "manual", label: "Manual only" },
+    { value: "30min", label: "Every 30 minutes" },
+    { value: "1hour", label: "Every hour" },
   ];
 
   let syncFreqValue = $state($syncFrequency);
@@ -75,12 +75,12 @@
   }
 
   function formatLastSynced(iso: string | null): string {
-    if (!iso) return 'Never';
+    if (!iso) return "Never";
     return new Date(iso).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 
@@ -88,14 +88,14 @@
   // Data directory
   // ---------------------------------------------------------------------------
 
-  let dataDir = $state('');
+  let dataDir = $state("");
 
   async function handleOpenFolder() {
     if (dataDir) {
       try {
         await openPath(dataDir);
       } catch (e) {
-        addError('Could not open folder: ' + String(e));
+        addError("Could not open folder: " + String(e));
       }
     }
   }
@@ -108,7 +108,7 @@
     try {
       dataDir = await getDataDir();
     } catch (e) {
-      addError('Could not get data directory: ' + String(e));
+      addError("Could not get data directory: " + String(e));
     }
   });
 </script>
@@ -120,14 +120,12 @@
     <div class="setting-row">
       <div class="setting-info">
         <span class="setting-label">Recent Entries Limit</span>
-        <span class="setting-desc">Number of entries shown in Time Tracking and Manual Entry</span>
+        <span class="setting-desc"
+          >Number of entries shown in Time Tracking and Manual Entry</span
+        >
       </div>
       <div class="setting-control narrow">
-        <Input
-          type="number"
-          bind:value={limitInput}
-          onblur={onLimitBlur}
-        />
+        <Input type="number" bind:value={limitInput} onblur={onLimitBlur} />
       </div>
     </div>
   </section>
@@ -138,7 +136,10 @@
     <div class="setting-row">
       <div class="setting-info">
         <span class="setting-label">Sync Frequency</span>
-        <span class="setting-desc">How often to automatically sync plans and tasks from Microsoft Planner</span>
+        <span class="setting-desc"
+          >How often to automatically sync plans and tasks from Microsoft
+          Planner</span
+        >
       </div>
       <div class="setting-control">
         <Select
@@ -152,10 +153,17 @@
     <div class="setting-row">
       <div class="setting-info">
         <span class="setting-label">Manual Sync</span>
-        <span class="setting-desc">Last synced: {formatLastSynced($lastSyncedAt)}</span>
+        <span class="setting-desc"
+          >Last synced: {formatLastSynced($lastSyncedAt)}</span
+        >
       </div>
       <div class="setting-control">
-        <Button variant="primary" loading={syncing} disabled={syncing} onclick={handleSyncNow}>
+        <Button
+          variant="primary"
+          loading={syncing}
+          disabled={syncing}
+          onclick={handleSyncNow}
+        >
           Sync Now
         </Button>
       </div>
@@ -168,7 +176,7 @@
     <div class="setting-row">
       <div class="setting-info">
         <span class="setting-label">Data Directory</span>
-        <span class="setting-desc path-text">{dataDir || '—'}</span>
+        <span class="setting-desc path-text">{dataDir || "—"}</span>
       </div>
       <div class="setting-control">
         <Button variant="ghost" disabled={!dataDir} onclick={handleOpenFolder}>
@@ -184,7 +192,7 @@
     <div class="setting-row">
       <div class="setting-info">
         <span class="setting-label">Signed in as</span>
-        <span class="setting-desc">{$userDisplayName ?? '—'}</span>
+        <span class="setting-desc">{$userDisplayName ?? "—"}</span>
       </div>
       <div class="setting-control">
         <Button variant="danger" onclick={logout}>Sign Out</Button>

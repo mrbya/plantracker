@@ -17,7 +17,10 @@ pub fn run() {
     // .env take precedence over any empty vars already present in the environment.
     match dotenvy::dotenv_override() {
         Ok(path) => eprintln!("[plantracker] loaded .env from: {}", path.display()),
-        Err(e) => eprintln!("[plantracker] .env not loaded: {e} (cwd: {:?})", std::env::current_dir()),
+        Err(e) => eprintln!(
+            "[plantracker] .env not loaded: {e} (cwd: {:?})",
+            std::env::current_dir()
+        ),
     }
 
     tauri::Builder::default()
@@ -35,42 +38,47 @@ pub fn run() {
             // Auth manager — loads any cached tokens from the OS keychain on startup
             let client_id = std::env::var("VITE_AZURE_CLIENT_ID").unwrap_or_default();
             let tenant_id = std::env::var("VITE_AZURE_TENANT_ID").unwrap_or_default();
-            eprintln!("[plantracker] client_id loaded: {}", if client_id.is_empty() { "EMPTY" } else { "OK" });
-            eprintln!("[plantracker] tenant_id loaded: {}", if tenant_id.is_empty() { "EMPTY" } else { "OK" });
+            eprintln!(
+                "[plantracker] client_id loaded: {}",
+                if client_id.is_empty() { "EMPTY" } else { "OK" }
+            );
+            eprintln!(
+                "[plantracker] tenant_id loaded: {}",
+                if tenant_id.is_empty() { "EMPTY" } else { "OK" }
+            );
             let auth_manager = auth::manager::AuthManager::new(client_id, tenant_id);
             app.manage(Arc::clone(&auth_manager));
 
             // Active timer state — restore from DB if a timer was running before shutdown.
-            let timer_state: Mutex<Option<ActiveTimer>> =
-                tauri::async_runtime::block_on(async {
-                    let active = db::entries::find_active_entry(&pool).await;
-                    match active {
-                        Ok(Some(entry)) => {
-                            match entry.start_time.parse::<chrono::DateTime<chrono::Utc>>() {
-                                Ok(start_time) => {
-                                    tracing::info!(
-                                        entry_id = %entry.id,
-                                        "Restored active timer from DB"
-                                    );
-                                    Mutex::new(Some(ActiveTimer {
-                                        entry_id: entry.id,
-                                        task_id: entry.task_id,
-                                        start_time,
-                                    }))
-                                }
-                                Err(e) => {
-                                    tracing::warn!("Could not parse active entry start_time: {e}");
-                                    Mutex::new(None)
-                                }
+            let timer_state: Mutex<Option<ActiveTimer>> = tauri::async_runtime::block_on(async {
+                let active = db::entries::find_active_entry(&pool).await;
+                match active {
+                    Ok(Some(entry)) => {
+                        match entry.start_time.parse::<chrono::DateTime<chrono::Utc>>() {
+                            Ok(start_time) => {
+                                tracing::info!(
+                                    entry_id = %entry.id,
+                                    "Restored active timer from DB"
+                                );
+                                Mutex::new(Some(ActiveTimer {
+                                    entry_id: entry.id,
+                                    task_id: entry.task_id,
+                                    start_time,
+                                }))
+                            }
+                            Err(e) => {
+                                tracing::warn!("Could not parse active entry start_time: {e}");
+                                Mutex::new(None)
                             }
                         }
-                        Ok(None) => Mutex::new(None),
-                        Err(e) => {
-                            tracing::warn!("Could not query for active timer on startup: {e}");
-                            Mutex::new(None)
-                        }
                     }
-                });
+                    Ok(None) => Mutex::new(None),
+                    Err(e) => {
+                        tracing::warn!("Could not query for active timer on startup: {e}");
+                        Mutex::new(None)
+                    }
+                }
+            });
             app.manage(timer_state);
 
             Ok(())
