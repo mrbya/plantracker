@@ -1,28 +1,34 @@
 #!/usr/bin/env just --justfile
 set dotenv-load := true
 
-# Output this list
+# Output this list.
 list:
     @just --list
 
-# Installs node deps
+# Installs node deps.
 deps *FLAGS:
     pnpm install {{FLAGS}}
 
-# Installs node deps with --frozen-lockfile
+# Installs node deps with --frozen-lockfile.
 deps-ci:
     @just deps --frozen-lockfile
 
-# Pre caches db queries
+
+# Apply strict formatting to rust sources.
+[working-directory: 'src-tauri']
+fmt-rs *FLAGS:
+    cargo +nightly fmt --all {{FLAGS}}
+
+# Pre caches db queries.
 [working-directory: 'src-tauri']
 precache *FLAGS:
     cargo sqlx prepare --workspace {{FLAGS}}
 
-# Chechs pre-cached db queries
+# Chechs pre-cached db queries.
 precache-check:
     @just precache --check
 
-# Builds app release
+# Builds app release.
 build:
     NO_STRIP=true cargo tauri build
 
@@ -46,7 +52,7 @@ docker-linux:
     sudo docker push "${IMAGE}"
     sudo docker push "${IMAGE_LATEST}"
 
-# Full app build used by ci
+# Full app build used by ci.
 ci-build:
     @just precache-check
     @just deps-ci
