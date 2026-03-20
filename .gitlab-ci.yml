@@ -53,7 +53,7 @@ linux-build:
 windows-build:
   stage: build
   tags:
-    - saas-windows-medium-amd64, shared-windows
+    - saas-windows-medium-amd64
   image: registry.gitlab.com/family-treasure/plantracker/windows-build:latest
   rules:
     - if: $[[ inputs.run_image ]] == true
@@ -113,7 +113,7 @@ upload-release:
 windows-image:
   stage: image
   tags:
-    - saas-windows-medium-amd64, shared-windows
+    - saas-windows-medium-amd64
   rules:
     - if: $[[ inputs.run_image ]] == true
   variables:
