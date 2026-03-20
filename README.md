@@ -2,7 +2,34 @@
 
 > A cross-platform desktop app for tracking time spent on Microsoft Planner tasks.
 
-Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the frontend. Stores all data locally in SQLite and integrates with the Microsoft Graph Tasks API.
+Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the frontend. Stores all data locally in an SQLite database and integrates with the Microsoft Graph Tasks API to sync MS Planner plans and task.
+
+## Index
+
+<!-- toc -->
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+  * [Platform-specific dependencies](#platform-specific-dependencies)
+- [Getting Started](#getting-started)
+- [Data Storage](#data-storage)
+  * [Database Schema (overview)](#database-schema-overview)
+- [Authentication Setup](#authentication-setup)
+  * [1. Register an Azure AD Application](#1-register-an-azure-ad-application)
+  * [2. Configure API Permissions](#2-configure-api-permissions)
+  * [3. Configure the App](#3-configure-the-app)
+  * [Auth Flow (how it works at runtime)](#auth-flow-how-it-works-at-runtime)
+- [Views](#views)
+  * [Time Tracking](#time-tracking)
+  * [Manual Entry](#manual-entry)
+  * [Reports](#reports)
+- [Project Structure](#project-structure)
+- [Development Notes](#development-notes)
+- [Roadmap](#roadmap)
+- [License](#license)
+
+<!-- tocstop -->
 
 ---
 
@@ -56,23 +83,31 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 
 ## Getting Started
 
+Requires `just` to bootstrap all tools and configuration
+
 ```bash
-# Clone
-git clone https://github.com/yourname/plantracker
-cd plantracker
+cargo install just
+just init # setup repo and all required tools
+```
 
-# Install frontend dependencies
-pnpm install
+Run in development:
+```bash
+just dev
+```
 
-# Copy environment config
-cp .env.example .env
-# → Edit .env and add your Azure App Client ID
+Build for release:
+```bash
+just build
+```
 
-# Run in development
-cargo tauri dev
+Before committing work:
+```bash
+just pre-commit
+```
 
-# Build for release
-cargo tauri build
+To see all available commands:
+```bash
+just list
 ```
 
 ---
@@ -131,7 +166,7 @@ In your `.env` file:
 
 ```env
 VITE_AZURE_CLIENT_ID=your-client-id-here
-VITE_AZURE_TENANT_ID=common
+VITE_AZURE_TENANT_ID=your-tenant-id-here
 ```
 
 > `common` allows both personal and work/school Microsoft accounts. Replace with your tenant ID to restrict to a single organisation.
@@ -191,7 +226,7 @@ plantracker/
 │   │   ├── ManualEntry.svelte
 │   │   └── Reports.svelte
 │   └── App.svelte
-├── src-tauri/
+├── src-tauri/                  # Tauri backend
 │   ├── src/
 │   │   ├── main.rs
 │   │   ├── commands/           # Tauri commands (time entries, reports)
@@ -201,7 +236,7 @@ plantracker/
 │   ├── migrations/             # SQLite migration files
 │   └── Cargo.toml
 ├── .env.example
-├── package.json
+├── ...
 └── vite.config.ts
 ```
 

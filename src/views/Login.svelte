@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/components/ui/Button.svelte';
-  import { login } from '$lib/stores/auth';
+  import Button from "$lib/components/ui/Button.svelte";
+  import { login } from "$lib/stores/auth";
 
   let loading = $state(false);
 
@@ -19,7 +19,12 @@
     <h1 class="app-name">PlanTracker</h1>
     <p class="tagline">Track time spent on Microsoft Planner tasks.</p>
 
-    <Button variant="primary" {loading} disabled={loading} onclick={handleLogin}>
+    <Button
+      variant="primary"
+      {loading}
+      disabled={loading}
+      onclick={handleLogin}
+    >
       Sign in with Microsoft
     </Button>
   </div>

@@ -21,7 +21,9 @@ use crate::{
 
 #[tauri::command]
 pub async fn list_plans(pool: State<'_, SqlitePool>) -> Result<Vec<Plan>, String> {
-    db::plans::list_plans(&pool).await.map_err(|e| e.to_string())
+    db::plans::list_plans(&pool)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -93,7 +95,10 @@ pub async fn sync_plans_and_tasks(
             .map_err(|e| e.to_string())?;
 
         let Some(local_plan) = local_plan else {
-            tracing::warn!("Plan {} not found in DB after upsert — skipping tasks", gp.id);
+            tracing::warn!(
+                "Plan {} not found in DB after upsert — skipping tasks",
+                gp.id
+            );
             continue;
         };
 

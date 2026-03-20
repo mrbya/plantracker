@@ -95,10 +95,7 @@ pub async fn update_entry(
 }
 
 #[tauri::command]
-pub async fn delete_entry(
-    id: String,
-    pool: State<'_, SqlitePool>,
-) -> Result<(), String> {
+pub async fn delete_entry(id: String, pool: State<'_, SqlitePool>) -> Result<(), String> {
     db::entries::delete_entry(&pool, &id)
         .await
         .map_err(|e| e.to_string())?;

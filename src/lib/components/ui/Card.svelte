@@ -4,7 +4,7 @@
     children,
   }: {
     title?: string;
-    children?: import('svelte').Snippet;
+    children?: import("svelte").Snippet;
   } = $props();
 </script>
 

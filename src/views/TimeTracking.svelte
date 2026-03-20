@@ -1,50 +1,55 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { get } from 'svelte/store';
+  import { onMount } from "svelte";
+  import { get } from "svelte/store";
 
-  import { deleteEntry, getRecentEntries } from '$lib/api';
-  import Button from '$lib/components/ui/Button.svelte';
-  import EmptyState from '$lib/components/ui/EmptyState.svelte';
-  import Select from '$lib/components/ui/Select.svelte';
-  import Spinner from '$lib/components/ui/Spinner.svelte';
-  import { addError, addSuccess } from '$lib/stores/notifications';
+  import { deleteEntry, getRecentEntries } from "$lib/api";
+  import Button from "$lib/components/ui/Button.svelte";
+  import EmptyState from "$lib/components/ui/EmptyState.svelte";
+  import Select from "$lib/components/ui/Select.svelte";
+  import Spinner from "$lib/components/ui/Spinner.svelte";
+  import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
     selectTask,
     selectedPlan,
     selectedTask,
     tasksByPlan,
-  } from '$lib/stores/planner';
-  import { elapsedSeconds, isRunning, start, stop } from '$lib/stores/timer';
-  import { entriesLimit } from '$lib/stores/settings';
-  import type { TimeEntry } from '$lib/types';
-  import { formatDuration } from '$lib/utils/duration';
+  } from "$lib/stores/planner";
+  import { elapsedSeconds, isRunning, start, stop } from "$lib/stores/timer";
+  import { entriesLimit } from "$lib/stores/settings";
+  import type { TimeEntry } from "$lib/types";
+  import { formatDuration } from "$lib/utils/duration";
 
   // ---------------------------------------------------------------------------
   // Dropdown state (string IDs for <Select> binding)
   // ---------------------------------------------------------------------------
 
-  let selectedPlanId = $state($selectedPlan?.id ?? '');
-  let selectedTaskId = $state($selectedTask?.id ?? '');
+  let selectedPlanId = $state($selectedPlan?.id ?? "");
+  let selectedTaskId = $state($selectedTask?.id ?? "");
 
   const planOptions = $derived(
-    $plans.map((p) => ({ value: p.id, label: p.title }))
+    $plans.map((p) => ({ value: p.id, label: p.title })),
   );
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({ value: t.id, label: t.title }))
-      : []
+      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+          value: t.id,
+          label: t.title,
+        }))
+      : [],
   );
 
   function onPlanChange() {
-    selectedTaskId = '';
+    selectedTaskId = "";
     selectedPlan.set($plans.find((p) => p.id === selectedPlanId) ?? null);
     selectedTask.set(null);
     loadEntries();
   }
 
   function onTaskChange() {
-    const task = ($tasksByPlan[selectedPlanId] ?? []).find((t) => t.id === selectedTaskId);
+    const task = ($tasksByPlan[selectedPlanId] ?? []).find(
+      (t) => t.id === selectedTaskId,
+    );
     if (task) {
       selectTask(task); // also syncs selectedPlan
       selectedPlanId = task.planId;
@@ -54,10 +59,10 @@
 
   // Sync selectedPlanId/selectedTaskId when store changes externally
   $effect(() => {
-    selectedPlanId = $selectedPlan?.id ?? '';
+    selectedPlanId = $selectedPlan?.id ?? "";
   });
   $effect(() => {
-    selectedTaskId = $selectedTask?.id ?? '';
+    selectedTaskId = $selectedTask?.id ?? "";
   });
 
   // ---------------------------------------------------------------------------
@@ -77,7 +82,7 @@
         limit: $entriesLimit,
       });
     } catch (e) {
-      addError('Failed to load entries: ' + String(e));
+      addError("Failed to load entries: " + String(e));
     } finally {
       loadingEntries = false;
     }
@@ -86,25 +91,25 @@
   // Task/plan lookup helpers for the entries table
   const allTasks = $derived(Object.values($tasksByPlan).flat());
   const planById = $derived(
-    Object.fromEntries($plans.map((p) => [p.id, p.title]))
+    Object.fromEntries($plans.map((p) => [p.id, p.title])),
   );
-  const taskById = $derived(
-    Object.fromEntries(allTasks.map((t) => [t.id, t]))
-  );
+  const taskById = $derived(Object.fromEntries(allTasks.map((t) => [t.id, t])));
 
   function entryDurationSeconds(entry: TimeEntry): number | null {
     if (!entry.endTime) return null;
     return Math.floor(
-      (new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()) / 1000
+      (new Date(entry.endTime).getTime() -
+        new Date(entry.startTime).getTime()) /
+        1000,
     );
   }
 
   function formatDateTime(iso: string): string {
     return new Date(iso).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 
@@ -143,10 +148,10 @@
     confirmDeleteId = null;
     try {
       await deleteEntry(id);
-      addSuccess('Entry deleted');
+      addSuccess("Entry deleted");
       await loadEntries();
     } catch (e) {
-      addError('Failed to delete entry: ' + String(e));
+      addError("Failed to delete entry: " + String(e));
     }
   }
 
@@ -180,7 +185,9 @@
           id="task-select"
           options={taskOptions}
           bind:value={selectedTaskId}
-          placeholder={selectedPlanId ? 'Select a task…' : 'Select a plan first'}
+          placeholder={selectedPlanId
+            ? "Select a task…"
+            : "Select a plan first"}
           onchange={onTaskChange}
         />
       </div>
@@ -202,7 +209,7 @@
           loading={timerBusy}
           disabled={timerBusy || !selectedTaskId}
           onclick={handleStart}
-          title={$isRunning ? 'A timer is already running' : undefined}
+          title={$isRunning ? "A timer is already running" : undefined}
         >
           Start Timer
         </Button>
@@ -237,11 +244,11 @@
           <tbody>
             {#each entries as entry (entry.id)}
               {@const task = taskById[entry.taskId]}
-              {@const planTitle = task ? planById[task.planId] : '—'}
+              {@const planTitle = task ? planById[task.planId] : "—"}
               {@const dur = entryDurationSeconds(entry)}
               <tr>
                 <td>{task?.title ?? entry.taskId}</td>
-                <td class="muted">{planTitle ?? '—'}</td>
+                <td class="muted">{planTitle ?? "—"}</td>
                 <td class="muted">{formatDateTime(entry.startTime)}</td>
                 <td>
                   {#if entry.endTime}
@@ -251,13 +258,19 @@
                   {/if}
                 </td>
                 <td class="muted">
-                  {dur !== null ? formatDuration(dur) : '—'}
+                  {dur !== null ? formatDuration(dur) : "—"}
                 </td>
                 <td class="action-cell">
                   {#if confirmDeleteId === entry.id}
                     <span class="confirm-row">
-                      <button class="text-btn danger" onclick={() => handleDelete(entry.id)}>Sure?</button>
-                      <button class="text-btn" onclick={() => (confirmDeleteId = null)}>Cancel</button>
+                      <button
+                        class="text-btn danger"
+                        onclick={() => handleDelete(entry.id)}>Sure?</button
+                      >
+                      <button
+                        class="text-btn"
+                        onclick={() => (confirmDeleteId = null)}>Cancel</button
+                      >
                     </span>
                   {:else}
                     <button

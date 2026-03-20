@@ -31,7 +31,10 @@ pub async fn list_plans(pool: &SqlitePool) -> anyhow::Result<Vec<Plan>> {
     Ok(rows)
 }
 
-pub async fn get_plan_by_graph_id(pool: &SqlitePool, graph_id: &str) -> anyhow::Result<Option<Plan>> {
+pub async fn get_plan_by_graph_id(
+    pool: &SqlitePool,
+    graph_id: &str,
+) -> anyhow::Result<Option<Plan>> {
     let row = sqlx::query_as!(
         Plan,
         r#"SELECT id as "id!", graph_id as "graph_id!", title as "title!", synced_at as "synced_at!" FROM plans WHERE graph_id = ?"#,

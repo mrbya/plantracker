@@ -54,15 +54,10 @@ pub async fn generate_report(
             - chrono::Duration::days(1)
     };
 
-    let entries = db::entries::list_entries_in_range(
-        &pool,
-        plan_id.as_deref(),
-        task_id.as_deref(),
-        from,
-        to,
-    )
-    .await
-    .map_err(|e| e.to_string())?;
+    let entries =
+        db::entries::list_entries_in_range(&pool, plan_id.as_deref(), task_id.as_deref(), from, to)
+            .await
+            .map_err(|e| e.to_string())?;
 
     let mut totals: BTreeMap<(i32, u32), i64> = BTreeMap::new();
 
@@ -169,13 +164,18 @@ pub async fn export_report_csv(
         .into_path()
         .map_err(|e| format!("Could not resolve save path: {e}"))?;
 
-    let file = std::fs::File::create(&path)
-        .map_err(|e| format!("Could not create file: {e}"))?;
+    let file = std::fs::File::create(&path).map_err(|e| format!("Could not create file: {e}"))?;
 
     let mut writer = csv::Writer::from_writer(file);
 
     writer
-        .write_record(["Month", "Year", "Total Hours", "Total Minutes", "Total Seconds"])
+        .write_record([
+            "Month",
+            "Year",
+            "Total Hours",
+            "Total Minutes",
+            "Total Seconds",
+        ])
         .map_err(|e| e.to_string())?;
 
     for row in &report.monthly_totals {

@@ -1,8 +1,13 @@
 <script lang="ts">
-  let { size = 'md' }: { size?: 'sm' | 'md' } = $props();
+  let { size = "md" }: { size?: "sm" | "md" } = $props();
 </script>
 
-<span class="spinner" class:sm={size === 'sm'} class:md={size === 'md'} aria-label="Loading"></span>
+<span
+  class="spinner"
+  class:sm={size === "sm"}
+  class:md={size === "md"}
+  aria-label="Loading"
+></span>
 
 <style>
   .spinner {
@@ -25,6 +30,8 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>

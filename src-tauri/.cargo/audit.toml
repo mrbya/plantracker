@@ -1,0 +1,9 @@
+[advisories]
+ignore = [
+    # Local use on a (hopefully) not compromised pc, therefore ignored until a fix is available.
+    "RUSTSEC-2023-0071",
+]
+
+[output]
+quiet = false
+

@@ -1,8 +1,8 @@
-import { derived, writable } from 'svelte/store';
+import { derived, writable } from "svelte/store";
 
-import { getActiveTimer, startTimer, stopTimer } from '$lib/api';
-import { addError } from '$lib/stores/notifications';
-import type { TimeEntry } from '$lib/types';
+import { getActiveTimer, startTimer, stopTimer } from "$lib/api";
+import { addError } from "$lib/stores/notifications";
+import type { TimeEntry } from "$lib/types";
 
 export const activeEntry = writable<TimeEntry | null>(null);
 export const elapsedSeconds = writable<number>(0);
@@ -42,7 +42,7 @@ export async function initTimer(): Promise<void> {
       startInterval();
     }
   } catch (e) {
-    addError('Could not restore timer state: ' + String(e));
+    addError("Could not restore timer state: " + String(e));
   }
 }
 
@@ -54,7 +54,7 @@ export async function start(taskId: string): Promise<void> {
     elapsedSeconds.set(0);
     startInterval();
   } catch (e) {
-    addError('Failed to start timer: ' + String(e));
+    addError("Failed to start timer: " + String(e));
     throw e;
   }
 }
@@ -68,7 +68,7 @@ export async function stop(): Promise<TimeEntry> {
     elapsedSeconds.set(0);
     return entry;
   } catch (e) {
-    addError('Failed to stop timer: ' + String(e));
+    addError("Failed to stop timer: " + String(e));
     throw e;
   }
 }

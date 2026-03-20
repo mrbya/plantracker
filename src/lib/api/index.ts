@@ -2,24 +2,32 @@
  * Single invoke boundary — all Tauri command calls live here.
  * Views and stores must import from this file, never call invoke() directly.
  */
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
-import type { ActiveTimerInfo, AuthStatus, Plan, ReportResult, SyncResult, Task, TimeEntry } from '$lib/types';
+import type {
+  ActiveTimerInfo,
+  AuthStatus,
+  Plan,
+  ReportResult,
+  SyncResult,
+  Task,
+  TimeEntry,
+} from "$lib/types";
 
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
 
 export async function login(): Promise<AuthStatus> {
-  return invoke<AuthStatus>('login');
+  return invoke<AuthStatus>("login");
 }
 
 export async function logout(): Promise<void> {
-  return invoke('logout');
+  return invoke("logout");
 }
 
 export async function getAuthStatus(): Promise<AuthStatus> {
-  return invoke<AuthStatus>('get_auth_status');
+  return invoke<AuthStatus>("get_auth_status");
 }
 
 // ---------------------------------------------------------------------------
@@ -27,15 +35,15 @@ export async function getAuthStatus(): Promise<AuthStatus> {
 // ---------------------------------------------------------------------------
 
 export async function syncPlansAndTasks(): Promise<SyncResult> {
-  return invoke<SyncResult>('sync_plans_and_tasks');
+  return invoke<SyncResult>("sync_plans_and_tasks");
 }
 
 export async function listPlans(): Promise<Plan[]> {
-  return invoke<Plan[]>('list_plans');
+  return invoke<Plan[]>("list_plans");
 }
 
 export async function listTasksForPlan(planId: string): Promise<Task[]> {
-  return invoke<Task[]>('list_tasks_for_plan', { planId });
+  return invoke<Task[]>("list_tasks_for_plan", { planId });
 }
 
 // ---------------------------------------------------------------------------
@@ -43,15 +51,15 @@ export async function listTasksForPlan(planId: string): Promise<Task[]> {
 // ---------------------------------------------------------------------------
 
 export async function startTimer(taskId: string): Promise<TimeEntry> {
-  return invoke<TimeEntry>('start_timer', { taskId });
+  return invoke<TimeEntry>("start_timer", { taskId });
 }
 
 export async function stopTimer(): Promise<TimeEntry> {
-  return invoke<TimeEntry>('stop_timer');
+  return invoke<TimeEntry>("stop_timer");
 }
 
 export async function getActiveTimer(): Promise<ActiveTimerInfo | null> {
-  return invoke<ActiveTimerInfo | null>('get_active_timer');
+  return invoke<ActiveTimerInfo | null>("get_active_timer");
 }
 
 export async function getRecentEntries(opts: {
@@ -59,7 +67,7 @@ export async function getRecentEntries(opts: {
   planId?: string;
   limit: number;
 }): Promise<TimeEntry[]> {
-  return invoke<TimeEntry[]>('get_recent_entries', {
+  return invoke<TimeEntry[]>("get_recent_entries", {
     taskId: opts.taskId ?? null,
     planId: opts.planId ?? null,
     limit: opts.limit,
@@ -76,7 +84,7 @@ export async function createManualEntry(params: {
   endTime: string;
   notes?: string;
 }): Promise<TimeEntry> {
-  return invoke<TimeEntry>('create_manual_entry', {
+  return invoke<TimeEntry>("create_manual_entry", {
     taskId: params.taskId,
     startTime: params.startTime,
     endTime: params.endTime,
@@ -90,7 +98,7 @@ export async function updateEntry(params: {
   endTime: string;
   notes?: string;
 }): Promise<TimeEntry> {
-  return invoke<TimeEntry>('update_entry', {
+  return invoke<TimeEntry>("update_entry", {
     id: params.id,
     startTime: params.startTime,
     endTime: params.endTime,
@@ -99,7 +107,7 @@ export async function updateEntry(params: {
 }
 
 export async function deleteEntry(id: string): Promise<void> {
-  return invoke('delete_entry', { id });
+  return invoke("delete_entry", { id });
 }
 
 // ---------------------------------------------------------------------------
@@ -107,7 +115,7 @@ export async function deleteEntry(id: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function exportReportCsv(report: ReportResult): Promise<string> {
-  return invoke<string>('export_report_csv', { report });
+  return invoke<string>("export_report_csv", { report });
 }
 
 export async function generateReport(params: {
@@ -118,7 +126,7 @@ export async function generateReport(params: {
   toYear: number;
   toMonth: number;
 }): Promise<ReportResult> {
-  return invoke<ReportResult>('generate_report', {
+  return invoke<ReportResult>("generate_report", {
     planId: params.planId ?? null,
     taskId: params.taskId ?? null,
     fromYear: params.fromYear,
@@ -133,5 +141,5 @@ export async function generateReport(params: {
 // ---------------------------------------------------------------------------
 
 export async function getDataDir(): Promise<string> {
-  return invoke<string>('get_data_dir');
+  return invoke<string>("get_data_dir");
 }

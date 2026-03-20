@@ -1,47 +1,59 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
 
-  import { createManualEntry, deleteEntry, getRecentEntries, updateEntry } from '$lib/api';
-  import Button from '$lib/components/ui/Button.svelte';
-  import EmptyState from '$lib/components/ui/EmptyState.svelte';
-  import Input from '$lib/components/ui/Input.svelte';
-  import Select from '$lib/components/ui/Select.svelte';
-  import Spinner from '$lib/components/ui/Spinner.svelte';
-  import { addError, addSuccess } from '$lib/stores/notifications';
+  import {
+    createManualEntry,
+    deleteEntry,
+    getRecentEntries,
+    updateEntry,
+  } from "$lib/api";
+  import Button from "$lib/components/ui/Button.svelte";
+  import EmptyState from "$lib/components/ui/EmptyState.svelte";
+  import Input from "$lib/components/ui/Input.svelte";
+  import Select from "$lib/components/ui/Select.svelte";
+  import Spinner from "$lib/components/ui/Spinner.svelte";
+  import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
     selectTask,
     selectedPlan,
     selectedTask,
     tasksByPlan,
-  } from '$lib/stores/planner';
-  import { entriesLimit } from '$lib/stores/settings';
-  import type { TimeEntry } from '$lib/types';
-  import { formatDuration } from '$lib/utils/duration';
+  } from "$lib/stores/planner";
+  import { entriesLimit } from "$lib/stores/settings";
+  import type { TimeEntry } from "$lib/types";
+  import { formatDuration } from "$lib/utils/duration";
 
   // ---------------------------------------------------------------------------
   // Dropdown state
   // ---------------------------------------------------------------------------
 
-  let selectedPlanId = $state($selectedPlan?.id ?? '');
-  let selectedTaskId = $state($selectedTask?.id ?? '');
+  let selectedPlanId = $state($selectedPlan?.id ?? "");
+  let selectedTaskId = $state($selectedTask?.id ?? "");
 
-  const planOptions = $derived($plans.map((p) => ({ value: p.id, label: p.title })));
+  const planOptions = $derived(
+    $plans.map((p) => ({ value: p.id, label: p.title })),
+  );
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({ value: t.id, label: t.title }))
-      : []
+      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+          value: t.id,
+          label: t.title,
+        }))
+      : [],
   );
 
   function onPlanChange() {
-    selectedTaskId = '';
+    selectedTaskId = "";
     selectedPlan.set($plans.find((p) => p.id === selectedPlanId) ?? null);
     selectedTask.set(null);
     loadEntries();
   }
 
   function onTaskChange() {
-    const task = ($tasksByPlan[selectedPlanId] ?? []).find((t) => t.id === selectedTaskId);
+    const task = ($tasksByPlan[selectedPlanId] ?? []).find(
+      (t) => t.id === selectedTaskId,
+    );
     if (task) {
       selectTask(task);
       selectedPlanId = task.planId;
@@ -49,32 +61,36 @@
     loadEntries();
   }
 
-  $effect(() => { selectedPlanId = $selectedPlan?.id ?? ''; });
-  $effect(() => { selectedTaskId = $selectedTask?.id ?? ''; });
+  $effect(() => {
+    selectedPlanId = $selectedPlan?.id ?? "";
+  });
+  $effect(() => {
+    selectedTaskId = $selectedTask?.id ?? "";
+  });
 
   // ---------------------------------------------------------------------------
   // Form state
   // ---------------------------------------------------------------------------
 
-  let startTime = $state('');
-  let endTime = $state('');
-  let notes = $state('');
+  let startTime = $state("");
+  let endTime = $state("");
+  let notes = $state("");
   let editingId = $state<string | null>(null);
 
-  let startError = $state('');
-  let endError = $state('');
-  let taskError = $state('');
+  let startError = $state("");
+  let endError = $state("");
+  let taskError = $state("");
 
   const isEditing = $derived(editingId !== null);
 
   function resetForm() {
-    startTime = '';
-    endTime = '';
-    notes = '';
+    startTime = "";
+    endTime = "";
+    notes = "";
     editingId = null;
-    startError = '';
-    endError = '';
-    taskError = '';
+    startError = "";
+    endError = "";
+    taskError = "";
   }
 
   /** Convert a local datetime-local string to ISO 8601 UTC. */
@@ -85,30 +101,30 @@
   /** Convert an ISO 8601 string to datetime-local format (YYYY-MM-DDTHH:MM). */
   function isoToLocal(iso: string): string {
     const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, '0');
+    const pad = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   function validate(): boolean {
     let ok = true;
-    taskError = '';
-    startError = '';
-    endError = '';
+    taskError = "";
+    startError = "";
+    endError = "";
 
     if (!selectedTaskId) {
-      taskError = 'Please select a task';
+      taskError = "Please select a task";
       ok = false;
     }
     if (!startTime) {
-      startError = 'Start time is required';
+      startError = "Start time is required";
       ok = false;
     }
     if (!endTime) {
-      endError = 'End time is required';
+      endError = "End time is required";
       ok = false;
     }
     if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
-      endError = 'End time must be after start time';
+      endError = "End time must be after start time";
       ok = false;
     }
     return ok;
@@ -131,7 +147,7 @@
           endTime: localToIso(endTime),
           notes: notes || undefined,
         });
-        addSuccess('Entry updated');
+        addSuccess("Entry updated");
       } else {
         await createManualEntry({
           taskId: selectedTaskId,
@@ -139,7 +155,7 @@
           endTime: localToIso(endTime),
           notes: notes || undefined,
         });
-        addSuccess('Entry saved');
+        addSuccess("Entry saved");
       }
       resetForm();
       await loadEntries();
@@ -153,10 +169,10 @@
   function handleEdit(entry: TimeEntry) {
     editingId = entry.id;
     startTime = isoToLocal(entry.startTime);
-    endTime = entry.endTime ? isoToLocal(entry.endTime) : '';
-    notes = entry.notes ?? '';
+    endTime = entry.endTime ? isoToLocal(entry.endTime) : "";
+    notes = entry.notes ?? "";
     // Scroll to top of form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   // ---------------------------------------------------------------------------
@@ -176,7 +192,7 @@
         limit: $entriesLimit,
       });
     } catch (e) {
-      addError('Failed to load entries: ' + String(e));
+      addError("Failed to load entries: " + String(e));
     } finally {
       loadingEntries = false;
     }
@@ -186,41 +202,47 @@
     confirmDeleteId = null;
     try {
       await deleteEntry(id);
-      addSuccess('Entry deleted');
+      addSuccess("Entry deleted");
       if (editingId === id) resetForm();
       await loadEntries();
     } catch (e) {
-      addError('Failed to delete entry: ' + String(e));
+      addError("Failed to delete entry: " + String(e));
     }
   }
 
   const allTasks = $derived(Object.values($tasksByPlan).flat());
-  const planById = $derived(Object.fromEntries($plans.map((p) => [p.id, p.title])));
+  const planById = $derived(
+    Object.fromEntries($plans.map((p) => [p.id, p.title])),
+  );
   const taskById = $derived(Object.fromEntries(allTasks.map((t) => [t.id, t])));
 
   function entryDurationSeconds(entry: TimeEntry): number | null {
     if (!entry.endTime) return null;
     return Math.floor(
-      (new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()) / 1000
+      (new Date(entry.endTime).getTime() -
+        new Date(entry.startTime).getTime()) /
+        1000,
     );
   }
 
   function formatDateTime(iso: string): string {
     return new Date(iso).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 
-  onMount(() => { loadEntries(); });
+  onMount(() => {
+    loadEntries();
+  });
 </script>
 
 <div class="view">
   <!-- Form -->
   <section class="form-section">
-    <h3 class="section-title">{isEditing ? 'Edit Entry' : 'New Entry'}</h3>
+    <h3 class="section-title">{isEditing ? "Edit Entry" : "New Entry"}</h3>
 
     <div class="form">
       <!-- Plan / Task row -->
@@ -244,7 +266,9 @@
             id="task-select"
             options={taskOptions}
             bind:value={selectedTaskId}
-            placeholder={selectedPlanId ? 'Select a task…' : 'Select a plan first'}
+            placeholder={selectedPlanId
+              ? "Select a task…"
+              : "Select a plan first"}
             onchange={onTaskChange}
           />
         </div>
@@ -286,7 +310,7 @@
           disabled={submitting}
           onclick={handleSubmit}
         >
-          {isEditing ? 'Update Entry' : 'Save Entry'}
+          {isEditing ? "Update Entry" : "Save Entry"}
         </Button>
         {#if isEditing}
           <Button variant="ghost" disabled={submitting} onclick={resetForm}>
@@ -307,7 +331,9 @@
         <span>Loading…</span>
       </div>
     {:else if entries.length === 0}
-      <EmptyState message="No entries yet. Fill in the form above to add one." />
+      <EmptyState
+        message="No entries yet. Fill in the form above to add one."
+      />
     {:else}
       <div class="table-wrap">
         <table>
@@ -324,24 +350,41 @@
           <tbody>
             {#each entries as entry (entry.id)}
               {@const task = taskById[entry.taskId]}
-              {@const planTitle = task ? planById[task.planId] : '—'}
+              {@const planTitle = task ? planById[task.planId] : "—"}
               {@const dur = entryDurationSeconds(entry)}
               <tr class:editing-row={editingId === entry.id}>
                 <td>{task?.title ?? entry.taskId}</td>
-                <td class="muted">{planTitle ?? '—'}</td>
+                <td class="muted">{planTitle ?? "—"}</td>
                 <td class="muted">{formatDateTime(entry.startTime)}</td>
-                <td class="muted">{entry.endTime ? formatDateTime(entry.endTime) : '—'}</td>
-                <td class="muted">{dur !== null ? formatDuration(dur) : '—'}</td>
+                <td class="muted"
+                  >{entry.endTime ? formatDateTime(entry.endTime) : "—"}</td
+                >
+                <td class="muted">{dur !== null ? formatDuration(dur) : "—"}</td
+                >
                 <td class="action-cell">
                   {#if confirmDeleteId === entry.id}
                     <span class="confirm-row">
-                      <button class="text-btn danger" onclick={() => handleDelete(entry.id)}>Sure?</button>
-                      <button class="text-btn" onclick={() => (confirmDeleteId = null)}>Cancel</button>
+                      <button
+                        class="text-btn danger"
+                        onclick={() => handleDelete(entry.id)}>Sure?</button
+                      >
+                      <button
+                        class="text-btn"
+                        onclick={() => (confirmDeleteId = null)}>Cancel</button
+                      >
                     </span>
                   {:else}
                     <span class="action-row">
-                      <button class="text-btn" onclick={() => handleEdit(entry)} title="Edit entry">󰏫</button>
-                      <button class="text-btn danger" onclick={() => (confirmDeleteId = entry.id)} title="Delete entry">󰆴</button>
+                      <button
+                        class="text-btn"
+                        onclick={() => handleEdit(entry)}
+                        title="Edit entry">󰏫</button
+                      >
+                      <button
+                        class="text-btn danger"
+                        onclick={() => (confirmDeleteId = entry.id)}
+                        title="Delete entry">󰆴</button
+                      >
                     </span>
                   {/if}
                 </td>
