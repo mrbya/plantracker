@@ -50,8 +50,9 @@ unused-js:
     pnpm unused
 
 # Checks for unused dependencies in rust sources.
+[working-directory: 'src-tauri']
 unused-rs:
-    cargo +nightly udeps --all-targets 
+    cargo +nightly udeps --all-targets
 
 # Checks for unused dependencies in all sources.
 unused:

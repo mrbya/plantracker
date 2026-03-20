@@ -1,0 +1,7 @@
+{
+  "ignores": [
+    "@tauri-apps/plugin-opener",
+    "prettier-plugin-svelte",
+    "$lib"
+  ]
+}
