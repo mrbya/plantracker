@@ -23,4 +23,6 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 RUN cargo install sqlx-cli
 
+RUN apt-get install -y xdg-utils
+
 CMD ["bash"]
