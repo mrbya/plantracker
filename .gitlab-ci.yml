@@ -72,10 +72,12 @@ windows-build:
     - $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
     # Install Tauri CLI
     - cargo install tauri-cli --locked
-    # Install just
-    - choco install just -y
   script:
-    - just ci-build
+    - pnpm install --frozen-lockfile
+    - cd src-tauri
+    - cargo sqlx prepare --workspace --check
+    - cd ..
+    - cargo tauri build
   artifacts:
     name: "platracker-windows-$CI_COMMIT_SHORT_SHA"
     paths:

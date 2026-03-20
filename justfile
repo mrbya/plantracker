@@ -14,6 +14,7 @@ deps-ci:
     @just deps --frozen-lockfile
 
 # Pre caches db queries
+[working-directory: 'src-tauri']
 precache *FLAGS:
     cargo sqlx prepare --workspace {{FLAGS}}
 
