@@ -114,9 +114,9 @@ pre-commit:
 
 # Full app build used by ci.
 ci-build:
+    @just deps-ci
     @just thorough-check
     @just precache-check
-    @just deps-ci
     @just build
 
 # Build linux-build-image.
