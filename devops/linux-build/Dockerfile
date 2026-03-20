@@ -23,4 +23,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 RUN cargo install sqlx-cli
 
+RUN apt-get install -y fuse libfuse2 && \
+    modprobe fuse || true
+
 CMD ["bash"]
