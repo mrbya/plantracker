@@ -21,4 +21,6 @@ RUN apt-get update -qq && \
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
+RUN cargo install sqlx-cli
+
 CMD ["bash"]
