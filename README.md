@@ -152,7 +152,7 @@ In your `.env` file:
 
 ```env
 VITE_AZURE_CLIENT_ID=your-client-id-here
-VITE_AZURE_TENANT_ID=common
+VITE_AZURE_TENANT_ID=your-tenant-id-here
 ```
 
 > `common` allows both personal and work/school Microsoft accounts. Replace with your tenant ID to restrict to a single organisation.
@@ -212,7 +212,7 @@ plantracker/
 │   │   ├── ManualEntry.svelte
 │   │   └── Reports.svelte
 │   └── App.svelte
-├── src-tauri/
+├── src-tauri/                  # Tauri backend
 │   ├── src/
 │   │   ├── main.rs
 │   │   ├── commands/           # Tauri commands (time entries, reports)
@@ -222,7 +222,7 @@ plantracker/
 │   ├── migrations/             # SQLite migration files
 │   └── Cargo.toml
 ├── .env.example
-├── package.json
+├── ...
 └── vite.config.ts
 ```
 

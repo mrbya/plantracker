@@ -7,16 +7,18 @@
     loading = false,
     onclick,
     children,
+    title,
   }: {
     variant?: "primary" | "ghost" | "danger" | "success";
     disabled?: boolean;
     loading?: boolean;
     onclick?: (e: MouseEvent) => void;
     children?: import("svelte").Snippet;
+    title?: string;
   } = $props();
 </script>
 
-<button class="btn {variant}" disabled={disabled || loading} {onclick}>
+<button class="btn {variant}" disabled={disabled || loading} {onclick} {title}>
   {#if loading}
     <Spinner size="sm" />
   {/if}

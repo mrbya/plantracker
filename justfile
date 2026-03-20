@@ -45,17 +45,27 @@ check:
     @just check-js
     @just check-rs
 
-# Audits for js source vulnerabilities.
-audit-js:
-    pnpm audit --prod
+# Checks for unused dependencies in js/ts/svelte sources.
+unused-js:
+    pnpm unused
 
-# RS sources:
-# Check for unused dependencies, audit for vulnerabilities,
-# and check if newer version of depenedencies is available.
+# Checks for unused dependencies in rust sources.
+unused-rs:
+    cargo +nightly udeps --all-targets 
+
+# Checks for unused dependencies in all sources.
+unused:
+    @just unused-js
+    @just unused-rs
+
+# Audits for js source vulnerabilities.
+audit-js *FLAGS:
+    pnpm audit --prod {{FLAGS}}
+
+# Audits for vulnerabilities in rust sources.
 [working-directory: 'src-tauri']
-audit-rs:
-    cargo +nightly udeps --all-targets
-    cargo audit
+audit-rs *FLAGS:
+    cargo audit {{FLAGS}}
 
 # Audits sources for vulnerabilities and unused deps.
 audit:
@@ -95,6 +105,7 @@ index:
 # Checks formatting, code quality, and more
 pre-commit:
     @just thorough-check
+    @just unused
     @just audit
     @just precache-check
     @just build

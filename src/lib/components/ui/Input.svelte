@@ -16,9 +16,9 @@
 
 <div class="field">
   {#if label}
-    <label class="label">{label}</label>
+    <label class="label" for={label}>{label}</label>
   {/if}
-  <input {type} bind:value class:has-error={!!error} {onblur} />
+  <input id={label} {type} bind:value class:has-error={!!error} {onblur} />
   {#if error}
     <span class="error-msg">{error}</span>
   {/if}

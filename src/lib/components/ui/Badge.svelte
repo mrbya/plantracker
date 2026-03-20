@@ -1,9 +1,13 @@
 <script lang="ts">
-  let { color }: { color: "green" | "red" | "yellow" } = $props();
+  import type { Snippet } from "svelte";
+  let {
+    color,
+    children,
+  }: { color: "green" | "red" | "yellow"; children?: Snippet } = $props();
 </script>
 
 <span class="badge {color}">
-  <slot />
+  {@render children?.()}
 </span>
 
 <style>
