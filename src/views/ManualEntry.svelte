@@ -21,6 +21,7 @@
   } from "$lib/stores/planner";
   import { entriesLimit } from "$lib/stores/settings";
   import type { TimeEntry } from "$lib/types";
+  import { formatDateTime } from "$lib/utils/datetime";
   import { formatDuration } from "$lib/utils/duration";
 
   // ---------------------------------------------------------------------------
@@ -84,9 +85,9 @@
   }
 
   let startDate = $state(todayDate()); // YYYY-MM-DD from <input type="date">
-  let startTime = $state(currentTime()); // HH:MM from <input type="time">
+  let startTime = $state(currentTime()); // HH:MM (24h text input)
   let endDate = $state(todayDate());
-  let endTime = $state(currentTime());
+  let endTime = $state(currentTime()); // HH:MM (24h text input)
   let notes = $state("");
   let editingId = $state<string | null>(null);
 
@@ -106,6 +107,13 @@
     startError = "";
     endError = "";
     taskError = "";
+  }
+
+  /** Returns true if time is a valid 24h HH:MM string. */
+  function isValidTime(time: string): boolean {
+    if (!/^\d{2}:\d{2}$/.test(time)) return false;
+    const [h, m] = time.split(":").map(Number);
+    return h >= 0 && h <= 23 && m >= 0 && m <= 59;
   }
 
   /** Assemble an ISO 8601 UTC string from a date and time picker value. */
@@ -139,12 +147,18 @@
     } else if (!startTime) {
       startError = "Start time is required";
       ok = false;
+    } else if (!isValidTime(startTime)) {
+      startError = "Start time must be HH:MM (24h)";
+      ok = false;
     }
     if (!endDate) {
       endError = "End date is required";
       ok = false;
     } else if (!endTime) {
       endError = "End time is required";
+      ok = false;
+    } else if (!isValidTime(endTime)) {
+      endError = "End time must be HH:MM (24h)";
       ok = false;
     }
     if (ok) {
@@ -258,15 +272,6 @@
     );
   }
 
-  function formatDateTime(iso: string): string {
-    return new Date(iso).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
   onMount(() => {
     loadEntries();
   });
@@ -318,8 +323,9 @@
           />
           <input
             class="picker-input time-input"
-            type="time"
-            step="60"
+            type="text"
+            placeholder="HH:MM"
+            maxlength="5"
             bind:value={startTime}
           />
         </div>
@@ -339,8 +345,9 @@
           />
           <input
             class="picker-input time-input"
-            type="time"
-            step="60"
+            type="text"
+            placeholder="HH:MM"
+            maxlength="5"
             bind:value={endTime}
           />
         </div>
