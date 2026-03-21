@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "format": "prettier --write ./src/.",
     "format-check": "prettier --check ./src/.",
-    "unused": "npx depcheck",
+    "unused": "knip --production --dependencies",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "tauri": "tauri"
@@ -27,7 +27,7 @@
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tauri-apps/cli": "^2",
     "@types/node": "^25.5.0",
-    "depcheck": "^1.4.7",
+    "knip": "^6.0.1",
     "prettier": "^3.8.1",
     "prettier-plugin-svelte": "^3.5.1",
     "svelte": "^5.0.0",

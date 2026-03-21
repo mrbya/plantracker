@@ -4,7 +4,14 @@
   import Reports from "../../views/Reports.svelte";
   import Settings from "../../views/Settings.svelte";
   import { userDisplayName, logout } from "$lib/stores/auth";
-  import { Timer, PencilLine, BarChart2, Settings as SettingsIcon, LogOut, Icon } from "lucide-svelte";
+  import {
+    Timer,
+    PencilLine,
+    BarChart2,
+    Settings as SettingsIcon,
+    LogOut,
+    Icon,
+  } from "lucide-svelte";
 
   type View = "time-tracking" | "manual-entry" | "reports" | "settings";
 
