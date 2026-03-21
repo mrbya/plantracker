@@ -9,7 +9,6 @@
   } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
   import EmptyState from "$lib/components/ui/EmptyState.svelte";
-  import Input from "$lib/components/ui/Input.svelte";
   import Select from "$lib/components/ui/Select.svelte";
   import Spinner from "$lib/components/ui/Spinner.svelte";
   import { addError, addSuccess } from "$lib/stores/notifications";
@@ -23,6 +22,25 @@
   import { entriesLimit } from "$lib/stores/settings";
   import type { TimeEntry } from "$lib/types";
   import { formatDuration } from "$lib/utils/duration";
+
+  // ---------------------------------------------------------------------------
+  // Month options (shared with Reports)
+  // ---------------------------------------------------------------------------
+
+  const MONTH_OPTIONS = [
+    { value: "1", label: "January" },
+    { value: "2", label: "February" },
+    { value: "3", label: "March" },
+    { value: "4", label: "April" },
+    { value: "5", label: "May" },
+    { value: "6", label: "June" },
+    { value: "7", label: "July" },
+    { value: "8", label: "August" },
+    { value: "9", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
 
   // ---------------------------------------------------------------------------
   // Dropdown state
@@ -72,8 +90,16 @@
   // Form state
   // ---------------------------------------------------------------------------
 
-  let startTime = $state("");
-  let endTime = $state("");
+  let startDay = $state("");
+  let startMonth = $state("");
+  let startYear = $state("");
+  let startTime = $state(""); // HH:MM from <input type="time">
+
+  let endDay = $state("");
+  let endMonth = $state("");
+  let endYear = $state("");
+  let endTime = $state(""); // HH:MM from <input type="time">
+
   let notes = $state("");
   let editingId = $state<string | null>(null);
 
@@ -84,7 +110,13 @@
   const isEditing = $derived(editingId !== null);
 
   function resetForm() {
+    startDay = "";
+    startMonth = "";
+    startYear = "";
     startTime = "";
+    endDay = "";
+    endMonth = "";
+    endYear = "";
     endTime = "";
     notes = "";
     editingId = null;
@@ -93,16 +125,38 @@
     taskError = "";
   }
 
-  /** Convert a local datetime-local string to ISO 8601 UTC. */
-  function localToIso(local: string): string {
-    return new Date(local).toISOString();
+  /** Assemble ISO 8601 UTC string from four picker values. */
+  function fieldsToIso(
+    day: string,
+    month: string,
+    year: string,
+    time: string,
+  ): string {
+    const [hours, minutes] = time.split(":").map(Number);
+    return new Date(
+      parseInt(year, 10),
+      parseInt(month, 10) - 1,
+      parseInt(day, 10),
+      hours,
+      minutes,
+    ).toISOString();
   }
 
-  /** Convert an ISO 8601 string to datetime-local format (YYYY-MM-DDTHH:MM). */
-  function isoToLocal(iso: string): string {
+  /** Decompose an ISO 8601 string into picker field values. */
+  function isoToFields(iso: string): {
+    day: string;
+    month: string;
+    year: string;
+    time: string;
+  } {
     const d = new Date(iso);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return {
+      day: String(d.getDate()),
+      month: String(d.getMonth() + 1),
+      year: String(d.getFullYear()),
+      time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    };
   }
 
   function validate(): boolean {
@@ -115,18 +169,44 @@
       taskError = "Please select a task";
       ok = false;
     }
-    if (!startTime) {
+
+    if (!startDay) {
+      startError = "Start day is required";
+      ok = false;
+    } else if (!startMonth) {
+      startError = "Start month is required";
+      ok = false;
+    } else if (!startYear) {
+      startError = "Start year is required";
+      ok = false;
+    } else if (!startTime) {
       startError = "Start time is required";
       ok = false;
     }
-    if (!endTime) {
+
+    if (!endDay) {
+      endError = "End day is required";
+      ok = false;
+    } else if (!endMonth) {
+      endError = "End month is required";
+      ok = false;
+    } else if (!endYear) {
+      endError = "End year is required";
+      ok = false;
+    } else if (!endTime) {
       endError = "End time is required";
       ok = false;
     }
-    if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
-      endError = "End time must be after start time";
-      ok = false;
+
+    if (ok) {
+      const start = fieldsToIso(startDay, startMonth, startYear, startTime);
+      const end = fieldsToIso(endDay, endMonth, endYear, endTime);
+      if (new Date(end) <= new Date(start)) {
+        endError = "End time must be after start time";
+        ok = false;
+      }
     }
+
     return ok;
   }
 
@@ -140,19 +220,21 @@
     if (!validate()) return;
     submitting = true;
     try {
+      const startIso = fieldsToIso(startDay, startMonth, startYear, startTime);
+      const endIso = fieldsToIso(endDay, endMonth, endYear, endTime);
       if (isEditing) {
         await updateEntry({
           id: editingId!,
-          startTime: localToIso(startTime),
-          endTime: localToIso(endTime),
+          startTime: startIso,
+          endTime: endIso,
           notes: notes || undefined,
         });
         addSuccess("Entry updated");
       } else {
         await createManualEntry({
           taskId: selectedTaskId,
-          startTime: localToIso(startTime),
-          endTime: localToIso(endTime),
+          startTime: startIso,
+          endTime: endIso,
           notes: notes || undefined,
         });
         addSuccess("Entry saved");
@@ -168,10 +250,17 @@
 
   function handleEdit(entry: TimeEntry) {
     editingId = entry.id;
-    startTime = isoToLocal(entry.startTime);
-    endTime = entry.endTime ? isoToLocal(entry.endTime) : "";
+    const s = isoToFields(entry.startTime);
+    startDay = s.day;
+    startMonth = s.month;
+    startYear = s.year;
+    startTime = s.time;
+    const e = isoToFields(entry.endTime ?? entry.startTime);
+    endDay = e.day;
+    endMonth = e.month;
+    endYear = e.year;
+    endTime = e.time;
     notes = entry.notes ?? "";
-    // Scroll to top of form
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -274,20 +363,78 @@
         </div>
       </div>
 
-      <!-- Time row -->
-      <div class="row-2">
-        <Input
-          type="datetime-local"
-          label="Start"
-          bind:value={startTime}
-          error={startError}
-        />
-        <Input
-          type="datetime-local"
-          label="End"
-          bind:value={endTime}
-          error={endError}
-        />
+      <!-- Start picker -->
+      <div class="picker-group">
+        <span class="picker-label">Start</span>
+        <div class="picker-row" class:has-error={!!startError}>
+          <input
+            class="picker-input day-input"
+            type="number"
+            min="1"
+            max="31"
+            placeholder="DD"
+            bind:value={startDay}
+          />
+          <div class="month-select">
+            <Select
+              options={MONTH_OPTIONS}
+              bind:value={startMonth}
+              placeholder="Month"
+            />
+          </div>
+          <input
+            class="picker-input year-input"
+            type="number"
+            placeholder="YYYY"
+            bind:value={startYear}
+          />
+          <input
+            class="picker-input time-input"
+            type="time"
+            step="60"
+            bind:value={startTime}
+          />
+        </div>
+        {#if startError}
+          <span class="error-msg">{startError}</span>
+        {/if}
+      </div>
+
+      <!-- End picker -->
+      <div class="picker-group">
+        <span class="picker-label">End</span>
+        <div class="picker-row" class:has-error={!!endError}>
+          <input
+            class="picker-input day-input"
+            type="number"
+            min="1"
+            max="31"
+            placeholder="DD"
+            bind:value={endDay}
+          />
+          <div class="month-select">
+            <Select
+              options={MONTH_OPTIONS}
+              bind:value={endMonth}
+              placeholder="Month"
+            />
+          </div>
+          <input
+            class="picker-input year-input"
+            type="number"
+            placeholder="YYYY"
+            bind:value={endYear}
+          />
+          <input
+            class="picker-input time-input"
+            type="time"
+            step="60"
+            bind:value={endTime}
+          />
+        </div>
+        {#if endError}
+          <span class="error-msg">{endError}</span>
+        {/if}
       </div>
 
       <!-- Notes -->
@@ -378,12 +525,12 @@
                       <button
                         class="text-btn"
                         onclick={() => handleEdit(entry)}
-                        title="Edit entry">󰏫</button
+                        title="Edit entry">Edit</button
                       >
                       <button
                         class="text-btn danger"
                         onclick={() => (confirmDeleteId = entry.id)}
-                        title="Delete entry">󰆴</button
+                        title="Delete entry">Delete</button
                       >
                     </span>
                   {/if}
@@ -437,6 +584,73 @@
     color: var(--text-muted);
   }
 
+  /* Picker */
+  .picker-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .picker-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+
+  .picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .picker-input {
+    padding: 0.45rem 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: var(--font-size-base);
+    transition: border-color 0.15s;
+  }
+
+  .picker-input:hover {
+    border-color: var(--text-muted);
+  }
+
+  .picker-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .picker-row.has-error .picker-input,
+  .picker-row.has-error :global(select) {
+    border-color: var(--danger);
+  }
+
+  .day-input {
+    width: 3.75rem;
+  }
+
+  .month-select {
+    flex: 1;
+    min-width: 8rem;
+    max-width: 11rem;
+  }
+
+  .year-input {
+    width: 5rem;
+  }
+
+  .time-input {
+    width: 6.5rem;
+  }
+
+  .error-msg {
+    font-size: var(--font-size-sm);
+    color: var(--danger);
+  }
+
   .notes-textarea {
     width: 100%;
     padding: 0.45rem 0.75rem;
@@ -462,11 +676,6 @@
   .form-actions {
     display: flex;
     gap: 0.5rem;
-  }
-
-  .error-msg {
-    font-size: var(--font-size-sm);
-    color: var(--danger);
   }
 
   /* Loading */
