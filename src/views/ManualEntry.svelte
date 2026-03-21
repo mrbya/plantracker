@@ -9,8 +9,8 @@
   } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
   import EmptyState from "$lib/components/ui/EmptyState.svelte";
-  import Select from "$lib/components/ui/Select.svelte";
   import Spinner from "$lib/components/ui/Spinner.svelte";
+  import Select from "$lib/components/ui/Select.svelte";
   import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
@@ -22,25 +22,6 @@
   import { entriesLimit } from "$lib/stores/settings";
   import type { TimeEntry } from "$lib/types";
   import { formatDuration } from "$lib/utils/duration";
-
-  // ---------------------------------------------------------------------------
-  // Month options (shared with Reports)
-  // ---------------------------------------------------------------------------
-
-  const MONTH_OPTIONS = [
-    { value: "1", label: "January" },
-    { value: "2", label: "February" },
-    { value: "3", label: "March" },
-    { value: "4", label: "April" },
-    { value: "5", label: "May" },
-    { value: "6", label: "June" },
-    { value: "7", label: "July" },
-    { value: "8", label: "August" },
-    { value: "9", label: "September" },
-    { value: "10", label: "October" },
-    { value: "11", label: "November" },
-    { value: "12", label: "December" },
-  ];
 
   // ---------------------------------------------------------------------------
   // Dropdown state
@@ -90,16 +71,10 @@
   // Form state
   // ---------------------------------------------------------------------------
 
-  let startDay = $state("");
-  let startMonth = $state("");
-  let startYear = $state("");
+  let startDate = $state(""); // YYYY-MM-DD from <input type="date">
   let startTime = $state(""); // HH:MM from <input type="time">
-
-  let endDay = $state("");
-  let endMonth = $state("");
-  let endYear = $state("");
-  let endTime = $state(""); // HH:MM from <input type="time">
-
+  let endDate = $state("");
+  let endTime = $state("");
   let notes = $state("");
   let editingId = $state<string | null>(null);
 
@@ -110,13 +85,9 @@
   const isEditing = $derived(editingId !== null);
 
   function resetForm() {
-    startDay = "";
-    startMonth = "";
-    startYear = "";
+    startDate = "";
     startTime = "";
-    endDay = "";
-    endMonth = "";
-    endYear = "";
+    endDate = "";
     endTime = "";
     notes = "";
     editingId = null;
@@ -125,36 +96,17 @@
     taskError = "";
   }
 
-  /** Assemble ISO 8601 UTC string from four picker values. */
-  function fieldsToIso(
-    day: string,
-    month: string,
-    year: string,
-    time: string,
-  ): string {
-    const [hours, minutes] = time.split(":").map(Number);
-    return new Date(
-      parseInt(year, 10),
-      parseInt(month, 10) - 1,
-      parseInt(day, 10),
-      hours,
-      minutes,
-    ).toISOString();
+  /** Assemble an ISO 8601 UTC string from a date and time picker value. */
+  function fieldsToIso(date: string, time: string): string {
+    return new Date(`${date}T${time}`).toISOString();
   }
 
-  /** Decompose an ISO 8601 string into picker field values. */
-  function isoToFields(iso: string): {
-    day: string;
-    month: string;
-    year: string;
-    time: string;
-  } {
+  /** Decompose an ISO 8601 string into date and time picker values. */
+  function isoToFields(iso: string): { date: string; time: string } {
     const d = new Date(iso);
     const pad = (n: number) => String(n).padStart(2, "0");
     return {
-      day: String(d.getDate()),
-      month: String(d.getMonth() + 1),
-      year: String(d.getFullYear()),
+      date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
       time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
     };
   }
@@ -169,44 +121,28 @@
       taskError = "Please select a task";
       ok = false;
     }
-
-    if (!startDay) {
-      startError = "Start day is required";
-      ok = false;
-    } else if (!startMonth) {
-      startError = "Start month is required";
-      ok = false;
-    } else if (!startYear) {
-      startError = "Start year is required";
+    if (!startDate) {
+      startError = "Start date is required";
       ok = false;
     } else if (!startTime) {
       startError = "Start time is required";
       ok = false;
     }
-
-    if (!endDay) {
-      endError = "End day is required";
-      ok = false;
-    } else if (!endMonth) {
-      endError = "End month is required";
-      ok = false;
-    } else if (!endYear) {
-      endError = "End year is required";
+    if (!endDate) {
+      endError = "End date is required";
       ok = false;
     } else if (!endTime) {
       endError = "End time is required";
       ok = false;
     }
-
     if (ok) {
-      const start = fieldsToIso(startDay, startMonth, startYear, startTime);
-      const end = fieldsToIso(endDay, endMonth, endYear, endTime);
+      const start = fieldsToIso(startDate, startTime);
+      const end = fieldsToIso(endDate, endTime);
       if (new Date(end) <= new Date(start)) {
-        endError = "End time must be after start time";
+        endError = "End must be after start";
         ok = false;
       }
     }
-
     return ok;
   }
 
@@ -220,8 +156,8 @@
     if (!validate()) return;
     submitting = true;
     try {
-      const startIso = fieldsToIso(startDay, startMonth, startYear, startTime);
-      const endIso = fieldsToIso(endDay, endMonth, endYear, endTime);
+      const startIso = fieldsToIso(startDate, startTime);
+      const endIso = fieldsToIso(endDate, endTime);
       if (isEditing) {
         await updateEntry({
           id: editingId!,
@@ -251,14 +187,10 @@
   function handleEdit(entry: TimeEntry) {
     editingId = entry.id;
     const s = isoToFields(entry.startTime);
-    startDay = s.day;
-    startMonth = s.month;
-    startYear = s.year;
+    startDate = s.date;
     startTime = s.time;
     const e = isoToFields(entry.endTime ?? entry.startTime);
-    endDay = e.day;
-    endMonth = e.month;
-    endYear = e.year;
+    endDate = e.date;
     endTime = e.time;
     notes = entry.notes ?? "";
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -363,30 +295,14 @@
         </div>
       </div>
 
-      <!-- Start picker -->
+      <!-- Start -->
       <div class="picker-group">
         <span class="picker-label">Start</span>
         <div class="picker-row" class:has-error={!!startError}>
           <input
-            class="picker-input day-input"
-            type="number"
-            min="1"
-            max="31"
-            placeholder="DD"
-            bind:value={startDay}
-          />
-          <div class="month-select">
-            <Select
-              options={MONTH_OPTIONS}
-              bind:value={startMonth}
-              placeholder="Month"
-            />
-          </div>
-          <input
-            class="picker-input year-input"
-            type="number"
-            placeholder="YYYY"
-            bind:value={startYear}
+            class="picker-input date-input"
+            type="date"
+            bind:value={startDate}
           />
           <input
             class="picker-input time-input"
@@ -400,30 +316,14 @@
         {/if}
       </div>
 
-      <!-- End picker -->
+      <!-- End -->
       <div class="picker-group">
         <span class="picker-label">End</span>
         <div class="picker-row" class:has-error={!!endError}>
           <input
-            class="picker-input day-input"
-            type="number"
-            min="1"
-            max="31"
-            placeholder="DD"
-            bind:value={endDay}
-          />
-          <div class="month-select">
-            <Select
-              options={MONTH_OPTIONS}
-              bind:value={endMonth}
-              placeholder="Month"
-            />
-          </div>
-          <input
-            class="picker-input year-input"
-            type="number"
-            placeholder="YYYY"
-            bind:value={endYear}
+            class="picker-input date-input"
+            type="date"
+            bind:value={endDate}
           />
           <input
             class="picker-input time-input"
@@ -584,7 +484,7 @@
     color: var(--text-muted);
   }
 
-  /* Picker */
+  /* Pickers */
   .picker-group {
     display: flex;
     flex-direction: column;
@@ -598,9 +498,8 @@
 
   .picker-row {
     display: flex;
-    align-items: center;
     gap: 0.5rem;
-    flex-wrap: wrap;
+    align-items: center;
   }
 
   .picker-input {
@@ -623,27 +522,16 @@
     outline-offset: 2px;
   }
 
-  .picker-row.has-error .picker-input,
-  .picker-row.has-error :global(select) {
+  .picker-row.has-error .picker-input {
     border-color: var(--danger);
   }
 
-  .day-input {
-    width: 3.75rem;
-  }
-
-  .month-select {
+  .date-input {
     flex: 1;
-    min-width: 8rem;
-    max-width: 11rem;
-  }
-
-  .year-input {
-    width: 5rem;
   }
 
   .time-input {
-    width: 6.5rem;
+    width: 7rem;
   }
 
   .error-msg {
