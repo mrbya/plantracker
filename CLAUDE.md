@@ -19,7 +19,6 @@ Cross-platform Tauri desktop app for tracking time spent on Microsoft Planner ta
 | Auth | OAuth 2.0 PKCE → Microsoft Identity Platform |
 | API | Microsoft Graph Tasks API |
 | Theme | Catppuccin Mocha (CSS custom properties) |
-| Font | JetBrains Mono Nerd Font |
 | Platforms | Linux x86_64, Windows x86_64 |
 
 Data directories:
@@ -35,7 +34,7 @@ plantracker/
 │   │   ├── api/index.ts           ← ALL invoke() wrappers live here
 │   │   ├── components/ui/         ← Button, Select, Input, Card, Badge, Spinner, EmptyState
 │   │   ├── stores/                ← auth.ts, timer.ts, planner.ts, notifications.ts
-│   │   ├── theme/                 ← mocha.css, global.css
+│   │   ├── theme/                 ← fonts.css, mocha.css, global.css
 │   │   └── types.ts               ← TS types mirroring Rust structs (camelCase)
 │   ├── views/                     ← TimeTracking, ManualEntry, Reports, Settings, Login
 │   └── App.svelte

@@ -63,6 +63,8 @@ Always use semantic aliases in component styles. Use raw palette variables only 
 
 Font family throughout the entire app: `'JetBrainsMono Nerd Font', 'JetBrains Mono', monospace`
 
+The font is **bundled with the app** — all 16 weight/style variants are stored in `static/fonts/` and loaded via `@font-face` declarations in `src/lib/theme/fonts.css`, which is imported first in `src/app.css`. **Users do not need to install the font on their system.**
+
 ```css
 --font:           'JetBrainsMono Nerd Font', 'JetBrains Mono', monospace;
 --font-size-sm:   0.75rem;

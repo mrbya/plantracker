@@ -82,6 +82,10 @@ precache *FLAGS:
 precache-check:
     @just precache --check
 
+# Generates icon pack from the icon.svg provided in src-tauri/icons.
+icons:
+    cargo tauri icon src-tauri/icons/icon.svg
+
 # Run app in development.
 dev *FLAGS:
     cargo tauri dev {{FLAGS}}
@@ -109,6 +113,7 @@ pre-commit:
     @just unused
     @just audit
     @just precache-check
+    @just icons
     @just build
     @just index
 
@@ -117,6 +122,7 @@ ci-build:
     @just deps-ci
     @just thorough-check
     @just precache-check
+    @just icons
     @just build
 
 # Build linux-build-image.

@@ -13,7 +13,7 @@
 - **Commands**: Tauri `#[tauri::command]` functions bridge frontend ↔ Rust
 - **Stores**: Svelte stores hold reactive UI state; backend is source of truth
 - **Theme**: All colors from Catppuccin Mocha palette via CSS custom properties
-- **Font**: JetBrains Mono Nerd Font throughout
+- **Font**: JetBrains Mono Nerd Font throughout — bundled in `static/fonts/`, loaded via `@font-face` in `src/lib/theme/fonts.css`; no system install required
 
 ---
 
@@ -731,6 +731,10 @@ cargo tauri icon assets/icon.png
 ### 9.3 Updater (optional)
 
 Configure `tauri-plugin-updater` pointing to a Gitlab Releases endpoint.
+
+### 9.5 Bundle fonts (Done)
+
+JetBrains Mono Nerd Font is self-hosted: all 16 weight/style `.ttf` files live in `static/fonts/`. They are declared via `@font-face` in `src/lib/theme/fonts.css` (imported first in `src/app.css`). Users do not need the font installed system-wide.
 
 ### 9.4 CI pipeline (Gitlab CI/CD)
 

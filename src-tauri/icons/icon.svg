@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+
+  <!-- Icon background -->
+  <rect width="1024" height="1024" rx="224" fill="#313244"/>
+
+  <!-- Ring track -->
+  <circle cx="512" cy="512" r="310" fill="none" stroke="#45475a" stroke-width="52"/>
+
+  <!-- Progress arc — mauve, ~290 degrees -->
+  <path d="M 512,202 A 310,310 0 1 1 208.8,579.6"
+        fill="none"
+        stroke="#cba6f7"
+        stroke-width="52"
+        stroke-linecap="round"/>
+
+  <!-- Terminal dot at arc end -->
+  <circle cx="208.8" cy="579.6" r="34" fill="#cba6f7"/>
+
+  <!-- Task bar 1: mauve, 78% -->
+  <rect x="367" y="432" width="290" height="52" rx="26" fill="#1e1e2e" opacity="0.55"/>
+  <rect x="367" y="432" width="226" height="52" rx="26" fill="#cba6f7"/>
+
+  <!-- Task bar 2: blue, 46% -->
+  <rect x="367" y="499" width="290" height="52" rx="26" fill="#1e1e2e" opacity="0.55"/>
+  <rect x="367" y="499" width="134" height="52" rx="26" fill="#89b4fa"/>
+
+  <!-- Task bar 3: green, 88% -->
+  <rect x="367" y="566" width="290" height="52" rx="26" fill="#1e1e2e" opacity="0.55"/>
+  <rect x="367" y="566" width="255" height="52" rx="26" fill="#a6e3a1"/>
+
+</svg>
