@@ -94,6 +94,10 @@ dev *FLAGS:
 build:
     cargo tauri build
 
+# Build app release setup for windows.
+build-windows:
+    cargo tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc
+
 # A thorough codebase check ran before
 # commiting and ci builds.
 thorough-check:
@@ -104,7 +108,7 @@ thorough-check:
 
 # Indexes README.
 index:
-    markdown-toc -i README.md
+    pnpm index README.md
 
 # Runs all checks neccesary before a commit.
 # Checks formatting, code quality, and more
@@ -147,10 +151,15 @@ docker-linux:
 
 # Initializes the project, installing all necessary tooling. Should be run once before beginning of development.
 init:
-    echo # installing nightly used by `just fmt` and `cargo udeps`
+    echo # installing nightly, windows-msvc target and xwin
     rustup install nightly
+    rustup target add x86_64-pc-windows-msvc
+    cargo install --locked cargo-xwin
 
-    echo # installing cargo-binstall for faster setup time
+    echo # Chaching windows SDK
+    cargo xwin cache xwin
+
+    echo # Installing cargo-binstall for faster setup time
     cargo binstall -V || cargo install cargo-binstall
 
     echo # Installing tauri cli
@@ -165,9 +174,6 @@ init:
 
     echo # Installing pnpm
     pnpm -v || npm install -g pnpm
-
-    echo # Install markdown-toc
-    npm list -g markdown-toc || npm install -g markdown-toc
 
     echo # Synch node_modules
     pnpm install

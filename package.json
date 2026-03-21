@@ -10,6 +10,7 @@
     "format": "prettier --write ./src/.",
     "format-check": "prettier --check ./src/.",
     "unused": "knip --production --dependencies",
+    "index": "markdown-toc -i",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "tauri": "tauri"
@@ -28,6 +29,7 @@
     "@tauri-apps/cli": "^2",
     "@types/node": "^25.5.0",
     "knip": "^6.0.1",
+    "markdown-toc": "^1.2.0",
     "prettier": "^3.8.1",
     "prettier-plugin-svelte": "^3.5.1",
     "svelte": "^5.0.0",
