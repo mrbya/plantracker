@@ -84,7 +84,7 @@ precache-check:
 
 # Generates icon pack from the icon.svg provided in src-tauri/icons.
 icons:
-    cargo tauri icon src-tauri/icons/icon.svg
+    cargo tauri icon static/icon.svg
 
 # Run app in development.
 dev *FLAGS:
