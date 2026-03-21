@@ -71,10 +71,22 @@
   // Form state
   // ---------------------------------------------------------------------------
 
-  let startDate = $state(""); // YYYY-MM-DD from <input type="date">
-  let startTime = $state(""); // HH:MM from <input type="time">
-  let endDate = $state("");
-  let endTime = $state("");
+  function todayDate(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function currentTime(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  let startDate = $state(todayDate()); // YYYY-MM-DD from <input type="date">
+  let startTime = $state(currentTime()); // HH:MM from <input type="time">
+  let endDate = $state(todayDate());
+  let endTime = $state(currentTime());
   let notes = $state("");
   let editingId = $state<string | null>(null);
 
@@ -85,10 +97,10 @@
   const isEditing = $derived(editingId !== null);
 
   function resetForm() {
-    startDate = "";
-    startTime = "";
-    endDate = "";
-    endTime = "";
+    startDate = todayDate();
+    startTime = currentTime();
+    endDate = todayDate();
+    endTime = currentTime();
     notes = "";
     editingId = null;
     startError = "";
