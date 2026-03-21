@@ -161,7 +161,7 @@ init:
 
     echo # Installing things required by `just pre-commit`
     cargo udeps -V || cargo binstall cargo-udeps --no-confirm
-    cargo audit -V || cargo binstall cargo-audit --no-confirm
+    cargo audit fix -V || cargo install cargo-audit --locked --features=fix
 
     echo # Installing pnpm
     pnpm -v || npm install -g pnpm
