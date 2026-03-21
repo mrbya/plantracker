@@ -28,4 +28,12 @@ RUN apt-get install -y xdg-utils
 RUN apt-get install -y fuse libfuse2 && \
     modprobe fuse || true
 
+RUN apt-get install -y nsis clang lld llvm
+
+RUN rustup target add x86_64-pc-windows-msvc
+
+RUN cargo install --locked cargo-xwin
+
+RUN cargo xwin cache xwin
+
 CMD ["bash"]

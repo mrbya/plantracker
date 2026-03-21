@@ -4,7 +4,7 @@ import { getActiveTimer, startTimer, stopTimer } from "$lib/api";
 import { addError } from "$lib/stores/notifications";
 import type { TimeEntry } from "$lib/types";
 
-export const activeEntry = writable<TimeEntry | null>(null);
+const activeEntry = writable<TimeEntry | null>(null);
 export const elapsedSeconds = writable<number>(0);
 export const isRunning = derived(activeEntry, (e) => e !== null);
 

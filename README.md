@@ -10,21 +10,22 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
   * [Platform-specific dependencies](#platform-specific-dependencies)
-- [Getting Started](#getting-started)
+- [Views](#views)
+  * [Time Tracking](#time-tracking)
+  * [Manual Entry](#manual-entry)
+  * [Reports](#reports)
 - [Data Storage](#data-storage)
   * [Database Schema (overview)](#database-schema-overview)
+- [Development](#development)
+  * [Prerequisites](#prerequisites)
+  * [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
 - [Authentication Setup](#authentication-setup)
   * [1. Register an Azure AD Application](#1-register-an-azure-ad-application)
   * [2. Configure API Permissions](#2-configure-api-permissions)
   * [3. Configure the App](#3-configure-the-app)
   * [Auth Flow (how it works at runtime)](#auth-flow-how-it-works-at-runtime)
-- [Views](#views)
-  * [Time Tracking](#time-tracking)
-  * [Manual Entry](#manual-entry)
-  * [Reports](#reports)
-- [Project Structure](#project-structure)
 - [Development Notes](#development-notes)
 - [Roadmap](#roadmap)
 - [License](#license)
@@ -48,24 +49,16 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 | Layer | Technology |
 |---|---|
 | Desktop shell | [Tauri 2](https://tauri.app/) |
-| Backend language | Rust |
-| Database | SQLite via [`sqlx`](https://github.com/launchbadge/sqlx) |
+| Backend language | [Rust](https://rust-lang.org/) |
+| Database | [SQLite](https://sqlite.org/) via [`sqlx`](https://github.com/launchbadge/sqlx) |
 | Frontend framework | [Svelte 5](https://svelte.dev/) + TypeScript |
-| Build tool | Vite |
-| Authentication | OAuth 2.0 PKCE → Microsoft Identity Platform |
+| Build tool | [Vite](https://vite.dev/) |
+| Authentication | [OAuth 2.0 PKCE](https://www.oauth.com/oauth2-servers/pkce/) → [Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) |
 | API | [Microsoft Graph Tasks API](https://learn.microsoft.com/en-us/graph/api/resources/plannertask) |
-| Theming | Catppuccin Mocha |
-| Font | JetBrains Mono Nerd Font |
+| Theming | [Catppuccin Mocha](https://catppuccin.com/palette/) |
+| Font | [JetBrains Mono Nerd Font](https://www.programmingfonts.org/#jetbrainsmono) |
 
 ---
-
-## Prerequisites
-
-- [Rust toolchain](https://rustup.rs/) (stable, 1.77+)
-- [Node.js](https://nodejs.org/) 20+ and `pnpm`
-- [Tauri CLI v2](https://tauri.app/start/): `cargo install tauri-cli --version "^2"`
-- A registered **Azure AD application** (see [Authentication Setup](#authentication-setup))
-- JetBrains Mono Nerd Font installed on your system
 
 ### Platform-specific dependencies
 
@@ -81,7 +74,64 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 
 ---
 
-## Getting Started
+## Views
+
+### Time Tracking
+
+- Select a **Plan** then a **Task** (or pick a task directly — plan auto-fills)
+- Hit **Start** to begin timing; **Stop** to save the entry
+- Last *N* entries shown below (configurable in settings)
+
+### Manual Entry
+
+- Same plan/task dropdowns
+- Pick **start** and **end** datetime
+- Optional **notes** field
+- Submit saves directly to SQLite
+
+### Reports
+
+- Select a **date range** (month + year, from/to)
+- Select a **plan** (and optionally a **task**)
+- Click **Generate** to build the report table
+- Table shows: monthly totals, grand total, plan or task total
+- **Export CSV** saves the report to your Downloads folder
+
+---
+
+## Data Storage
+
+All data is stored locally — no cloud sync, no telemetry.
+
+| Platform | Path |
+|---|---|
+| Linux | `~/.local/share/com.siemens.plantracker/` |
+| Windows | `%USERPROFILE%\Documents\com.siemens.plantracker\` |
+
+The directory contains:
+- `plantracker.db` — SQLite database (time entries, cached task/plan metadata)
+- `config.json` — App preferences (managed by `tauri-plugin-store`)
+
+### Database Schema (overview)
+
+```
+plans          id, graph_id, title, synced_at
+tasks          id, graph_id, plan_id, title, synced_at
+time_entries   id, task_id, start_time, end_time, notes, created_at
+```
+
+---
+
+## Development
+
+### Prerequisites
+
+- [Rust toolchain](https://rustup.rs/) (stable, 1.77+)
+- [Node.js](https://nodejs.org/) 20+ and `pnpm`
+- [Tauri CLI v2](https://tauri.app/start/): `cargo install tauri-cli --version "^2"` or bootstrap using `just init`
+- A registered **Azure AD application** (see [Authentication Setup](#authentication-setup))
+
+### Getting Started
 
 Requires `just` to bootstrap all tools and configuration
 
@@ -112,25 +162,63 @@ just list
 
 ---
 
-## Data Storage
-
-All data is stored locally — no cloud sync, no telemetry.
-
-| Platform | Path |
-|---|---|
-| Linux | `~/.local/share/com.siemens.plantracker/` |
-| Windows | `%USERPROFILE%\Documents\com.siemens.plantracker\` |
-
-The directory contains:
-- `plantracker.db` — SQLite database (time entries, cached task/plan metadata)
-- `config.json` — App preferences (managed by `tauri-plugin-store`)
-
-### Database Schema (overview)
+## Project Structure
 
 ```
-plans          id, graph_id, title, synced_at
-tasks          id, graph_id, plan_id, title, synced_at
-time_entries   id, task_id, start_time, end_time, notes, created_at
+plantracker/
+├── src/                              # Svelte frontend
+│   ├── lib/
+│   │   ├── api/
+│   │   │   └── index.ts              # All invoke() wrappers (single boundary)
+│   │   │
+│   │   ├── components/
+│   │   │   ├── ui/                   # Reusable UI components
+│   │   │   ├── Layout.svelte         # App shell with sidebar navigation
+│   │   │   └── ToastContainer.svelte # Toast notification renderer
+│   │   │
+│   │   ├── stores/                   # Svelte stores (auth, planner, timer, notifications, settings)
+│   │   ├── theme/                    # CSS theming variables
+│   │   ├── types.ts                  # TypeScript types mirroring Rust structs
+│   │   └── utils/
+│   │       └── duration.ts           # Utilities to format unix time
+│   │
+│   ├── routes/                       # Frontend API routes
+│   │   ├── +layout.svelte
+│   │   ├── +layout.ts
+│   │   └── +page.svelte
+│   │
+│   └── views/                        # Full-page views
+│       ├── Login.svelte
+│       ├── TimeTracking.svelte
+│       ├── ManualEntry.svelte
+│       ├── Reports.svelte
+│       └── Settings.svelte
+│
+├── src-tauri/                        # Tauri / Rust backend
+│   ├── src/
+│   │   ├── auth/                     # OAuth PKCE: pkce, oauth, keychain, manager
+│   │   ├── commands/                 # Tauri commands: auth, sync, timer, entries, reports, settings
+│   │   ├── db/                       # sqlx query functions: plans, tasks, entries
+│   │   ├── graph/                    # Microsoft Graph client + models
+│   │   ├── models.rs                 # Shared Rust structs (serde, camelCase)
+│   │   ├── lib.rs
+│   │   └── main.rs
+│   │
+│   ├── migrations/                   # SQLite migration files (0001_initial.sql, …)
+│   └── Cargo.toml
+│
+├── static/                           # Bundled static artefacts (fonts, icons, etc.)
+│   └── fonts/
+│
+├── devops/
+│   ├── linux-build/Dockerfile        # CI image for Linux builds
+│   └── windows-build/Dockerfile      # CI image for Windows builds
+│
+├── .gitlab-ci.yml                    # CI/CD pipeline (build + release upload)
+├── justfile                          # Dev workflow recipes (run `just list` to list all)
+├── .env.example                      # Example .env file used to generate local .env file for dev
+├── ...
+└── vite.config.ts
 ```
 
 ---
@@ -186,82 +274,26 @@ User clicks "Sign In"
 
 ---
 
-## Views
-
-### Time Tracking
-
-- Select a **Plan** then a **Task** (or pick a task directly — plan auto-fills)
-- Hit **Start** to begin timing; **Stop** to save the entry
-- Last *N* entries shown below (configurable in settings)
-
-### Manual Entry
-
-- Same plan/task dropdowns
-- Pick **start** and **end** datetime
-- Optional **notes** field
-- Submit saves directly to SQLite
-
-### Reports
-
-- Select a **date range** (month + year, from/to)
-- Select a **plan** (and optionally a **task**)
-- Click **Generate** to build the report table
-- Table shows: monthly totals, grand total, plan or task total
-- **Export CSV** saves the report to your Downloads folder
-
----
-
-## Project Structure
-
-```
-plantracker/
-├── src/                        # Svelte frontend
-│   ├── lib/
-│   │   ├── components/         # Reusable UI components
-│   │   ├── stores/             # Svelte stores (auth, plans, tasks, timer)
-│   │   ├── api/                # Graph API client (TypeScript)
-│   │   └── theme/              # Catppuccin Mocha CSS variables
-│   ├── views/
-│   │   ├── TimeTracking.svelte
-│   │   ├── ManualEntry.svelte
-│   │   └── Reports.svelte
-│   └── App.svelte
-├── src-tauri/                  # Tauri backend
-│   ├── src/
-│   │   ├── main.rs
-│   │   ├── commands/           # Tauri commands (time entries, reports)
-│   │   ├── db/                 # sqlx migrations + query functions
-│   │   ├── auth/               # OAuth PKCE implementation
-│   │   └── graph/              # Graph API Rust client
-│   ├── migrations/             # SQLite migration files
-│   └── Cargo.toml
-├── .env.example
-├── ...
-└── vite.config.ts
-```
-
----
-
 ## Development Notes
 
 - **sqlx compile-time checks**: Run `cargo sqlx prepare` after changing queries to regenerate `.sqlx/` offline query cache
 - **Hot reload**: `cargo tauri dev` supports Vite HMR for the frontend; Rust recompiles on backend changes
 - **Logging**: Backend uses `tracing` crate; logs viewable in the terminal running `tauri dev`
-- **Font**: The app CSS references `'JetBrainsMono Nerd Font'` — ensure it is installed system-wide or bundled
+- **Font**: JetBrainsMono Nerd Font is bundled in `static/fonts/` and loaded via `@font-face` — no system installation required
 
 ---
 
 ## Roadmap
 
+- [ ] Dark/light theme toggle (Catppuccin Latte)
 - [ ] Task search / filter in dropdowns
 - [ ] Idle detection (pause timer when system is idle)
 - [ ] System tray with quick start/stop
 - [ ] Sync time entries back to Planner task comments
-- [ ] Dark/light theme toggle (Catppuccin Latte)
 
 ---
 
 ## License
 
-MIT
+[MIT](LICENSE)
 

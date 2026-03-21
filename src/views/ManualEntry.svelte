@@ -9,9 +9,8 @@
   } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
   import EmptyState from "$lib/components/ui/EmptyState.svelte";
-  import Input from "$lib/components/ui/Input.svelte";
-  import Select from "$lib/components/ui/Select.svelte";
   import Spinner from "$lib/components/ui/Spinner.svelte";
+  import Select from "$lib/components/ui/Select.svelte";
   import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
@@ -22,6 +21,7 @@
   } from "$lib/stores/planner";
   import { entriesLimit } from "$lib/stores/settings";
   import type { TimeEntry } from "$lib/types";
+  import { formatDateTime } from "$lib/utils/datetime";
   import { formatDuration } from "$lib/utils/duration";
 
   // ---------------------------------------------------------------------------
@@ -72,8 +72,22 @@
   // Form state
   // ---------------------------------------------------------------------------
 
-  let startTime = $state("");
-  let endTime = $state("");
+  function todayDate(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function currentTime(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  let startDate = $state(todayDate()); // YYYY-MM-DD from <input type="date">
+  let startTime = $state(currentTime()); // HH:MM (24h text input)
+  let endDate = $state(todayDate());
+  let endTime = $state(currentTime()); // HH:MM (24h text input)
   let notes = $state("");
   let editingId = $state<string | null>(null);
 
@@ -84,8 +98,10 @@
   const isEditing = $derived(editingId !== null);
 
   function resetForm() {
-    startTime = "";
-    endTime = "";
+    startDate = todayDate();
+    startTime = currentTime();
+    endDate = todayDate();
+    endTime = currentTime();
     notes = "";
     editingId = null;
     startError = "";
@@ -93,16 +109,26 @@
     taskError = "";
   }
 
-  /** Convert a local datetime-local string to ISO 8601 UTC. */
-  function localToIso(local: string): string {
-    return new Date(local).toISOString();
+  /** Returns true if time is a valid 24h HH:MM string. */
+  function isValidTime(time: string): boolean {
+    if (!/^\d{2}:\d{2}$/.test(time)) return false;
+    const [h, m] = time.split(":").map(Number);
+    return h >= 0 && h <= 23 && m >= 0 && m <= 59;
   }
 
-  /** Convert an ISO 8601 string to datetime-local format (YYYY-MM-DDTHH:MM). */
-  function isoToLocal(iso: string): string {
+  /** Assemble an ISO 8601 UTC string from a date and time picker value. */
+  function fieldsToIso(date: string, time: string): string {
+    return new Date(`${date}T${time}`).toISOString();
+  }
+
+  /** Decompose an ISO 8601 string into date and time picker values. */
+  function isoToFields(iso: string): { date: string; time: string } {
     const d = new Date(iso);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return {
+      date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+      time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    };
   }
 
   function validate(): boolean {
@@ -115,17 +141,33 @@
       taskError = "Please select a task";
       ok = false;
     }
-    if (!startTime) {
+    if (!startDate) {
+      startError = "Start date is required";
+      ok = false;
+    } else if (!startTime) {
       startError = "Start time is required";
       ok = false;
+    } else if (!isValidTime(startTime)) {
+      startError = "Start time must be HH:MM (24h)";
+      ok = false;
     }
-    if (!endTime) {
+    if (!endDate) {
+      endError = "End date is required";
+      ok = false;
+    } else if (!endTime) {
       endError = "End time is required";
       ok = false;
-    }
-    if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
-      endError = "End time must be after start time";
+    } else if (!isValidTime(endTime)) {
+      endError = "End time must be HH:MM (24h)";
       ok = false;
+    }
+    if (ok) {
+      const start = fieldsToIso(startDate, startTime);
+      const end = fieldsToIso(endDate, endTime);
+      if (new Date(end) <= new Date(start)) {
+        endError = "End must be after start";
+        ok = false;
+      }
     }
     return ok;
   }
@@ -140,19 +182,21 @@
     if (!validate()) return;
     submitting = true;
     try {
+      const startIso = fieldsToIso(startDate, startTime);
+      const endIso = fieldsToIso(endDate, endTime);
       if (isEditing) {
         await updateEntry({
           id: editingId!,
-          startTime: localToIso(startTime),
-          endTime: localToIso(endTime),
+          startTime: startIso,
+          endTime: endIso,
           notes: notes || undefined,
         });
         addSuccess("Entry updated");
       } else {
         await createManualEntry({
           taskId: selectedTaskId,
-          startTime: localToIso(startTime),
-          endTime: localToIso(endTime),
+          startTime: startIso,
+          endTime: endIso,
           notes: notes || undefined,
         });
         addSuccess("Entry saved");
@@ -168,10 +212,13 @@
 
   function handleEdit(entry: TimeEntry) {
     editingId = entry.id;
-    startTime = isoToLocal(entry.startTime);
-    endTime = entry.endTime ? isoToLocal(entry.endTime) : "";
+    const s = isoToFields(entry.startTime);
+    startDate = s.date;
+    startTime = s.time;
+    const e = isoToFields(entry.endTime ?? entry.startTime);
+    endDate = e.date;
+    endTime = e.time;
     notes = entry.notes ?? "";
-    // Scroll to top of form
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -225,15 +272,6 @@
     );
   }
 
-  function formatDateTime(iso: string): string {
-    return new Date(iso).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
   onMount(() => {
     loadEntries();
   });
@@ -274,20 +312,48 @@
         </div>
       </div>
 
-      <!-- Time row -->
-      <div class="row-2">
-        <Input
-          type="datetime-local"
-          label="Start"
-          bind:value={startTime}
-          error={startError}
-        />
-        <Input
-          type="datetime-local"
-          label="End"
-          bind:value={endTime}
-          error={endError}
-        />
+      <!-- Start -->
+      <div class="picker-group">
+        <span class="picker-label">Start</span>
+        <div class="picker-row" class:has-error={!!startError}>
+          <input
+            class="picker-input date-input"
+            type="date"
+            bind:value={startDate}
+          />
+          <input
+            class="picker-input time-input"
+            type="text"
+            placeholder="HH:MM"
+            maxlength="5"
+            bind:value={startTime}
+          />
+        </div>
+        {#if startError}
+          <span class="error-msg">{startError}</span>
+        {/if}
+      </div>
+
+      <!-- End -->
+      <div class="picker-group">
+        <span class="picker-label">End</span>
+        <div class="picker-row" class:has-error={!!endError}>
+          <input
+            class="picker-input date-input"
+            type="date"
+            bind:value={endDate}
+          />
+          <input
+            class="picker-input time-input"
+            type="text"
+            placeholder="HH:MM"
+            maxlength="5"
+            bind:value={endTime}
+          />
+        </div>
+        {#if endError}
+          <span class="error-msg">{endError}</span>
+        {/if}
       </div>
 
       <!-- Notes -->
@@ -378,12 +444,12 @@
                       <button
                         class="text-btn"
                         onclick={() => handleEdit(entry)}
-                        title="Edit entry">󰏫</button
+                        title="Edit entry">Edit</button
                       >
                       <button
                         class="text-btn danger"
                         onclick={() => (confirmDeleteId = entry.id)}
-                        title="Delete entry">󰆴</button
+                        title="Delete entry">Delete</button
                       >
                     </span>
                   {/if}
@@ -437,6 +503,61 @@
     color: var(--text-muted);
   }
 
+  /* Pickers */
+  .picker-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .picker-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+
+  .picker-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .picker-input {
+    padding: 0.45rem 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: var(--font-size-base);
+    transition: border-color 0.15s;
+  }
+
+  .picker-input:hover {
+    border-color: var(--text-muted);
+  }
+
+  .picker-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .picker-row.has-error .picker-input {
+    border-color: var(--danger);
+  }
+
+  .date-input {
+    flex: 1;
+  }
+
+  .time-input {
+    width: 7rem;
+  }
+
+  .error-msg {
+    font-size: var(--font-size-sm);
+    color: var(--danger);
+  }
+
   .notes-textarea {
     width: 100%;
     padding: 0.45rem 0.75rem;
@@ -462,11 +583,6 @@
   .form-actions {
     display: flex;
     gap: 0.5rem;
-  }
-
-  .error-msg {
-    font-size: var(--font-size-sm);
-    color: var(--danger);
   }
 
   /* Loading */

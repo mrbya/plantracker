@@ -1,8 +1,8 @@
 import { writable } from "svelte/store";
 
-export type NotificationType = "success" | "error" | "warning";
+type NotificationType = "success" | "error" | "warning";
 
-export interface Notification {
+interface Notification {
   id: number;
   type: NotificationType;
   message: string;
@@ -23,4 +23,4 @@ function add(type: NotificationType, message: string): void {
 
 export const addSuccess = (msg: string): void => add("success", msg);
 export const addError = (msg: string): void => add("error", msg);
-export const addWarning = (msg: string): void => add("warning", msg);
+const addWarning = (msg: string): void => add("warning", msg);

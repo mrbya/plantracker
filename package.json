@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "format": "prettier --write ./src/.",
     "format-check": "prettier --check ./src/.",
-    "unused": "npx depcheck",
+    "unused": "knip --production --dependencies",
+    "index": "markdown-toc -i",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "tauri": "tauri"
@@ -18,7 +19,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-store": "^2.4.2"
+    "@tauri-apps/plugin-store": "^2.4.2",
+    "lucide-svelte": "^0.577.0"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.6",
@@ -26,7 +28,8 @@
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tauri-apps/cli": "^2",
     "@types/node": "^25.5.0",
-    "depcheck": "^1.4.7",
+    "knip": "^6.0.1",
+    "markdown-toc": "^1.2.0",
     "prettier": "^3.8.1",
     "prettier-plugin-svelte": "^3.5.1",
     "svelte": "^5.0.0",

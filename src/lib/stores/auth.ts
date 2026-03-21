@@ -9,7 +9,7 @@ import { addError } from "$lib/stores/notifications";
 import { syncAndLoad } from "$lib/stores/planner";
 import type { AuthStatus } from "$lib/types";
 
-export const authStatus = writable<AuthStatus | null>(null);
+const authStatus = writable<AuthStatus | null>(null);
 
 export const isAuthenticated = derived(
   authStatus,

@@ -18,6 +18,7 @@
     syncFrequency,
     type SyncFrequency,
   } from "$lib/stores/settings";
+  import { formatDateTime } from "$lib/utils/datetime";
 
   // ---------------------------------------------------------------------------
   // Entries limit
@@ -76,12 +77,7 @@
 
   function formatLastSynced(iso: string | null): string {
     if (!iso) return "Never";
-    return new Date(iso).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatDateTime(iso);
   }
 
   // ---------------------------------------------------------------------------

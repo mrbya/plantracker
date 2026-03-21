@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/routes/+layout.svelte",
+    "src/routes/+page.svelte",
+    "src/app.css",
+    "vite.config.ts",
+    "svelte.config.js"
+  ],
+  "project": [
+    "src/**/*.{ts,svelte}",
+    "vite.config.ts",
+    "svelte.config.js"
+  ],
+  "ignoreDependencies": [
+    "@tauri-apps/cli",
+    "@tauri-apps/api",
+    "@tauri-apps/plugin-opener",
+    "@tauri-apps/plugin-store",
+    "lucide-svelte"
+  ],
+  "compilers": {
+    "svelte": "svelte/compiler"
+  }
+}

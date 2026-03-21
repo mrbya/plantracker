@@ -4,7 +4,7 @@ export function formatDuration(seconds: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-export function formatDurationCSV(seconds: number): string {
+function formatDurationCSV(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;

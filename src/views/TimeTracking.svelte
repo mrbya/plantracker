@@ -18,6 +18,7 @@
   import { elapsedSeconds, isRunning, start, stop } from "$lib/stores/timer";
   import { entriesLimit } from "$lib/stores/settings";
   import type { TimeEntry } from "$lib/types";
+  import { formatDateTime } from "$lib/utils/datetime";
   import { formatDuration } from "$lib/utils/duration";
 
   // ---------------------------------------------------------------------------
@@ -102,15 +103,6 @@
         new Date(entry.startTime).getTime()) /
         1000,
     );
-  }
-
-  function formatDateTime(iso: string): string {
-    return new Date(iso).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   }
 
   // ---------------------------------------------------------------------------

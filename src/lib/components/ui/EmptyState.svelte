@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { CircleSlash2 } from "lucide-svelte";
   let { message }: { message: string } = $props();
 </script>
 
 <div class="empty-state">
-  <span class="icon">󰟢</span>
+  <CircleSlash2 size={28} strokeWidth={1.5} />
   <p>{message}</p>
 </div>
 
@@ -17,14 +18,10 @@
     padding: 3rem 1rem;
     color: var(--text-muted);
     text-align: center;
-  }
-
-  .icon {
-    font-size: 2rem;
     opacity: 0.5;
   }
 
   p {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-base);
   }
 </style>

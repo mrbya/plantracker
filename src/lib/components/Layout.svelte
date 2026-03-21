@@ -4,16 +4,24 @@
   import Reports from "../../views/Reports.svelte";
   import Settings from "../../views/Settings.svelte";
   import { userDisplayName, logout } from "$lib/stores/auth";
+  import {
+    Timer,
+    PencilLine,
+    BarChart2,
+    Settings as SettingsIcon,
+    LogOut,
+    Icon,
+  } from "lucide-svelte";
 
   type View = "time-tracking" | "manual-entry" | "reports" | "settings";
 
   let activeView = $state<View>("time-tracking");
 
-  const navItems: { id: View; icon: string; label: string }[] = [
-    { id: "time-tracking", icon: "", label: "Time Tracking" },
-    { id: "manual-entry", icon: "", label: "Manual Entry" },
-    { id: "reports", icon: "󱛣", label: "Reports" },
-    { id: "settings", icon: "", label: "Settings" },
+  const navItems: { id: View; icon: typeof Icon; label: string }[] = [
+    { id: "time-tracking", icon: Timer, label: "Time Tracking" },
+    { id: "manual-entry", icon: PencilLine, label: "Manual Entry" },
+    { id: "reports", icon: BarChart2, label: "Reports" },
+    { id: "settings", icon: SettingsIcon, label: "Settings" },
   ];
 
   const initials = $derived(
@@ -39,7 +47,9 @@
             title={item.label}
             onclick={() => (activeView = item.id)}
           >
-            <span class="icon">{item.icon}</span>
+            <span class="icon">
+              <item.icon size={20} strokeWidth={1.75} />
+            </span>
           </button>
         </li>
       {/each}
@@ -50,7 +60,9 @@
         {initials}
       </div>
       <button class="nav-btn sign-out" title="Sign out" onclick={logout}>
-        <span class="icon">󰍃</span>
+        <span class="icon">
+          <LogOut size={20} strokeWidth={1.75} />
+        </span>
       </button>
     </div>
   </nav>
@@ -121,8 +133,8 @@
   }
 
   .icon {
-    font-size: 1.25rem;
     line-height: 1;
+    display: flex;
   }
 
   .sidebar-bottom {
