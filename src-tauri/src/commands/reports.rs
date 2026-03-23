@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use chrono::NaiveDate;
 use sqlx::SqlitePool;
 use tauri::State;
@@ -12,16 +10,19 @@ use crate::db;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MonthlyTotal {
-    pub year: i32,
-    pub month: u32,
-    pub total_seconds: i64,
+pub struct ReportEntry {
+    pub task_title: String,
+    pub plan_title: String,
+    pub start_time: String,
+    pub end_time: String,
+    pub duration_seconds: i64,
+    pub notes: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportResult {
-    pub monthly_totals: Vec<MonthlyTotal>,
+    pub entries: Vec<ReportEntry>,
     pub grand_total_seconds: i64,
     pub subject_label: String,
 }
@@ -54,44 +55,64 @@ pub async fn generate_report(
             - chrono::Duration::days(1)
     };
 
-    let entries =
+    let raw_entries =
         db::entries::list_entries_in_range(&pool, plan_id.as_deref(), task_id.as_deref(), from, to)
             .await
             .map_err(|e| e.to_string())?;
 
-    let mut totals: BTreeMap<(i32, u32), i64> = BTreeMap::new();
+    // Cache lookups to avoid redundant DB queries when many entries share the
+    // same task or plan.
+    let mut task_cache: std::collections::HashMap<String, (String, String)> = Default::default();
+    let mut plan_cache: std::collections::HashMap<String, String> = Default::default();
 
-    for entry in &entries {
-        let start = entry
+    let mut entries: Vec<ReportEntry> = Vec::with_capacity(raw_entries.len());
+
+    for raw in &raw_entries {
+        let (task_title, task_plan_id) = if let Some(cached) = task_cache.get(&raw.task_id) {
+            cached.clone()
+        } else {
+            let (title, pid) = match db::tasks::get_task(&pool, &raw.task_id).await {
+                Ok(Some(t)) => (t.title, t.plan_id),
+                _ => (raw.task_id.clone(), String::new()),
+            };
+            task_cache.insert(raw.task_id.clone(), (title.clone(), pid.clone()));
+            (title, pid)
+        };
+
+        let plan_title = if let Some(cached) = plan_cache.get(&task_plan_id) {
+            cached.clone()
+        } else {
+            let title = match db::plans::get_plan(&pool, &task_plan_id).await {
+                Ok(Some(p)) => p.title,
+                _ => task_plan_id.clone(),
+            };
+            plan_cache.insert(task_plan_id.clone(), title.clone());
+            title
+        };
+
+        let end_time = raw.end_time.clone().unwrap_or_default();
+
+        let start = raw
             .start_time
             .parse::<chrono::DateTime<chrono::Utc>>()
-            .map_err(|e| format!("Bad start_time '{}': {e}", entry.start_time))?;
-
-        let end_str = entry
-            .end_time
-            .as_deref()
-            .ok_or_else(|| format!("Entry {} has no end_time", entry.id))?;
-        let end = end_str
+            .map_err(|e| format!("Bad start_time '{}': {e}", raw.start_time))?;
+        let end = end_time
             .parse::<chrono::DateTime<chrono::Utc>>()
-            .map_err(|e| format!("Bad end_time '{end_str}': {e}"))?;
+            .map_err(|e| format!("Bad end_time '{end_time}': {e}"))?;
 
-        let seconds = (end - start).num_seconds().max(0);
-        let year = start.format("%Y").to_string().parse::<i32>().unwrap_or(0);
-        let month = start.format("%m").to_string().parse::<u32>().unwrap_or(0);
+        let duration_seconds = (end - start).num_seconds().max(0);
 
-        *totals.entry((year, month)).or_insert(0) += seconds;
+        entries.push(ReportEntry {
+            task_title,
+            plan_title,
+            start_time: raw.start_time.clone(),
+            end_time,
+            duration_seconds,
+            notes: raw.notes.clone(),
+        });
     }
 
-    let monthly_totals: Vec<MonthlyTotal> = totals
-        .into_iter()
-        .map(|((year, month), total_seconds)| MonthlyTotal {
-            year,
-            month,
-            total_seconds,
-        })
-        .collect();
-
-    let grand_total_seconds = monthly_totals.iter().map(|m| m.total_seconds).sum();
+    let grand_total_seconds = entries.iter().map(|e| e.duration_seconds).sum();
 
     let subject_label = if let Some(ref tid) = task_id {
         match db::tasks::get_task(&pool, tid).await {
@@ -108,7 +129,7 @@ pub async fn generate_report(
     };
 
     Ok(ReportResult {
-        monthly_totals,
+        entries,
         grand_total_seconds,
         subject_label,
     })
@@ -118,22 +139,11 @@ pub async fn generate_report(
 // export_report_csv
 // ---------------------------------------------------------------------------
 
-fn month_name(month: u32) -> &'static str {
-    match month {
-        1 => "January",
-        2 => "February",
-        3 => "March",
-        4 => "April",
-        5 => "May",
-        6 => "June",
-        7 => "July",
-        8 => "August",
-        9 => "September",
-        10 => "October",
-        11 => "November",
-        12 => "December",
-        _ => "Unknown",
-    }
+fn format_duration_csv(seconds: i64) -> String {
+    let h = seconds / 3600;
+    let m = (seconds % 3600) / 60;
+    let s = seconds % 60;
+    format!("{h}:{m:02}:{s:02}")
 }
 
 #[tauri::command]
@@ -169,38 +179,41 @@ pub async fn export_report_csv(
     let mut writer = csv::Writer::from_writer(file);
 
     writer
-        .write_record([
-            "Month",
-            "Year",
-            "Total Hours",
-            "Total Minutes",
-            "Total Seconds",
-        ])
+        .write_record(["Task", "Plan", "Date", "Start", "End", "Duration", "Notes"])
         .map_err(|e| e.to_string())?;
 
-    for row in &report.monthly_totals {
-        let hours = row.total_seconds / 3600;
-        let minutes = (row.total_seconds % 3600) / 60;
-        let seconds = row.total_seconds % 60;
+    for entry in &report.entries {
+        let start_dt = entry
+            .start_time
+            .parse::<chrono::DateTime<chrono::Utc>>()
+            .unwrap_or_default();
+        let end_dt = entry
+            .end_time
+            .parse::<chrono::DateTime<chrono::Utc>>()
+            .unwrap_or_default();
+
+        let date = start_dt.format("%Y-%m-%d").to_string();
+        let start_str = start_dt.format("%H:%M:%S").to_string();
+        let end_str = end_dt.format("%H:%M:%S").to_string();
+        let duration = format_duration_csv(entry.duration_seconds);
+        let notes = entry.notes.as_deref().unwrap_or("");
+
         writer
-            .write_record(&[
-                month_name(row.month).to_string(),
-                row.year.to_string(),
-                hours.to_string(),
-                minutes.to_string(),
-                seconds.to_string(),
+            .write_record([
+                entry.task_title.as_str(),
+                entry.plan_title.as_str(),
+                date.as_str(),
+                start_str.as_str(),
+                end_str.as_str(),
+                duration.as_str(),
+                notes,
             ])
             .map_err(|e| e.to_string())?;
     }
 
+    let grand_duration = format_duration_csv(report.grand_total_seconds);
     writer
-        .write_record(&[
-            "Grand Total".to_string(),
-            String::new(),
-            String::new(),
-            String::new(),
-            report.grand_total_seconds.to_string(),
-        ])
+        .write_record(["Grand Total", "", "", "", "", grand_duration.as_str(), ""])
         .map_err(|e| e.to_string())?;
 
     writer.flush().map_err(|e| e.to_string())?;

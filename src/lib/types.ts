@@ -40,14 +40,17 @@ export interface ActiveTimerInfo {
   elapsedSeconds: number;
 }
 
-export interface MonthlyTotal {
-  year: number;
-  month: number;
-  totalSeconds: number;
+export interface ReportEntry {
+  taskTitle: string;
+  planTitle: string;
+  startTime: string;
+  endTime: string;
+  durationSeconds: number;
+  notes: string | null;
 }
 
 export interface ReportResult {
-  monthlyTotals: MonthlyTotal[];
+  entries: ReportEntry[];
   grandTotalSeconds: number;
   subjectLabel: string;
 }

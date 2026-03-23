@@ -13,6 +13,8 @@
     tasksByPlan,
   } from "$lib/stores/planner";
   import type { ReportResult } from "$lib/types";
+  import { formatDateTime } from "$lib/utils/datetime";
+  import { formatDuration } from "$lib/utils/duration";
 
   // ---------------------------------------------------------------------------
   // Month helpers
@@ -31,22 +33,6 @@
     { value: "10", label: "October" },
     { value: "11", label: "November" },
     { value: "12", label: "December" },
-  ];
-
-  const SHORT_MONTHS = [
-    "",
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
   ];
 
   // ---------------------------------------------------------------------------
@@ -146,16 +132,6 @@
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Derived totals for table footer
-  // ---------------------------------------------------------------------------
-
-  const grandHours = $derived(
-    report ? Math.floor(report.grandTotalSeconds / 3600) : 0,
-  );
-  const grandMinutes = $derived(
-    report ? Math.floor((report.grandTotalSeconds % 3600) / 60) : 0,
-  );
 </script>
 
 <div class="view">
@@ -237,38 +213,36 @@
       {#if report}
         <h3 class="subject-label">{report.subjectLabel}</h3>
 
-        {#if report.monthlyTotals.length === 0}
+        {#if report.entries.length === 0}
           <EmptyState message="No entries found for this period." />
         {:else}
+          <div class="grand-total">
+            Total: <strong>{formatDuration(report.grandTotalSeconds)}</strong>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Month</th>
-                  <th class="num-col">Hours</th>
-                  <th class="num-col">Minutes</th>
+                  <th>Task</th>
+                  <th>Plan</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th class="num-col">Duration</th>
+                  <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
-                {#each report.monthlyTotals as row (row.year + "-" + row.month)}
+                {#each report.entries as entry, i (i)}
                   <tr>
-                    <td>{SHORT_MONTHS[row.month]} {row.year}</td>
-                    <td class="num-col muted"
-                      >{Math.floor(row.totalSeconds / 3600)}</td
-                    >
-                    <td class="num-col muted"
-                      >{Math.floor((row.totalSeconds % 3600) / 60)}</td
-                    >
+                    <td>{entry.taskTitle}</td>
+                    <td class="muted">{entry.planTitle}</td>
+                    <td class="muted">{formatDateTime(entry.startTime)}</td>
+                    <td class="muted">{formatDateTime(entry.endTime)}</td>
+                    <td class="num-col">{formatDuration(entry.durationSeconds)}</td>
+                    <td class="muted notes-col">{entry.notes ?? "—"}</td>
                   </tr>
                 {/each}
               </tbody>
-              <tfoot>
-                <tr class="grand-total-row">
-                  <td>Grand Total</td>
-                  <td class="num-col">{grandHours}</td>
-                  <td class="num-col">{grandMinutes}</td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         {/if}
@@ -382,6 +356,7 @@
     border-bottom: none;
   }
 
+
   .num-col {
     text-align: right;
   }
@@ -390,13 +365,20 @@
     color: var(--text-muted);
   }
 
-  tfoot tr td {
-    border-top: 1px solid var(--border);
-    border-bottom: none;
+  .grand-total {
+    font-size: var(--font-size-base);
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
   }
 
-  .grand-total-row td {
-    font-weight: 600;
+  .grand-total strong {
     color: var(--text);
+    font-weight: 600;
+  }
+
+  .notes-col {
+    max-width: 20rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
