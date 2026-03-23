@@ -38,7 +38,7 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 
 - **Time Tracking** — Start/stop timers against any Planner task
 - **Manual Entry** — Log time with explicit start/end times
-- **Reports** — Monthly breakdowns, plan/task totals, CSV export
+- **Reports** — Grand total + per-entry breakdown, plan/task filter, CSV export
 - **Offline-first** — All data stored locally; Microsoft Graph syncs task metadata
 - **Secure auth** — OAuth 2.0 PKCE via system browser (no credentials stored in app)
 
@@ -94,7 +94,7 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 - Select a **date range** (month + year, from/to)
 - Select a **plan** (and optionally a **task**)
 - Click **Generate** to build the report table
-- Table shows: monthly totals, grand total, plan or task total
+- Table shows: grand total at top, then individual entries (task, plan, start, end, duration, notes)
 - **Export CSV** saves the report to your Downloads folder
 
 ---
