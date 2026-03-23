@@ -5,6 +5,7 @@ workflow:
     - if: '$CI_COMMIT_TAG'
 
 stages:
+  - test
   - build
   - release
 
@@ -20,6 +21,25 @@ cache:
     - ~/.cargo/registry/
     - ~/.cargo/git/
     - node_modules/
+
+test:
+  stage: test
+  image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
+  variables:
+    SQLX_OFFLINE: "true"
+    VITE_AZURE_CLIENT_ID: "test-client-id"
+    VITE_AZURE_TENANT_ID: "test-tenant-id"
+  script:
+    - just deps-ci
+    - just test-rs
+    - just test-js
+  coverage: '/^TOTAL\s+\S+\s+\S+\s+(\d+\.?\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 1 day
 
 build:
   stage: build

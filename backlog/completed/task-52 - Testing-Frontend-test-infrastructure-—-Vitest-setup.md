@@ -1,9 +1,10 @@
 ---
 id: TASK-52
 title: 'Testing: Frontend test infrastructure — Vitest setup'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 07:52'
+updated_date: '2026-03-23 10:54'
 labels:
   - testing
   - frontend
@@ -77,10 +78,16 @@ afterEach(() => {
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 vitest, @testing-library/svelte, @testing-library/jest-dom, jsdom installed as devDependencies
-- [ ] #2 vitest.config.ts exists at repo root with jsdom environment, globals: true, and setupFiles pointing to src/tests/setup.ts
-- [ ] #3 src/tests/setup.ts exists with WebCrypto polyfill and clearMocks afterEach hook
-- [ ] #4 package.json has test, test:watch, and test:coverage scripts
-- [ ] #5 pnpm test runs without error (zero test files found is acceptable at this stage)
-- [ ] #6 svelte-check passes with no errors
+- [x] #1 vitest, @testing-library/svelte, @testing-library/jest-dom, jsdom installed as devDependencies
+- [x] #2 vitest.config.ts exists at repo root with jsdom environment, globals: true, and setupFiles pointing to src/tests/setup.ts
+- [x] #3 src/tests/setup.ts exists with WebCrypto polyfill and clearMocks afterEach hook
+- [x] #4 package.json has test, test:watch, and test:coverage scripts
+- [x] #5 pnpm test runs without error (zero test files found is acceptable at this stage)
+- [x] #6 svelte-check passes with no errors
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Installed vitest 4.1.0, @testing-library/svelte 5.3.1, @testing-library/jest-dom 6.9.1, jsdom 29.0.1 as devDependencies. Created vitest.config.ts with jsdom environment, globals: true, passWithNoTests: true (so zero test files exit cleanly), and setupFiles pointing to src/tests/setup.ts. Created src/tests/setup.ts with WebCrypto polyfill and clearMocks afterEach hook. Added test/test:watch/test:coverage scripts to package.json. Added "vitest/globals" to tsconfig.json types so afterEach is recognized by svelte-check. pnpm test exits 0; svelte-check passes with 0 errors.
+<!-- SECTION:FINAL_SUMMARY:END -->

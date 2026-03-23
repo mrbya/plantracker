@@ -1,10 +1,10 @@
 ---
 id: TASK-53
 title: 'Testing: Frontend unit tests — duration utilities and API wrappers'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 07:52'
-updated_date: '2026-03-23 07:52'
+updated_date: '2026-03-23 10:55'
 labels:
   - testing
   - frontend
@@ -78,10 +78,16 @@ Test cases:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 formatDurationCSV exported from duration.ts
-- [ ] #2 duration.test.ts exists with all 4 describe/it cases passing
-- [ ] #3 api/index.test.ts exists with all 6 test cases passing
-- [ ] #4 mockIPC used for all API tests — no real Tauri IPC calls
-- [ ] #5 pnpm test passes with all tests green
-- [ ] #6 svelte-check passes with no errors
+- [x] #1 formatDurationCSV exported from duration.ts
+- [x] #2 duration.test.ts exists with all 4 describe/it cases passing
+- [x] #3 api/index.test.ts exists with all 6 test cases passing
+- [x] #4 mockIPC used for all API tests — no real Tauri IPC calls
+- [x] #5 pnpm test passes with all tests green
+- [x] #6 svelte-check passes with no errors
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Exported formatDurationCSV from duration.ts. Created src/lib/utils/duration.test.ts with 4 test cases covering formatDuration (sub-hour, hour+minutes, zero) and formatDurationCSV (H:MM:SS formatting). Created src/lib/api/index.test.ts with 6 test cases using mockIPC to verify startTimer null/set taskId, stopTimer non-null endTime, createManualEntry undefined→null taskId and passthrough, and generateReport null planId/taskId. All 10 tests pass; svelte-check has 0 errors.
+<!-- SECTION:FINAL_SUMMARY:END -->

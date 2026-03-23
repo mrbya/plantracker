@@ -104,3 +104,44 @@ pub async fn delete_entry(id: String, pool: State<'_, SqlitePool>) -> Result<(),
     tracing::info!(entry_id = %id, "Entry deleted");
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::parse_and_validate_times;
+
+    #[test]
+    fn rejects_end_before_start() {
+        let result = parse_and_validate_times(
+            "2024-03-15T11:00:00Z",
+            "2024-03-15T10:00:00Z",
+        );
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("after start_time"));
+    }
+
+    #[test]
+    fn rejects_equal_times() {
+        let result = parse_and_validate_times(
+            "2024-03-15T10:00:00Z",
+            "2024-03-15T10:00:00Z",
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn accepts_valid_range() {
+        let result = parse_and_validate_times(
+            "2024-03-15T10:00:00Z",
+            "2024-03-15T11:00:00Z",
+        );
+        assert!(result.is_ok());
+        let (start, end) = result.unwrap();
+        assert!(end > start);
+    }
+
+    #[test]
+    fn rejects_unparseable_start() {
+        let result = parse_and_validate_times("not-a-date", "2024-03-15T11:00:00Z");
+        assert!(result.is_err());
+    }
+}

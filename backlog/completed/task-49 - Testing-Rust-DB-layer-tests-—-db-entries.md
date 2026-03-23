@@ -1,10 +1,10 @@
 ---
 id: TASK-49
 title: 'Testing: Rust DB layer tests — db::entries'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 07:51'
-updated_date: '2026-03-23 07:52'
+updated_date: '2026-03-23 10:47'
 labels:
   - testing
   - backend
@@ -81,11 +81,17 @@ mod tests {
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 All 11 test cases listed above are implemented
-- [ ] #2 Tests use test_pool() — no shared state between tests
-- [ ] #3 list_entries_for_plan test verifies taskless entries are included alongside task-level entries
-- [ ] #4 list_entries_in_range_excludes_active confirms entries with end_time IS NULL do not appear in range results
-- [ ] #5 fk_constraint_fires test confirms inserting with a bogus plan_id returns Err
-- [ ] #6 SQLX_OFFLINE=true cargo test passes with all tests green
-- [ ] #7 cargo clippy passes with no warnings
+- [x] #1 All 11 test cases listed above are implemented
+- [x] #2 Tests use test_pool() — no shared state between tests
+- [x] #3 list_entries_for_plan test verifies taskless entries are included alongside task-level entries
+- [x] #4 list_entries_in_range_excludes_active confirms entries with end_time IS NULL do not appear in range results
+- [x] #5 fk_constraint_fires test confirms inserting with a bogus plan_id returns Err
+- [x] #6 SQLX_OFFLINE=true cargo test passes with all tests green
+- [x] #7 cargo clippy passes with no warnings
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added an inline `#[cfg(test)] mod tests` to `src-tauri/src/db/entries.rs` with all 11 test cases. Each test gets its own isolated in-memory pool via `test_pool()`. Test setup helpers (`insert_plan`, `insert_task`) use `sqlx::query` (non-macro) to avoid needing offline cache entries for test-only SQL. All 11 tests pass under `SQLX_OFFLINE=true cargo test`; clippy is clean.
+<!-- SECTION:FINAL_SUMMARY:END -->

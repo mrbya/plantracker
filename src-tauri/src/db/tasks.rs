@@ -58,3 +58,123 @@ pub async fn get_task(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Task
     .await?;
     Ok(row)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::test_helpers::test_pool;
+    use crate::models::Task;
+    use uuid::Uuid;
+
+    async fn insert_plan(pool: &SqlitePool, id: &str) {
+        sqlx::query(
+            "INSERT INTO plans (id, graph_id, title, synced_at) VALUES (?, ?, ?, ?)",
+        )
+        .bind(id)
+        .bind(format!("g-{id}"))
+        .bind("Test Plan")
+        .bind("2024-01-01T00:00:00Z")
+        .execute(pool)
+        .await
+        .expect("failed to insert plan");
+    }
+
+    fn make_task(graph_id: &str, plan_id: &str, title: &str) -> Task {
+        Task {
+            id: Uuid::new_v4().to_string(),
+            graph_id: graph_id.to_string(),
+            plan_id: plan_id.to_string(),
+            title: title.to_string(),
+            synced_at: "2024-01-01T00:00:00Z".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn upsert_task_insert() {
+        let pool = test_pool().await;
+        insert_plan(&pool, "p1").await;
+
+        let task = make_task("gt1", "p1", "My Task");
+        upsert_task(&pool, &task).await.unwrap();
+
+        let fetched = get_task(&pool, &task.id).await.unwrap();
+        assert!(fetched.is_some());
+        assert_eq!(fetched.unwrap().graph_id, "gt1");
+    }
+
+    #[tokio::test]
+    async fn upsert_task_update() {
+        let pool = test_pool().await;
+        insert_plan(&pool, "p1").await;
+
+        let task = make_task("gt1", "p1", "Original Title");
+        upsert_task(&pool, &task).await.unwrap();
+
+        // Re-upsert same graph_id with updated title
+        let updated = Task {
+            id: Uuid::new_v4().to_string(),
+            graph_id: "gt1".to_string(),
+            plan_id: "p1".to_string(),
+            title: "Updated Title".to_string(),
+            synced_at: "2024-06-01T00:00:00Z".to_string(),
+        };
+        upsert_task(&pool, &updated).await.unwrap();
+
+        let fetched = get_task_by_graph_id(&pool, "gt1").await.unwrap().unwrap();
+        assert_eq!(fetched.title, "Updated Title");
+        assert_eq!(fetched.synced_at, "2024-06-01T00:00:00Z");
+    }
+
+    #[tokio::test]
+    async fn list_tasks_for_plan_test() {
+        let pool = test_pool().await;
+        insert_plan(&pool, "p1").await;
+        insert_plan(&pool, "p2").await;
+
+        let t1 = make_task("gt1", "p1", "Task A");
+        let t2 = make_task("gt2", "p1", "Task B");
+        let t3 = make_task("gt3", "p2", "Task C"); // different plan — must not appear
+
+        upsert_task(&pool, &t1).await.unwrap();
+        upsert_task(&pool, &t2).await.unwrap();
+        upsert_task(&pool, &t3).await.unwrap();
+
+        let results = list_tasks_for_plan(&pool, "p1").await.unwrap();
+        assert_eq!(results.len(), 2);
+        let ids: Vec<&str> = results.iter().map(|t| t.id.as_str()).collect();
+        assert!(ids.contains(&t1.id.as_str()));
+        assert!(ids.contains(&t2.id.as_str()));
+    }
+
+    #[tokio::test]
+    async fn get_task_by_graph_id_test() {
+        let pool = test_pool().await;
+        insert_plan(&pool, "p1").await;
+
+        let task = make_task("gt1", "p1", "My Task");
+        upsert_task(&pool, &task).await.unwrap();
+
+        let fetched = get_task_by_graph_id(&pool, "gt1").await.unwrap();
+        assert!(fetched.is_some());
+        assert_eq!(fetched.unwrap().id, task.id);
+    }
+
+    #[tokio::test]
+    async fn cascade_delete() {
+        let pool = test_pool().await;
+        insert_plan(&pool, "p1").await;
+
+        let task = make_task("gt1", "p1", "Will Be Deleted");
+        upsert_task(&pool, &task).await.unwrap();
+
+        // Deleting the plan must cascade-delete the task
+        sqlx::query("DELETE FROM plans WHERE id = ?")
+            .bind("p1")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        let result = get_task(&pool, &task.id).await.unwrap();
+        assert!(result.is_none());
+    }
+}

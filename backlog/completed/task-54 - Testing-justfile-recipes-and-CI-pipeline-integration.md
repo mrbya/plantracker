@@ -1,10 +1,10 @@
 ---
 id: TASK-54
 title: 'Testing: justfile recipes and CI pipeline integration'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 07:52'
-updated_date: '2026-03-23 07:52'
+updated_date: '2026-03-23 10:57'
 labels:
   - testing
   - ci
@@ -96,12 +96,18 @@ The dummy `VITE_AZURE_*` values are required because `dotenvy` attempts to load 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 justfile has test-rs, test-js, test, and test-js-coverage recipes
-- [ ] #2 test-rs sets SQLX_OFFLINE=true and runs from src-tauri working directory
-- [ ] #3 pre-commit recipe calls just test before just build
-- [ ] #4 just test runs both Rust and frontend tests end-to-end cleanly
-- [ ] #5 .gitlab-ci.yml has a test stage defined before build
-- [ ] #6 CI test job sets SQLX_OFFLINE=true and dummy Azure vars
-- [ ] #7 CI test job runs just test-rs and just test-js
-- [ ] #8 Coverage artifact configured with cobertura format
+- [x] #1 justfile has test-rs, test-js, test, and test-js-coverage recipes
+- [x] #2 test-rs sets SQLX_OFFLINE=true and runs from src-tauri working directory
+- [x] #3 pre-commit recipe calls just test before just build
+- [x] #4 just test runs both Rust and frontend tests end-to-end cleanly
+- [x] #5 .gitlab-ci.yml has a test stage defined before build
+- [x] #6 CI test job sets SQLX_OFFLINE=true and dummy Azure vars
+- [x] #7 CI test job runs just test-rs and just test-js
+- [x] #8 Coverage artifact configured with cobertura format
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added test-rs (SQLX_OFFLINE=true cargo test from src-tauri dir), test-js (pnpm test), test (calls both), and test-js-coverage recipes to justfile. Added @just test after @just thorough-check in pre-commit. Updated .gitlab-ci.yml: added test stage before build, added test job with SQLX_OFFLINE=true + dummy Azure vars, running just deps-ci + just test-rs + just test-js, with cobertura coverage artifact. just test runs cleanly: 30 Rust + 10 frontend tests all green.
+<!-- SECTION:FINAL_SUMMARY:END -->

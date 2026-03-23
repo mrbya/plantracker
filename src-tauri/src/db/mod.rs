@@ -4,6 +4,9 @@ pub mod entries;
 pub mod plans;
 pub mod tasks;
 
+#[cfg(test)]
+pub mod test_helpers;
+
 fn resolve_db_path(app: &tauri::AppHandle) -> anyhow::Result<std::path::PathBuf> {
     use tauri::Manager;
 

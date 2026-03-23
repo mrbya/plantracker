@@ -1,9 +1,10 @@
 ---
 id: TASK-48
 title: 'Testing: Rust test infrastructure — dev-dependencies and in-memory pool helper'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 07:51'
+updated_date: '2026-03-23 09:39'
 labels:
   - testing
   - backend
@@ -67,9 +68,15 @@ This keeps the helper out of the release binary entirely.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 tokio test-util feature added under [dev-dependencies] in Cargo.toml
-- [ ] #2 src-tauri/src/db/test_helpers.rs exists with test_pool() that returns a migrated in-memory pool
-- [ ] #3 test_helpers module gated behind #[cfg(test)] in db/mod.rs
-- [ ] #4 cargo clippy passes with no warnings
-- [ ] #5 SQLX_OFFLINE=true cargo test compiles and runs (no tests yet, just no compile errors)
+- [x] #1 tokio test-util feature added under [dev-dependencies] in Cargo.toml
+- [x] #2 src-tauri/src/db/test_helpers.rs exists with test_pool() that returns a migrated in-memory pool
+- [x] #3 test_helpers module gated behind #[cfg(test)] in db/mod.rs
+- [x] #4 cargo clippy passes with no warnings
+- [x] #5 SQLX_OFFLINE=true cargo test compiles and runs (no tests yet, just no compile errors)
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added `tokio` with `test-util` feature under `[dev-dependencies]` in Cargo.toml. Created `src-tauri/src/db/test_helpers.rs` with `test_pool()` returning a fully migrated in-memory SQLite pool. Used `sqlx::query` (non-macro) for the PRAGMA to avoid needing an offline cache entry for test-only code. Exposed the module behind `#[cfg(test)]` in `db/mod.rs`. `SQLX_OFFLINE=true cargo test` compiles and runs cleanly; clippy reports no warnings.
+<!-- SECTION:FINAL_SUMMARY:END -->

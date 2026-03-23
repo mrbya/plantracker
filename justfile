@@ -73,6 +73,24 @@ audit:
     @just audit-js
     @just audit-rs
 
+# Runs rust unit tests.
+[working-directory: 'src-tauri']
+test-rs *FLAGS:
+    SQLX_OFFLINE=true cargo test {{FLAGS}}
+
+# Runs frontend unit tests.
+test-js *FLAGS:
+    pnpm test {{FLAGS}}
+
+# Runs all unit tests.
+test:
+    @just test-rs
+    @just test-js
+
+# Runs frontend unit tests with coverage report.
+test-js-coverage:
+    pnpm test:coverage
+
 # Pre caches db queries.
 [working-directory: 'src-tauri']
 precache *FLAGS:
@@ -114,6 +132,7 @@ index:
 # Checks formatting, code quality, and more
 pre-commit:
     @just thorough-check
+    @just test
     @just unused
     @just audit
     @just precache-check
@@ -126,6 +145,22 @@ ci-build:
     @just thorough-check
     @just precache-check
     @just build
+
+# Generate SBOM for rs sources.
+[working-directory: 'src-tauri']
+sbom-rs:
+    mkdir -p ../sbom
+    cargo sbom > ../sbom/sbom-backend.json
+
+# Generate SBOM for js/ts/svelte sources.
+sbom-js:
+    mkdir -p sbom
+    pnpm sbom --sbom-format spdx --prod > sbom/sbom-frontend.json
+
+# Generates SBOM for all sources.
+sbom:
+    @just sbom-rs
+    @just sbom-js
 
 # Build linux-build-image.
 docker-linux:
@@ -166,12 +201,14 @@ init:
     echo # Installing sqlx cli for db migrations and pre-caching 
     cargo sqlx -V || cargo binstall sqlx-cli --no-confirm
 
-    echo # Installing things required by `just pre-commit`
+    echo # Installing things required by `just pre-commit` and other utilities
     cargo udeps -V || cargo binstall cargo-udeps --no-confirm
     cargo audit fix -V || cargo install cargo-audit --locked --features=fix
+    cargo sbom -V || cargo binstall cargo-sbom --no-confirm
 
     echo # Installing pnpm
-    pnpm -v || npm install -g pnpm
+    pnpm_major=$(pnpm --version 2>/dev/null | cut -d. -f1)
+    [[ "${pnpm_major:-0}" -lt 11 ]] && npm install -g pnpm@next-11 || true
 
     echo # Synch node_modules
     pnpm install

@@ -1,10 +1,10 @@
 ---
 id: TASK-51
 title: 'Testing: Rust unit tests — commands::entries validation and auth::pkce'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 07:52'
-updated_date: '2026-03-23 07:52'
+updated_date: '2026-03-23 10:50'
 labels:
   - testing
   - backend
@@ -80,9 +80,15 @@ Add inline `#[cfg(test)]` module to `src-tauri/src/auth/pkce.rs`:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 4 parse_and_validate_times tests implemented in commands/entries.rs
-- [ ] #2 5 PKCE tests implemented in auth/pkce.rs
-- [ ] #3 All tests are synchronous (#[test], not #[tokio::test]) — no async or DB needed
-- [ ] #4 SQLX_OFFLINE=true cargo test passes with all tests green
-- [ ] #5 cargo clippy passes with no warnings
+- [x] #1 4 parse_and_validate_times tests implemented in commands/entries.rs
+- [x] #2 5 PKCE tests implemented in auth/pkce.rs
+- [x] #3 All tests are synchronous (#[test], not #[tokio::test]) — no async or DB needed
+- [x] #4 SQLX_OFFLINE=true cargo test passes with all tests green
+- [x] #5 cargo clippy passes with no warnings
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added 4 synchronous tests for `parse_and_validate_times` in `commands/entries.rs` (rejects_end_before_start, rejects_equal_times, accepts_valid_range, rejects_unparseable_start) and 5 synchronous tests for PKCE helpers in `auth/pkce.rs` (verifier_length_within_rfc7636_range, verifier_is_base64url, challenge_is_sha256_of_verifier, state_is_32_hex_chars, successive_verifiers_differ). All 30 tests pass under SQLX_OFFLINE=true; clippy is clean.
+<!-- SECTION:FINAL_SUMMARY:END -->
