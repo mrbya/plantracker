@@ -117,7 +117,6 @@ pre-commit:
     @just unused
     @just audit
     @just precache-check
-    @just icons
     @just build
     @just index
 
@@ -126,7 +125,6 @@ ci-build:
     @just deps-ci
     @just thorough-check
     @just precache-check
-    @just icons
     @just build
 
 # Build linux-build-image.
