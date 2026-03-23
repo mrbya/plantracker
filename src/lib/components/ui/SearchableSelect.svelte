@@ -103,9 +103,9 @@
 
   function scrollActiveIntoView() {
     if (!listEl || activeIdx < 0) return;
-    const item = listEl.querySelectorAll("[role=option]")[
-      activeIdx
-    ] as HTMLElement | undefined;
+    const item = listEl.querySelectorAll("[role=option]")[activeIdx] as
+      | HTMLElement
+      | undefined;
     item?.scrollIntoView({ block: "nearest" });
   }
 </script>
@@ -150,7 +150,12 @@
         {opt.label}
       </li>
     {:else}
-      <li class="no-results" role="option" aria-selected={false} aria-disabled="true">
+      <li
+        class="no-results"
+        role="option"
+        aria-selected={false}
+        aria-disabled="true"
+      >
         No results
       </li>
     {/each}

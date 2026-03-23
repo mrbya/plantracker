@@ -1831,36 +1831,36 @@ export { default as SearchableSelect } from './SearchableSelect.svelte';
 - [x] After selection, re-opening the panel shows all plans (query is cleared)
 
 **Functional — task dropdown**
-- [ ] Typing a partial task name filters within the current plan's tasks
-- [ ] "No specific task" entry always appears in the task list (even when query is active) — it is never filtered out
-- [ ] Selecting a task closes the panel, shows the task label, and triggers `onTaskChange`
-- [ ] With no plan selected, the task dropdown remains disabled / shows placeholder (behaviour unchanged from before)
+- [x] Typing a partial task name filters within the current plan's tasks
+- [x] "No specific task" entry always appears in the task list (even when query is active) — it is never filtered out
+- [x] Selecting a task closes the panel, shows the task label, and triggers `onTaskChange`
+- [x] With no plan selected, the task dropdown remains disabled / shows placeholder (behaviour unchanged from before)
 
 **Keyboard navigation**
-- [ ] `ArrowDown` on the closed input opens the panel and highlights the first option
-- [ ] `ArrowDown` / `ArrowUp` cycle through `filteredOptions`; the highlighted item scrolls into view in a long list
-- [ ] `Enter` selects the highlighted option and closes the panel
-- [ ] `Tab` selects the highlighted option (if any) and closes the panel
-- [ ] `Escape` closes the panel without changing the selected value; the input reverts to the previously selected label
+- [x] `ArrowDown` on the closed input opens the panel and highlights the first option
+- [x] `ArrowDown` / `ArrowUp` cycle through `filteredOptions`; the highlighted item scrolls into view in a long list
+- [x] `Enter` selects the highlighted option and closes the panel
+- [x] `Tab` selects the highlighted option (if any) and closes the panel
+- [x] `Escape` closes the panel without changing the selected value; the input reverts to the previously selected label
 
 **Edge cases**
-- [ ] Query that matches nothing shows "No results" text inside the panel (not an empty panel with no affordance)
-- [ ] A plan with 50+ tasks is still performant — filtering is synchronous and derived, no debounce required at this data scale
-- [ ] Clicking outside the open panel closes it without selecting anything
+- [x] Query that matches nothing shows "No results" text inside the panel (not an empty panel with no affordance)
+- [?] A plan with 50+ tasks is still performant — filtering is synchronous and derived, no debounce required at this data scale
+- [x] Clicking outside the open panel closes it without selecting anything
 
 **Visual / theme**
-- [ ] Resting state (closed, value selected) is visually identical to the existing `Select.svelte`
-- [ ] Resting state (closed, no value) shows placeholder in muted colour
-- [ ] Chevron rotates when the panel is open
-- [ ] Focused input shows the standard `2px solid var(--accent)` focus ring
-- [ ] Active (keyboard-highlighted) and selected options are visually distinct from each other and from unselected options
-- [ ] Panel and items render correctly in both Mocha (dark) and Latte (light) themes
+- [x] Resting state (closed, value selected) is visually identical to the existing `Select.svelte`
+- [x] Resting state (closed, no value) shows placeholder in muted colour
+- [x] Chevron rotates when the panel is open
+- [x] Focused input shows the standard `2px solid var(--accent)` focus ring
+- [x] Active (keyboard-highlighted) and selected options are visually distinct from each other and from unselected options
+- [x] Panel and items render correctly in both Mocha (dark) and Latte (light) themes
 
 **Regression — unmodified components**
-- [ ] Settings view dropdowns (theme, sync frequency) still use `Select.svelte` — unaffected
-- [ ] `Select.svelte` itself is unmodified
-- [ ] `pnpm tsc --noEmit` passes with no type errors
-- [ ] `pnpm svelte-check` passes with no errors or warnings
+- [x] Settings view dropdowns (theme, sync frequency) still use `Select.svelte` — unaffected
+- [x] `Select.svelte` itself is unmodified
+- [x] `pnpm tsc --noEmit` passes with no type errors
+- [x] `pnpm svelte-check` passes with no errors or warnings
 
 ---
 

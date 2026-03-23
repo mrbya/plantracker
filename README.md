@@ -55,7 +55,7 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 | Build tool | [Vite](https://vite.dev/) |
 | Authentication | [OAuth 2.0 PKCE](https://www.oauth.com/oauth2-servers/pkce/) → [Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) |
 | API | [Microsoft Graph Tasks API](https://learn.microsoft.com/en-us/graph/api/resources/plannertask) |
-| Theming | [Catppuccin Mocha](https://catppuccin.com/palette/) |
+| Theming | [Catppuccin Mocha](https://catppuccin.com/palette/) (Dark - `Mocha`, Light - `Latte`)|
 | Font | [JetBrains Mono Nerd Font](https://www.programmingfonts.org/#jetbrainsmono) |
 
 ---
@@ -78,7 +78,7 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 
 ### Time Tracking
 
-- Select a **Plan** then a **Task** (or pick a task directly — plan auto-fills)
+- Select a **Plan** then a **Task**
 - Hit **Start** to begin timing; **Stop** to save the entry
 - Last *N* entries shown below (configurable in settings)
 
@@ -87,7 +87,7 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 - Same plan/task dropdowns
 - Pick **start** and **end** datetime
 - Optional **notes** field
-- Submit saves directly to SQLite
+- Submit to save
 
 ### Reports
 
@@ -95,7 +95,7 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 - Select a **plan** (and optionally a **task**)
 - Click **Generate** to build the report table
 - Table shows: grand total at top, then individual entries (task, plan, start, end, duration, notes)
-- **Export CSV** saves the report to your Downloads folder
+- **Export CSV** to export report to a .csv file
 
 ---
 
@@ -128,8 +128,8 @@ time_entries   id, task_id, start_time, end_time, notes, created_at
 
 - [Rust toolchain](https://rustup.rs/) (stable, 1.77+)
 - [Node.js](https://nodejs.org/) 20+ and `pnpm`
-- [Tauri CLI v2](https://tauri.app/start/): `cargo install tauri-cli --version "^2"` or bootstrap using `just init`
-- A registered **Azure AD application** (see [Authentication Setup](#authentication-setup))
+- [Tauri CLI v2](https://tauri.app/start/): `cargo install tauri-cli --version "^2"` or bootstrap using `just init` (see [Getting Started](#getting-started))
+- A registered **Azure Entra ID application** (see [Authentication Setup](#authentication-setup))
 
 ### Getting Started
 
