@@ -26,7 +26,7 @@ Commit the updated `.sqlx/` directory. CI builds without a live database will fa
 All migrations live in `src-tauri/migrations/` and are numbered sequentially:
 ```
 0001_initial.sql
-0002_add_notes_to_entries.sql
+0002_plan_level_entries.sql
 ```
 
 Never apply migrations manually. Always use `sqlx::migrate!()` at startup:
@@ -68,13 +68,23 @@ CREATE TABLE tasks (
 
 CREATE TABLE time_entries (
     id         TEXT PRIMARY KEY,
-    task_id    TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    plan_id    TEXT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+    task_id    TEXT            REFERENCES tasks(id) ON DELETE SET NULL,
     start_time TEXT NOT NULL,            -- ISO 8601, required
     end_time   TEXT,                     -- NULL means timer is active
     notes      TEXT,
     created_at TEXT NOT NULL
 );
 ```
+
+Indices on `time_entries` (created by migration `0002_plan_level_entries.sql`):
+```sql
+CREATE INDEX idx_time_entries_plan_id    ON time_entries(plan_id);
+CREATE INDEX idx_time_entries_task_id    ON time_entries(task_id);
+CREATE INDEX idx_time_entries_start_time ON time_entries(start_time);
+```
+
+`task_id ON DELETE SET NULL` means if a task is removed during a Graph sync, its entries survive as plan-level entries rather than being deleted.
 
 A `NULL` `end_time` signals an in-progress timer. There must be at most one such row at any time — enforce this check in the `start_timer` command before inserting.
 

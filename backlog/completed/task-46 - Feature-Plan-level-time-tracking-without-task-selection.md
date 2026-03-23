@@ -1,10 +1,10 @@
 ---
 id: TASK-46
 title: 'Feature: Plan-level time tracking without task selection'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 02:41'
-updated_date: '2026-03-23 02:41'
+updated_date: '2026-03-23 07:09'
 labels:
   - feature
   - backend

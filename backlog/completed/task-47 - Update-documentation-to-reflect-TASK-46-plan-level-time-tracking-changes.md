@@ -1,9 +1,10 @@
 ---
 id: TASK-47
 title: Update documentation to reflect TASK-46 plan-level time tracking changes
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 02:45'
+updated_date: '2026-03-23 07:08'
 labels:
   - documentation
 dependencies:

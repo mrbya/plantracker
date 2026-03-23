@@ -36,10 +36,13 @@
   );
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
-          value: t.id,
-          label: t.title,
-        }))
+      ? [
+          { value: "", label: "No specific task" },
+          ...($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+            value: t.id,
+            label: t.title,
+          })),
+        ]
       : [],
   );
 
@@ -305,9 +308,7 @@
             id="task-select"
             options={taskOptions}
             bind:value={selectedTaskId}
-            placeholder={selectedPlanId
-              ? "Select a task…"
-              : "Select a plan first"}
+            placeholder={selectedPlanId ? undefined : "Select a plan first"}
             onchange={onTaskChange}
           />
         </div>
