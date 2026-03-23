@@ -1580,16 +1580,16 @@ automatically adopts the correct light-mode colours. No change needed.
 
 ### Verification checklist
 
-- [ ] Selecting **Dark** applies Catppuccin Mocha immediately; no page reload
-- [ ] Selecting **Light** applies Catppuccin Latte immediately; no page reload
-- [ ] Selecting **System Default** follows the OS preference in real time
-- [ ] Theme choice persists across app restarts (stored in `config.json` under key `"theme"`)
-- [ ] First launch with no saved preference defaults to **System Default** (resolves to OS setting)
-- [ ] OS switches from light → dark (or vice versa) while app is open and **System Default** is active — app follows immediately
-- [ ] All semantic colour variables (`--bg`, `--text`, `--accent`, `--danger`, etc.) render correctly in Latte
-- [ ] Focus rings, scrollbars, toasts, and badges all look correct in both themes
-- [ ] `pnpm tsc --noEmit` passes with no type errors
-- [ ] `cargo tauri dev` starts cleanly (no Rust changes required)
+- [x] Selecting **Dark** applies Catppuccin Mocha immediately; no page reload
+- [x] Selecting **Light** applies Catppuccin Latte immediately; no page reload
+- [x] Selecting **System Default** follows the OS preference in real time
+- [x] Theme choice persists across app restarts (stored in `config.json` under key `"theme"`)
+- [x] First launch with no saved preference defaults to **System Default** (resolves to OS setting)
+- [?] OS switches from light → dark (or vice versa) while app is open and **System Default** is active — app follows immediately
+- [x] All semantic colour variables (`--bg`, `--text`, `--accent`, `--danger`, etc.) render correctly in Latte
+- [x] Focus rings, scrollbars, toasts, and badges all look correct in both themes
+- [x] `pnpm tsc --noEmit` passes with no type errors
+- [x] `cargo tauri dev` starts cleanly (no Rust changes required)
 
 ---
 
@@ -1667,5 +1667,6 @@ export interface ReportResult { entries: ReportEntry[]; grandTotalSeconds: numbe
 | 7 | Reports | Medium |
 | 8 | Settings & polish | Medium |
 | 9 | Build & CI | Low |
-| 10 | Testing |  
+| 10 | Testing |
+| 11 | Dark / Light Theme Toggle |
 
