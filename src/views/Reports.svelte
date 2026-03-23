@@ -52,15 +52,19 @@
   let selectedPlanId = $state($selectedPlan?.id ?? "");
   let selectedTaskId = $state($selectedTask?.id ?? "");
 
-  const planOptions = $derived(
-    $plans.map((p) => ({ value: p.id, label: p.title })),
-  );
+  const planOptions = $derived([
+    { value: "", label: "All plans" },
+    ...$plans.map((p) => ({ value: p.id, label: p.title })),
+  ]);
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
-          value: t.id,
-          label: t.title,
-        }))
+      ? [
+          { value: "", label: "All tasks" },
+          ...($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+            value: t.id,
+            label: t.title,
+          })),
+        ]
       : [],
   );
 
@@ -170,7 +174,6 @@
           id="plan-select"
           options={planOptions}
           bind:value={selectedPlanId}
-          placeholder="All plans"
           onchange={onPlanChange}
         />
       </div>
@@ -180,7 +183,7 @@
           id="task-select"
           options={taskOptions}
           bind:value={selectedTaskId}
-          placeholder={selectedPlanId ? "All tasks" : "Select a plan first"}
+          placeholder={selectedPlanId ? undefined : "Select a plan first"}
           onchange={onTaskChange}
         />
       </div>

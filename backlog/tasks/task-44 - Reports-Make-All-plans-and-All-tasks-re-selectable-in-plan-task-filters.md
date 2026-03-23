@@ -1,9 +1,10 @@
 ---
 id: TASK-44
 title: 'Reports: Make "All plans" and "All tasks" re-selectable in plan/task filters'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-23 01:55'
+updated_date: '2026-03-23 02:12'
 labels:
   - frontend
   - reports
@@ -39,10 +40,22 @@ No changes to `Select.svelte`, `TimeTracking.svelte`, `ManualEntry.svelte`, or t
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 After selecting a plan, the plan dropdown still shows 'All plans' as a selectable option and choosing it resets selectedPlanId to '' and clears the task selection.
-- [ ] #2 After selecting a task, the task dropdown still shows 'All tasks' as a selectable option and choosing it resets selectedTaskId to ''.
-- [ ] #3 When no plan is selected, the task dropdown shows the non-selectable 'Select a plan first' hint (unchanged behaviour).
-- [ ] #4 TimeTracking.svelte and ManualEntry.svelte are unmodified.
-- [ ] #5 Select.svelte is unmodified.
-- [ ] #6 The app builds without errors (cargo + svelte-check).
+- [x] #1 After selecting a plan, the plan dropdown still shows 'All plans' as a selectable option and choosing it resets selectedPlanId to '' and clears the task selection.
+- [x] #2 After selecting a task, the task dropdown still shows 'All tasks' as a selectable option and choosing it resets selectedTaskId to ''.
+- [x] #3 When no plan is selected, the task dropdown shows the non-selectable 'Select a plan first' hint (unchanged behaviour).
+- [x] #4 TimeTracking.svelte and ManualEntry.svelte are unmodified.
+- [x] #5 Select.svelte is unmodified.
+- [x] #6 The app builds without errors (cargo + svelte-check).
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Frontend-only change in `src/views/Reports.svelte`. No other files touched.
+
+- `planOptions` now prepends `{ value: "", label: "All plans" }` as a regular selectable option; the `placeholder` prop is removed from the plan `<Select>` so there is no competing disabled/hidden option.
+- `taskOptions` (when a plan is selected) now prepends `{ value: "", label: "All tasks" }` as a regular selectable option; the task `<Select>` no longer receives a placeholder when a plan is selected (`placeholder={selectedPlanId ? undefined : "Select a plan first"}`).
+- When no plan is selected, `taskOptions` remains `[]` and the "Select a plan first" placeholder (disabled/hidden) is preserved unchanged.
+- `Select.svelte`, `TimeTracking.svelte`, and `ManualEntry.svelte` are unmodified.
+- `svelte-check` passes with zero errors or warnings.
+<!-- SECTION:FINAL_SUMMARY:END -->
