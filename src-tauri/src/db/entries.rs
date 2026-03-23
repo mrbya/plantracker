@@ -202,16 +202,14 @@ mod tests {
     use uuid::Uuid;
 
     async fn insert_plan(pool: &SqlitePool, id: &str) {
-        sqlx::query(
-            "INSERT INTO plans (id, graph_id, title, synced_at) VALUES (?, ?, ?, ?)",
-        )
-        .bind(id)
-        .bind(format!("g-{id}"))
-        .bind("Test Plan")
-        .bind("2024-01-01T00:00:00Z")
-        .execute(pool)
-        .await
-        .expect("failed to insert plan");
+        sqlx::query("INSERT INTO plans (id, graph_id, title, synced_at) VALUES (?, ?, ?, ?)")
+            .bind(id)
+            .bind(format!("g-{id}"))
+            .bind("Test Plan")
+            .bind("2024-01-01T00:00:00Z")
+            .execute(pool)
+            .await
+            .expect("failed to insert plan");
     }
 
     async fn insert_task(pool: &SqlitePool, id: &str, plan_id: &str) {
@@ -250,7 +248,12 @@ mod tests {
         let pool = test_pool().await;
         insert_plan(&pool, "p1").await;
 
-        let entry = make_entry("p1", None, "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
+        let entry = make_entry(
+            "p1",
+            None,
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
         insert_entry(&pool, &entry).await.unwrap();
 
         let fetched = get_entry(&pool, &entry.id).await.unwrap();
@@ -302,11 +305,31 @@ mod tests {
         insert_task(&pool, "t2", "p1").await;
 
         // Three entries for t1 with distinct start times
-        let e1 = make_entry("p1", Some("t1"), "2024-03-15T08:00:00Z", Some("2024-03-15T09:00:00Z"));
-        let e2 = make_entry("p1", Some("t1"), "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
-        let e3 = make_entry("p1", Some("t1"), "2024-03-15T12:00:00Z", Some("2024-03-15T13:00:00Z"));
+        let e1 = make_entry(
+            "p1",
+            Some("t1"),
+            "2024-03-15T08:00:00Z",
+            Some("2024-03-15T09:00:00Z"),
+        );
+        let e2 = make_entry(
+            "p1",
+            Some("t1"),
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
+        let e3 = make_entry(
+            "p1",
+            Some("t1"),
+            "2024-03-15T12:00:00Z",
+            Some("2024-03-15T13:00:00Z"),
+        );
         // Entry for t2 — must not appear in t1 results
-        let e4 = make_entry("p1", Some("t2"), "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
+        let e4 = make_entry(
+            "p1",
+            Some("t2"),
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
 
         insert_entry(&pool, &e1).await.unwrap();
         insert_entry(&pool, &e2).await.unwrap();
@@ -328,11 +351,26 @@ mod tests {
         insert_task(&pool, "t1", "p1").await;
 
         // Task-level entry for p1
-        let e1 = make_entry("p1", Some("t1"), "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
+        let e1 = make_entry(
+            "p1",
+            Some("t1"),
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
         // Taskless (plan-level) entry for p1
-        let e2 = make_entry("p1", None, "2024-03-15T12:00:00Z", Some("2024-03-15T13:00:00Z"));
+        let e2 = make_entry(
+            "p1",
+            None,
+            "2024-03-15T12:00:00Z",
+            Some("2024-03-15T13:00:00Z"),
+        );
         // Entry for a different plan — must not appear
-        let e3 = make_entry("p2", None, "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
+        let e3 = make_entry(
+            "p2",
+            None,
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
 
         insert_entry(&pool, &e1).await.unwrap();
         insert_entry(&pool, &e2).await.unwrap();
@@ -351,15 +389,27 @@ mod tests {
         insert_plan(&pool, "p1").await;
         insert_task(&pool, "t1", "p1").await;
 
-        let in_range = make_entry("p1", Some("t1"), "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
-        let out_of_range = make_entry("p1", Some("t1"), "2024-04-01T10:00:00Z", Some("2024-04-01T11:00:00Z"));
+        let in_range = make_entry(
+            "p1",
+            Some("t1"),
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
+        let out_of_range = make_entry(
+            "p1",
+            Some("t1"),
+            "2024-04-01T10:00:00Z",
+            Some("2024-04-01T11:00:00Z"),
+        );
 
         insert_entry(&pool, &in_range).await.unwrap();
         insert_entry(&pool, &out_of_range).await.unwrap();
 
         let from = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
         let to = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
-        let results = list_entries_in_range(&pool, None, Some("t1"), from, to).await.unwrap();
+        let results = list_entries_in_range(&pool, None, Some("t1"), from, to)
+            .await
+            .unwrap();
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].id, in_range.id);
@@ -371,9 +421,24 @@ mod tests {
         insert_plan(&pool, "p1").await;
         insert_plan(&pool, "p2").await;
 
-        let in_range = make_entry("p1", None, "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
-        let out_of_range = make_entry("p1", None, "2024-04-01T10:00:00Z", Some("2024-04-01T11:00:00Z"));
-        let other_plan = make_entry("p2", None, "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
+        let in_range = make_entry(
+            "p1",
+            None,
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
+        let out_of_range = make_entry(
+            "p1",
+            None,
+            "2024-04-01T10:00:00Z",
+            Some("2024-04-01T11:00:00Z"),
+        );
+        let other_plan = make_entry(
+            "p2",
+            None,
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
 
         insert_entry(&pool, &in_range).await.unwrap();
         insert_entry(&pool, &out_of_range).await.unwrap();
@@ -381,7 +446,9 @@ mod tests {
 
         let from = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
         let to = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
-        let results = list_entries_in_range(&pool, Some("p1"), None, from, to).await.unwrap();
+        let results = list_entries_in_range(&pool, Some("p1"), None, from, to)
+            .await
+            .unwrap();
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].id, in_range.id);
@@ -392,7 +459,12 @@ mod tests {
         let pool = test_pool().await;
         insert_plan(&pool, "p1").await;
 
-        let completed = make_entry("p1", None, "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
+        let completed = make_entry(
+            "p1",
+            None,
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
         // Active entry (end_time IS NULL) — must be excluded from range results
         let active = make_entry("p1", None, "2024-03-15T12:00:00Z", None);
 
@@ -401,7 +473,9 @@ mod tests {
 
         let from = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
         let to = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
-        let results = list_entries_in_range(&pool, Some("p1"), None, from, to).await.unwrap();
+        let results = list_entries_in_range(&pool, Some("p1"), None, from, to)
+            .await
+            .unwrap();
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].id, completed.id);
@@ -412,7 +486,12 @@ mod tests {
         let pool = test_pool().await;
         insert_plan(&pool, "p1").await;
 
-        let entry = make_entry("p1", None, "2024-03-15T10:00:00Z", Some("2024-03-15T11:00:00Z"));
+        let entry = make_entry(
+            "p1",
+            None,
+            "2024-03-15T10:00:00Z",
+            Some("2024-03-15T11:00:00Z"),
+        );
         insert_entry(&pool, &entry).await.unwrap();
 
         delete_entry(&pool, &entry.id).await.unwrap();

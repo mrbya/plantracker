@@ -1316,13 +1316,13 @@ coverage: {
 
 ### Verification checklist
 
-- [ ] `just test-rs` passes — all Rust tests green, no warnings
-- [ ] `just test-js` passes — all Vitest tests green
-- [ ] `just test` runs both suites sequentially with a clear summary
-- [ ] `cargo clippy --tests -- -D warnings` passes (clippy covers test code too)
-- [ ] CI `test` stage runs before `build` and fails the pipeline if any test fails
-- [ ] Coverage report visible in GitLab MR sidebar
-- [ ] `just pre-commit` includes tests — a failing test blocks a commit
+- [x] `just test-rs` passes — all Rust tests green, no warnings
+- [x] `just test-js` passes — all Vitest tests green
+- [x] `just test` runs both suites sequentially with a clear summary
+- [x] `cargo clippy --tests -- -D warnings` passes (clippy covers test code too)
+- [x] CI `test` stage runs before `build` and fails the pipeline if any test fails
+- [x] Coverage report visible in GitLab MR sidebar
+- [x] `just pre-commit` includes tests — a failing test blocks a commit
 
 ---
 

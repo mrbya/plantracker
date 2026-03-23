@@ -67,16 +67,14 @@ mod tests {
     use uuid::Uuid;
 
     async fn insert_plan(pool: &SqlitePool, id: &str) {
-        sqlx::query(
-            "INSERT INTO plans (id, graph_id, title, synced_at) VALUES (?, ?, ?, ?)",
-        )
-        .bind(id)
-        .bind(format!("g-{id}"))
-        .bind("Test Plan")
-        .bind("2024-01-01T00:00:00Z")
-        .execute(pool)
-        .await
-        .expect("failed to insert plan");
+        sqlx::query("INSERT INTO plans (id, graph_id, title, synced_at) VALUES (?, ?, ?, ?)")
+            .bind(id)
+            .bind(format!("g-{id}"))
+            .bind("Test Plan")
+            .bind("2024-01-01T00:00:00Z")
+            .execute(pool)
+            .await
+            .expect("failed to insert plan");
     }
 
     fn make_task(graph_id: &str, plan_id: &str, title: &str) -> Task {

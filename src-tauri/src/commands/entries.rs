@@ -111,29 +111,20 @@ mod tests {
 
     #[test]
     fn rejects_end_before_start() {
-        let result = parse_and_validate_times(
-            "2024-03-15T11:00:00Z",
-            "2024-03-15T10:00:00Z",
-        );
+        let result = parse_and_validate_times("2024-03-15T11:00:00Z", "2024-03-15T10:00:00Z");
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("after start_time"));
     }
 
     #[test]
     fn rejects_equal_times() {
-        let result = parse_and_validate_times(
-            "2024-03-15T10:00:00Z",
-            "2024-03-15T10:00:00Z",
-        );
+        let result = parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T10:00:00Z");
         assert!(result.is_err());
     }
 
     #[test]
     fn accepts_valid_range() {
-        let result = parse_and_validate_times(
-            "2024-03-15T10:00:00Z",
-            "2024-03-15T11:00:00Z",
-        );
+        let result = parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T11:00:00Z");
         assert!(result.is_ok());
         let (start, end) = result.unwrap();
         assert!(end > start);

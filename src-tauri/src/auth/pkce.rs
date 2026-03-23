@@ -43,7 +43,9 @@ mod tests {
     fn verifier_is_base64url() {
         let verifier = generate_code_verifier();
         assert!(
-            verifier.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'),
+            verifier
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'),
             "verifier contains non-base64url characters: {verifier}"
         );
     }
@@ -58,9 +60,16 @@ mod tests {
     #[test]
     fn state_is_32_hex_chars() {
         let state = generate_state();
-        assert_eq!(state.len(), 32, "state length should be 32, got {}", state.len());
+        assert_eq!(
+            state.len(),
+            32,
+            "state length should be 32, got {}",
+            state.len()
+        );
         assert!(
-            state.chars().all(|c| c.is_ascii_hexdigit() && !c.is_uppercase()),
+            state
+                .chars()
+                .all(|c| c.is_ascii_hexdigit() && !c.is_uppercase()),
             "state contains non-lowercase-hex characters: {state}"
         );
     }

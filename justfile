@@ -132,18 +132,25 @@ index:
 # Checks formatting, code quality, and more
 pre-commit:
     @just thorough-check
-    @just test
     @just unused
     @just audit
     @just precache-check
+    @just test
     @just build
     @just index
+
+# Runs checks and tests run by ci.
+test-ci:
+    @just deps-ci
+    @just thorough-check
+    @just precache-check
+    @just unused
+    @just audit
+    @just test
 
 # Full app build used by ci.
 ci-build:
     @just deps-ci
-    @just thorough-check
-    @just precache-check
     @just build
 
 # Generate SBOM for rs sources.
