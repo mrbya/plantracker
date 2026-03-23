@@ -51,7 +51,7 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 | Desktop shell | [Tauri 2](https://tauri.app/) |
 | Backend language | [Rust](https://rust-lang.org/) |
 | Database | [SQLite](https://sqlite.org/) via [`sqlx`](https://github.com/launchbadge/sqlx) |
-| Frontend framework | [Svelte 5](https://svelte.dev/) + TypeScript |
+| Frontend framework | [Svelte 5](https://svelte.dev/) + [TypeScript](https://www.typescriptlang.org/) |
 | Build tool | [Vite](https://vite.dev/) |
 | Authentication | [OAuth 2.0 PKCE](https://www.oauth.com/oauth2-servers/pkce/) → [Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) |
 | API | [Microsoft Graph Tasks API](https://learn.microsoft.com/en-us/graph/api/resources/plannertask) |
@@ -285,7 +285,7 @@ User clicks "Sign In"
 
 ## Roadmap
 
-- [ ] Dark/light theme toggle (Catppuccin Latte)
+- [x] Dark/light theme toggle (Catppuccin Latte)
 - [ ] Task search / filter in dropdowns
 - [ ] Idle detection (pause timer when system is idle)
 - [ ] System tray with quick start/stop
