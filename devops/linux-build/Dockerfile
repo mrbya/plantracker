@@ -13,7 +13,7 @@ RUN apt-get update -qq && \
     libayatana-appindicator3-dev && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash && \
     apt-get install -y nodejs && \
-    npm install -g pnpm && \
+    npm install -g pnpm@next-11 && \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable && \
     . "$HOME/.cargo/env" && \
     cargo install tauri-cli --locked && \
@@ -35,5 +35,9 @@ RUN rustup target add x86_64-pc-windows-msvc
 RUN cargo install --locked cargo-xwin
 
 RUN cargo xwin cache xwin
+
+RUN cargo install cargo-sbom && \
+    cargo install cargo-udeps && \
+    cargo install cargo-audit --locked --features=fix
 
 CMD ["bash"]
