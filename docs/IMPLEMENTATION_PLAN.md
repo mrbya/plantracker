@@ -1326,6 +1326,273 @@ coverage: {
 
 ---
 
+## Phase 11 — Dark / Light Theme Toggle
+
+> Pure frontend change. No Rust commands, no database migrations, no new Tauri
+> plugins. The theme is applied by toggling a CSS class on `<html>`, persisted
+> via the existing `tauri-plugin-store` (`config.json`), and defaults to the
+> OS preference via `prefers-color-scheme`.
+
+---
+
+### 11.1 Catppuccin Latte CSS file
+
+Create `src/lib/theme/latte.css`. It must define the same set of variables as
+`mocha.css` — palette first, then semantic aliases — so that swapping the
+active theme file replaces the entire colour set without touching any component
+styles.
+
+```css
+/* src/lib/theme/latte.css */
+:root.theme-light {
+
+  /* Catppuccin Latte palette */
+  --ctp-base:      #eff1f5;
+  --ctp-mantle:    #e6e9ef;
+  --ctp-crust:     #dce0e8;
+  --ctp-surface0:  #ccd0da;
+  --ctp-surface1:  #bcc0cc;
+  --ctp-surface2:  #acb0be;
+  --ctp-overlay0:  #9ca0b0;
+  --ctp-overlay1:  #8c8fa1;
+  --ctp-overlay2:  #7c7f93;
+  --ctp-subtext0:  #6c6f85;
+  --ctp-subtext1:  #5c5f77;
+  --ctp-text:      #4c4f69;
+  --ctp-lavender:  #7287fd;
+  --ctp-blue:      #1e66f5;
+  --ctp-sapphire:  #209fb5;
+  --ctp-sky:       #04a5e5;
+  --ctp-teal:      #179299;
+  --ctp-green:     #40a02b;
+  --ctp-yellow:    #df8e1d;
+  --ctp-peach:     #fe640b;
+  --ctp-maroon:    #e64553;
+  --ctp-red:       #d20f39;
+  --ctp-mauve:     #8839ef;
+  --ctp-pink:      #ea76cb;
+  --ctp-flamingo:  #dd7878;
+  --ctp-rosewater: #dc8a78;
+
+  /* Semantic aliases — identical names to mocha.css */
+  --bg:           var(--ctp-base);
+  --bg-raised:    var(--ctp-mantle);
+  --bg-input:     var(--ctp-surface0);
+  --border:       var(--ctp-surface1);
+  --text:         var(--ctp-text);
+  --text-muted:   var(--ctp-subtext0);
+  --accent:       var(--ctp-mauve);
+  --accent-hover: var(--ctp-lavender);
+  --success:      var(--ctp-green);
+  --warning:      var(--ctp-yellow);
+  --danger:       var(--ctp-red);
+  --timer-active: var(--ctp-green);
+}
+```
+
+The selector is `:root.theme-light`, not `:root`. This means Latte variables
+only activate when the `theme-light` class is present on `<html>`, and Mocha
+remains the default (`:root` selector in `mocha.css`) so there is no flash of
+unstyled content on first load.
+
+---
+
+### 11.2 Wire `latte.css` into `app.css`
+
+Add the import after `mocha.css` and before `global.css`:
+
+```css
+/* src/app.css */
+@import "$lib/theme/fonts.css";
+@import "$lib/theme/mocha.css";
+@import "$lib/theme/latte.css";   /* ← add this line */
+@import "$lib/theme/global.css";
+```
+
+Import order matters: `mocha.css` defines the `:root` defaults; `latte.css`
+overrides them with `:root.theme-light`; `global.css` consumes the resolved
+variables. No component file needs to be changed.
+
+---
+
+### 11.3 Theme store (`src/lib/stores/theme.ts`)
+
+Create a new store file. It handles three concerns:
+1. Persisting the user's choice (`'dark' | 'light' | 'system'`) in `config.json`.
+2. Resolving `'system'` to the actual OS preference via `matchMedia`.
+3. Applying or removing the `theme-light` class on `document.documentElement`.
+
+```typescript
+import { Store } from '@tauri-apps/plugin-store';
+import { writable, derived, get } from 'svelte/store';
+
+export type ThemeChoice = 'dark' | 'light' | 'system';
+
+export const themeChoice = writable<ThemeChoice>('system');
+
+// Derived: the colour scheme actually in use right now ('dark' or 'light').
+// When choice is 'system', resolves via matchMedia.
+export const resolvedTheme = derived(themeChoice, ($choice) => {
+    if ($choice !== 'system') return $choice;
+    return window.matchMedia('(prefers-color-scheme: light)').matches
+        ? 'light'
+        : 'dark';
+});
+
+// Apply the correct class to <html> whenever the resolved theme changes.
+resolvedTheme.subscribe((resolved) => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('theme-light', resolved === 'light');
+});
+
+// ── Persistence ──────────────────────────────────────────────────────────────
+
+let _store: Store | null = null;
+
+async function getStore(): Promise<Store> {
+    if (!_store) _store = await Store.load('config.json');
+    return _store;
+}
+
+export async function loadTheme(): Promise<void> {
+    const store = await getStore();
+    const saved = await store.get<ThemeChoice>('theme');
+    if (saved) themeChoice.set(saved);
+}
+
+export async function saveTheme(value: ThemeChoice): Promise<void> {
+    themeChoice.set(value);
+    const store = await getStore();
+    await store.set('theme', value);
+    await store.save();
+}
+```
+
+The `resolvedTheme.subscribe` call runs immediately on store creation and
+re-runs whenever `themeChoice` or (indirectly, via `derived`) the OS setting
+changes. For `'system'`, re-evaluating on OS change requires a `matchMedia`
+listener — see section 11.5.
+
+---
+
+### 11.4 Settings view — Appearance section
+
+Add a new section to `src/views/Settings.svelte`. It follows the existing
+`setting-row` layout used by the other sections.
+
+**Import additions:**
+
+```typescript
+import {
+    themeChoice,
+    saveTheme,
+    type ThemeChoice,
+} from '$lib/stores/theme';
+```
+
+**New section in the template** (insert before the Account section):
+
+```svelte
+<!-- Appearance -->
+<section class="settings-section">
+  <h2 class="section-title">Appearance</h2>
+  <div class="setting-row">
+    <div class="setting-info">
+      <span class="setting-label">Theme</span>
+      <span class="setting-desc">
+        Controls the colour scheme of the application.
+      </span>
+    </div>
+    <div class="setting-control">
+      <Select
+        options={[
+          { value: 'dark',   label: 'Dark'           },
+          { value: 'light',  label: 'Light'          },
+          { value: 'system', label: 'System Default' },
+        ]}
+        value={$themeChoice}
+        onchange={(e) =>
+          saveTheme((e.target as HTMLSelectElement).value as ThemeChoice)
+        }
+      />
+    </div>
+  </div>
+</section>
+```
+
+No new components needed — `Select` is already imported in the view.
+
+---
+
+### 11.5 Startup wiring and system-preference reactivity
+
+**`src/routes/+page.svelte`** — add `loadTheme()` to the `onMount` block,
+alongside the existing `loadSettings()` call:
+
+```typescript
+import { loadTheme } from '$lib/stores/theme';
+
+onMount(async () => {
+    await loadSettings();
+    await loadTheme();    // ← add this line
+    await initAuth();
+    // ...
+});
+```
+
+`loadTheme` must be called before `initAuth` so the correct class is on
+`<html>` before the app renders its first frame.
+
+**OS preference listener** — add inside the `onMount` block so it is cleaned
+up when the component unmounts (which for this root component is never, but it
+is good practice):
+
+```typescript
+import { themeChoice, resolvedTheme } from '$lib/stores/theme';
+import { get } from 'svelte/store';
+
+onMount(async () => {
+    // ... existing calls ...
+
+    // Re-apply theme when the OS changes (e.g. system switches to dark mode
+    // at sunset) but only when the user's choice is 'system'.
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const onSystemChange = () => {
+        if (get(themeChoice) === 'system') {
+            // Trigger derived recomputation by setting the same value.
+            themeChoice.update((v) => v);
+        }
+    };
+    mq.addEventListener('change', onSystemChange);
+    return () => mq.removeEventListener('change', onSystemChange);
+});
+```
+
+---
+
+### 11.6 `global.css` scrollbar colours in light mode
+
+The scrollbar thumb uses `--border` and `--text-muted`, both of which are
+already defined in `latte.css` as semantic aliases, so the scrollbar
+automatically adopts the correct light-mode colours. No change needed.
+
+---
+
+### Verification checklist
+
+- [ ] Selecting **Dark** applies Catppuccin Mocha immediately; no page reload
+- [ ] Selecting **Light** applies Catppuccin Latte immediately; no page reload
+- [ ] Selecting **System Default** follows the OS preference in real time
+- [ ] Theme choice persists across app restarts (stored in `config.json` under key `"theme"`)
+- [ ] First launch with no saved preference defaults to **System Default** (resolves to OS setting)
+- [ ] OS switches from light → dark (or vice versa) while app is open and **System Default** is active — app follows immediately
+- [ ] All semantic colour variables (`--bg`, `--text`, `--accent`, `--danger`, etc.) render correctly in Latte
+- [ ] Focus rings, scrollbars, toasts, and badges all look correct in both themes
+- [ ] `pnpm tsc --noEmit` passes with no type errors
+- [ ] `cargo tauri dev` starts cleanly (no Rust changes required)
+
+---
+
 ## Appendix A — Tauri Command Registration
 
 All commands must be registered in `src-tauri/src/main.rs`:
