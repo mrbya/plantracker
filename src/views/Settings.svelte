@@ -18,6 +18,7 @@
     syncFrequency,
     type SyncFrequency,
   } from "$lib/stores/settings";
+  import { themeChoice, saveTheme, type ThemeChoice } from "$lib/stores/theme";
   import { formatDateTime } from "$lib/utils/datetime";
 
   // ---------------------------------------------------------------------------
@@ -37,6 +38,26 @@
     } else {
       limitInput = String($entriesLimit); // reset on invalid input
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Theme
+  // ---------------------------------------------------------------------------
+
+  const THEME_OPTIONS = [
+    { value: "dark", label: "Dark" },
+    { value: "light", label: "Light" },
+    { value: "system", label: "System Default" },
+  ];
+
+  let themeValue = $state($themeChoice);
+
+  $effect(() => {
+    themeValue = $themeChoice;
+  });
+
+  async function onThemeChange() {
+    await saveTheme(themeValue as ThemeChoice);
   }
 
   // ---------------------------------------------------------------------------
@@ -178,6 +199,26 @@
         <Button variant="ghost" disabled={!dataDir} onclick={handleOpenFolder}>
           Open Folder
         </Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Appearance section -->
+  <section class="settings-section">
+    <h3 class="section-title">Appearance</h3>
+    <div class="setting-row">
+      <div class="setting-info">
+        <span class="setting-label">Theme</span>
+        <span class="setting-desc"
+          >Controls the colour scheme of the application.</span
+        >
+      </div>
+      <div class="setting-control">
+        <Select
+          options={THEME_OPTIONS}
+          bind:value={themeValue}
+          onchange={onThemeChange}
+        />
       </div>
     </div>
   </section>
