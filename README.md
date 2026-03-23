@@ -286,7 +286,7 @@ User clicks "Sign In"
 ## Roadmap
 
 - [x] Dark/light theme toggle (Catppuccin Latte)
-- [ ] Task search / filter in dropdowns
+- [x] Task search / filter in dropdowns
 - [ ] Idle detection (pause timer when system is idle)
 - [ ] System tray with quick start/stop
 - [ ] Sync time entries back to Planner task comments

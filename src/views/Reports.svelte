@@ -4,6 +4,7 @@
   import EmptyState from "$lib/components/ui/EmptyState.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import Select from "$lib/components/ui/Select.svelte";
+  import SearchableSelect from "$lib/components/ui/SearchableSelect.svelte";
   import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
@@ -169,7 +170,7 @@
     <div class="filter-group">
       <div class="field">
         <label class="label" for="plan-select">Plan</label>
-        <Select
+        <SearchableSelect
           id="plan-select"
           options={planOptions}
           bind:value={selectedPlanId}
@@ -178,11 +179,12 @@
       </div>
       <div class="field">
         <label class="label" for="task-select">Task</label>
-        <Select
+        <SearchableSelect
           id="task-select"
           options={taskOptions}
           bind:value={selectedTaskId}
           placeholder={selectedPlanId ? undefined : "Select a plan first"}
+          disabled={!selectedPlanId}
           onchange={onTaskChange}
         />
       </div>

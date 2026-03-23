@@ -1824,11 +1824,11 @@ export { default as SearchableSelect } from './SearchableSelect.svelte';
 #### 12.1 Verification checklist
 
 **Functional — plan dropdown**
-- [ ] Clicking the plan dropdown opens the panel immediately
-- [ ] Typing a partial plan name filters the list to matching plans only
-- [ ] Clearing the query restores the full plan list
-- [ ] Selecting a plan closes the panel and shows the plan name in the input
-- [ ] After selection, re-opening the panel shows all plans (query is cleared)
+- [x] Clicking the plan dropdown opens the panel immediately
+- [x] Typing a partial plan name filters the list to matching plans only
+- [x] Clearing the query restores the full plan list
+- [x] Selecting a plan closes the panel and shows the plan name in the input
+- [x] After selection, re-opening the panel shows all plans (query is cleared)
 
 **Functional — task dropdown**
 - [ ] Typing a partial task name filters within the current plan's tasks
@@ -1940,4 +1940,5 @@ export interface ReportResult { entries: ReportEntry[]; grandTotalSeconds: numbe
 | 9 | Build & CI | Low |
 | 10 | Testing |
 | 11 | Dark / Light Theme Toggle |
+| 12 | Quality of Life |
 
