@@ -23,7 +23,8 @@ pub struct Task {
 #[serde(rename_all = "camelCase")]
 pub struct TimeEntry {
     pub id: String,
-    pub task_id: String,
+    pub plan_id: String,
+    pub task_id: Option<String>,
     pub start_time: String,
     pub end_time: Option<String>,
     pub notes: Option<String>,

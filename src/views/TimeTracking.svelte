@@ -112,10 +112,10 @@
   let timerBusy = $state(false);
 
   async function handleStart() {
-    if (!selectedTaskId) return;
+    if (!selectedPlanId) return;
     timerBusy = true;
     try {
-      await start(selectedTaskId);
+      await start(selectedPlanId, selectedTaskId || undefined);
       await loadEntries();
     } finally {
       timerBusy = false;
@@ -199,7 +199,7 @@
         <Button
           variant="success"
           loading={timerBusy}
-          disabled={timerBusy || !selectedTaskId}
+          disabled={timerBusy || !selectedPlanId}
           onclick={handleStart}
           title={$isRunning ? "A timer is already running" : undefined}
         >
@@ -219,7 +219,7 @@
         <span>Loading…</span>
       </div>
     {:else if entries.length === 0}
-      <EmptyState message="No entries yet. Select a task and start a timer." />
+      <EmptyState message="No entries yet. Select a plan and start a timer." />
     {:else}
       <div class="table-wrap">
         <table>
@@ -235,12 +235,12 @@
           </thead>
           <tbody>
             {#each entries as entry (entry.id)}
-              {@const task = taskById[entry.taskId]}
-              {@const planTitle = task ? planById[task.planId] : "—"}
+              {@const task = entry.taskId ? taskById[entry.taskId] : null}
+              {@const planTitle = planById[entry.planId] ?? "—"}
               {@const dur = entryDurationSeconds(entry)}
               <tr>
-                <td>{task?.title ?? entry.taskId}</td>
-                <td class="muted">{planTitle ?? "—"}</td>
+                <td>{task?.title ?? "No specific task"}</td>
+                <td class="muted">{planTitle}</td>
                 <td class="muted">{formatDateTime(entry.startTime)}</td>
                 <td>
                   {#if entry.endTime}

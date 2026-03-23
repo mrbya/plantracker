@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO time_entries (id, plan_id, task_id, start_time, end_time, notes, created_at)\n        VALUES (?, ?, ?, ?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "63cafec2e70b7715dbccf0d3a0d057c838d28f2c26433013dd88756797cd4d04"
+}

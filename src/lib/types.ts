@@ -15,7 +15,8 @@ export interface Task {
 
 export interface TimeEntry {
   id: string;
-  taskId: string;
+  planId: string;
+  taskId: string | null;
   startTime: string;
   endTime: string | null;
   notes: string | null;
@@ -35,7 +36,8 @@ export interface SyncResult {
 
 export interface ActiveTimerInfo {
   entryId: string;
-  taskId: string;
+  planId: string;
+  taskId: string | null;
   startTime: string;
   elapsedSeconds: number;
 }

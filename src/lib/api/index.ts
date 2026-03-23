@@ -50,8 +50,11 @@ export async function listTasksForPlan(planId: string): Promise<Task[]> {
 // Timer
 // ---------------------------------------------------------------------------
 
-export async function startTimer(taskId: string): Promise<TimeEntry> {
-  return invoke<TimeEntry>("start_timer", { taskId });
+export async function startTimer(
+  planId: string,
+  taskId?: string,
+): Promise<TimeEntry> {
+  return invoke<TimeEntry>("start_timer", { planId, taskId: taskId ?? null });
 }
 
 export async function stopTimer(): Promise<TimeEntry> {
@@ -79,13 +82,15 @@ export async function getRecentEntries(opts: {
 // ---------------------------------------------------------------------------
 
 export async function createManualEntry(params: {
-  taskId: string;
+  planId: string;
+  taskId?: string;
   startTime: string;
   endTime: string;
   notes?: string;
 }): Promise<TimeEntry> {
   return invoke<TimeEntry>("create_manual_entry", {
-    taskId: params.taskId,
+    planId: params.planId,
+    taskId: params.taskId ?? null,
     startTime: params.startTime,
     endTime: params.endTime,
     notes: params.notes ?? null,

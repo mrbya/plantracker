@@ -32,15 +32,16 @@ fn parse_and_validate_times(
 
 #[tauri::command]
 pub async fn create_manual_entry(
-    task_id: String,
+    plan_id: String,
+    task_id: Option<String>,
     start_time: String,
     end_time: String,
     notes: Option<String>,
     pool: State<'_, SqlitePool>,
     timer: State<'_, Mutex<Option<ActiveTimer>>>,
 ) -> Result<TimeEntry, String> {
-    if task_id.is_empty() {
-        return Err("task_id must not be empty".to_string());
+    if plan_id.is_empty() {
+        return Err("plan_id must not be empty".to_string());
     }
 
     let (start, _end) = parse_and_validate_times(&start_time, &end_time)?;
@@ -56,6 +57,7 @@ pub async fn create_manual_entry(
 
     let entry = TimeEntry {
         id: Uuid::new_v4().to_string(),
+        plan_id,
         task_id,
         start_time: start.to_rfc3339(),
         end_time: Some(end_time),

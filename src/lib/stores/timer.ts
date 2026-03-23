@@ -32,6 +32,7 @@ export async function initTimer(): Promise<void> {
       // Reconstruct a minimal TimeEntry so isRunning becomes true.
       activeEntry.set({
         id: info.entryId,
+        planId: info.planId,
         taskId: info.taskId,
         startTime: info.startTime,
         endTime: null,
@@ -46,10 +47,10 @@ export async function initTimer(): Promise<void> {
   }
 }
 
-/** Starts a timer for the given task. */
-export async function start(taskId: string): Promise<void> {
+/** Starts a timer for the given plan, optionally scoped to a task. */
+export async function start(planId: string, taskId?: string): Promise<void> {
   try {
-    const entry = await startTimer(taskId);
+    const entry = await startTimer(planId, taskId);
     activeEntry.set(entry);
     elapsedSeconds.set(0);
     startInterval();

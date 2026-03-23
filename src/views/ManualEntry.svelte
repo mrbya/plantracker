@@ -93,7 +93,7 @@
 
   let startError = $state("");
   let endError = $state("");
-  let taskError = $state("");
+  let planError = $state("");
 
   const isEditing = $derived(editingId !== null);
 
@@ -106,7 +106,7 @@
     editingId = null;
     startError = "";
     endError = "";
-    taskError = "";
+    planError = "";
   }
 
   /** Returns true if time is a valid 24h HH:MM string. */
@@ -133,12 +133,12 @@
 
   function validate(): boolean {
     let ok = true;
-    taskError = "";
+    planError = "";
     startError = "";
     endError = "";
 
-    if (!selectedTaskId) {
-      taskError = "Please select a task";
+    if (!selectedPlanId && !isEditing) {
+      planError = "Please select a plan";
       ok = false;
     }
     if (!startDate) {
@@ -194,7 +194,8 @@
         addSuccess("Entry updated");
       } else {
         await createManualEntry({
-          taskId: selectedTaskId,
+          planId: selectedPlanId,
+          taskId: selectedTaskId || undefined,
           startTime: startIso,
           endTime: endIso,
           notes: notes || undefined,
@@ -294,8 +295,8 @@
             placeholder="Select a plan…"
             onchange={onPlanChange}
           />
-          {#if taskError && !selectedTaskId}
-            <span class="error-msg">{taskError}</span>
+          {#if planError}
+            <span class="error-msg">{planError}</span>
           {/if}
         </div>
         <div class="field">
@@ -415,12 +416,12 @@
           </thead>
           <tbody>
             {#each entries as entry (entry.id)}
-              {@const task = taskById[entry.taskId]}
-              {@const planTitle = task ? planById[task.planId] : "—"}
+              {@const task = entry.taskId ? taskById[entry.taskId] : null}
+              {@const planTitle = planById[entry.planId] ?? "—"}
               {@const dur = entryDurationSeconds(entry)}
               <tr class:editing-row={editingId === entry.id}>
-                <td>{task?.title ?? entry.taskId}</td>
-                <td class="muted">{planTitle ?? "—"}</td>
+                <td>{task?.title ?? "No specific task"}</td>
+                <td class="muted">{planTitle}</td>
                 <td class="muted">{formatDateTime(entry.startTime)}</td>
                 <td class="muted"
                   >{entry.endTime ? formatDateTime(entry.endTime) : "—"}</td

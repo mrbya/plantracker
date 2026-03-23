@@ -62,6 +62,7 @@ pub fn run() {
                                 );
                                 Mutex::new(Some(ActiveTimer {
                                     entry_id: entry.id,
+                                    plan_id: entry.plan_id,
                                     task_id: entry.task_id,
                                     start_time,
                                 }))

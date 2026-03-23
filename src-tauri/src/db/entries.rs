@@ -6,10 +6,11 @@ use crate::models::TimeEntry;
 pub async fn insert_entry(pool: &SqlitePool, entry: &TimeEntry) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
-        INSERT INTO time_entries (id, task_id, start_time, end_time, notes, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO time_entries (id, plan_id, task_id, start_time, end_time, notes, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         "#,
         entry.id,
+        entry.plan_id,
         entry.task_id,
         entry.start_time,
         entry.end_time,
@@ -40,7 +41,7 @@ pub async fn update_entry_end_time(
 pub async fn find_active_entry(pool: &SqlitePool) -> anyhow::Result<Option<TimeEntry>> {
     let row = sqlx::query_as!(
         TimeEntry,
-        r#"SELECT id as "id!", task_id as "task_id!", start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE end_time IS NULL LIMIT 1"#,
+        r#"SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE end_time IS NULL LIMIT 1"#,
     )
     .fetch_optional(pool)
     .await?;
@@ -55,7 +56,7 @@ pub async fn list_entries_for_task(
     let limit = limit as i64;
     let rows = sqlx::query_as!(
         TimeEntry,
-        r#"SELECT id as "id!", task_id as "task_id!", start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE task_id = ? ORDER BY start_time DESC LIMIT ?"#,
+        r#"SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE task_id = ? ORDER BY start_time DESC LIMIT ?"#,
         task_id,
         limit,
     )
@@ -72,14 +73,7 @@ pub async fn list_entries_for_plan(
     let limit = limit as i64;
     let rows = sqlx::query_as!(
         TimeEntry,
-        r#"
-        SELECT te.id as "id!", te.task_id as "task_id!", te.start_time as "start_time!", te.end_time, te.notes, te.created_at as "created_at!"
-        FROM time_entries te
-        INNER JOIN tasks t ON t.id = te.task_id
-        WHERE t.plan_id = ?
-        ORDER BY te.start_time DESC
-        LIMIT ?
-        "#,
+        r#"SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE plan_id = ? ORDER BY start_time DESC LIMIT ?"#,
         plan_id,
         limit,
     )
@@ -106,7 +100,7 @@ pub async fn list_entries_in_range(
         let rows = sqlx::query_as!(
             TimeEntry,
             r#"
-            SELECT id as "id!", task_id as "task_id!", start_time as "start_time!", end_time, notes, created_at as "created_at!"
+            SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!"
             FROM time_entries
             WHERE task_id = ?
               AND start_time >= ?
@@ -127,14 +121,13 @@ pub async fn list_entries_in_range(
         let rows = sqlx::query_as!(
             TimeEntry,
             r#"
-            SELECT te.id as "id!", te.task_id as "task_id!", te.start_time as "start_time!", te.end_time, te.notes, te.created_at as "created_at!"
-            FROM time_entries te
-            INNER JOIN tasks t ON t.id = te.task_id
-            WHERE t.plan_id = ?
-              AND te.start_time >= ?
-              AND te.start_time <  ?
-              AND te.end_time IS NOT NULL
-            ORDER BY te.start_time DESC
+            SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!"
+            FROM time_entries
+            WHERE plan_id = ?
+              AND start_time >= ?
+              AND start_time <  ?
+              AND end_time IS NOT NULL
+            ORDER BY start_time DESC
             "#,
             pid,
             from_str,
@@ -148,7 +141,7 @@ pub async fn list_entries_in_range(
     let rows = sqlx::query_as!(
         TimeEntry,
         r#"
-        SELECT id as "id!", task_id as "task_id!", start_time as "start_time!", end_time, notes, created_at as "created_at!"
+        SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!"
         FROM time_entries
         WHERE start_time >= ?
           AND start_time <  ?
@@ -185,7 +178,7 @@ pub async fn update_entry(
 pub async fn get_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<TimeEntry>> {
     let row = sqlx::query_as!(
         TimeEntry,
-        r#"SELECT id as "id!", task_id as "task_id!", start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE id = ?"#,
+        r#"SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE id = ?"#,
         id,
     )
     .fetch_optional(pool)

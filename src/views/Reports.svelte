@@ -135,7 +135,6 @@
       exporting = false;
     }
   }
-
 </script>
 
 <div class="view">
@@ -241,7 +240,9 @@
                     <td class="muted">{entry.planTitle}</td>
                     <td class="muted">{formatDateTime(entry.startTime)}</td>
                     <td class="muted">{formatDateTime(entry.endTime)}</td>
-                    <td class="num-col">{formatDuration(entry.durationSeconds)}</td>
+                    <td class="num-col"
+                      >{formatDuration(entry.durationSeconds)}</td
+                    >
                     <td class="muted notes-col">{entry.notes ?? "—"}</td>
                   </tr>
                 {/each}
@@ -358,7 +359,6 @@
   tbody tr:last-child td {
     border-bottom: none;
   }
-
 
   .num-col {
     text-align: right;

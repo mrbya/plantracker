@@ -68,25 +68,29 @@ pub async fn generate_report(
     let mut entries: Vec<ReportEntry> = Vec::with_capacity(raw_entries.len());
 
     for raw in &raw_entries {
-        let (task_title, task_plan_id) = if let Some(cached) = task_cache.get(&raw.task_id) {
-            cached.clone()
+        let (task_title, plan_id_for_lookup) = if let Some(ref tid) = raw.task_id {
+            if let Some(cached) = task_cache.get(tid) {
+                cached.clone()
+            } else {
+                let (title, pid) = match db::tasks::get_task(&pool, tid).await {
+                    Ok(Some(t)) => (t.title, t.plan_id),
+                    _ => (tid.clone(), raw.plan_id.clone()),
+                };
+                task_cache.insert(tid.clone(), (title.clone(), pid.clone()));
+                (title, pid)
+            }
         } else {
-            let (title, pid) = match db::tasks::get_task(&pool, &raw.task_id).await {
-                Ok(Some(t)) => (t.title, t.plan_id),
-                _ => (raw.task_id.clone(), String::new()),
-            };
-            task_cache.insert(raw.task_id.clone(), (title.clone(), pid.clone()));
-            (title, pid)
+            ("No specific task".to_string(), raw.plan_id.clone())
         };
 
-        let plan_title = if let Some(cached) = plan_cache.get(&task_plan_id) {
+        let plan_title = if let Some(cached) = plan_cache.get(&plan_id_for_lookup) {
             cached.clone()
         } else {
-            let title = match db::plans::get_plan(&pool, &task_plan_id).await {
+            let title = match db::plans::get_plan(&pool, &plan_id_for_lookup).await {
                 Ok(Some(p)) => p.title,
-                _ => task_plan_id.clone(),
+                _ => plan_id_for_lookup.clone(),
             };
-            plan_cache.insert(task_plan_id.clone(), title.clone());
+            plan_cache.insert(plan_id_for_lookup.clone(), title.clone());
             title
         };
 
