@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { get } from "svelte/store";
 
   import { deleteEntry, getRecentEntries } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
@@ -60,14 +59,6 @@
     }
     loadEntries();
   }
-
-  // Sync selectedPlanId/selectedTaskId when store changes externally
-  $effect(() => {
-    selectedPlanId = $selectedPlan?.id ?? "";
-  });
-  $effect(() => {
-    selectedTaskId = $selectedTask?.id ?? "";
-  });
 
   // ---------------------------------------------------------------------------
   // Entries table

@@ -27,10 +27,6 @@
 
   let limitInput = $state(String($entriesLimit));
 
-  $effect(() => {
-    limitInput = String($entriesLimit);
-  });
-
   async function onLimitBlur() {
     const parsed = parseInt(limitInput, 10);
     if (!isNaN(parsed) && parsed > 0) {
@@ -52,10 +48,6 @@
 
   let themeValue = $state($themeChoice);
 
-  $effect(() => {
-    themeValue = $themeChoice;
-  });
-
   async function onThemeChange() {
     await saveTheme(themeValue as ThemeChoice);
   }
@@ -71,10 +63,6 @@
   ];
 
   let syncFreqValue = $state($syncFrequency);
-
-  $effect(() => {
-    syncFreqValue = $syncFrequency;
-  });
 
   async function onSyncFreqChange() {
     await saveSyncFrequency(syncFreqValue as SyncFrequency);

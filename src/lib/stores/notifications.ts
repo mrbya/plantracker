@@ -23,4 +23,4 @@ function add(type: NotificationType, message: string): void {
 
 export const addSuccess = (msg: string): void => add("success", msg);
 export const addError = (msg: string): void => add("error", msg);
-const addWarning = (msg: string): void => add("warning", msg);
+export const addWarning = (msg: string): void => add("warning", msg);

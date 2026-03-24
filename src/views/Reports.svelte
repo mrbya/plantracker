@@ -85,12 +85,7 @@
     }
   }
 
-  $effect(() => {
-    selectedPlanId = $selectedPlan?.id ?? "";
-  });
-  $effect(() => {
-    selectedTaskId = $selectedTask?.id ?? "";
-  });
+
 
   // ---------------------------------------------------------------------------
   // Report state
