@@ -10,18 +10,19 @@ use crate::{commands::timer::ActiveTimer, db, models::TimeEntry};
 // Shared validation helper
 // ---------------------------------------------------------------------------
 
+/// Parses and validates start/end time strings, ensuring end is strictly after start.
 fn parse_and_validate_times(
     start_time: &str,
     end_time: &str,
 ) -> Result<(DateTime<chrono::Utc>, DateTime<chrono::Utc>), String> {
     let start = start_time
         .parse::<DateTime<chrono::Utc>>()
-        .map_err(|_| format!("Invalid start_time: {start_time}"))?;
+        .map_err(|_e| format!("Invalid start_time: {start_time}"))?;
     let end = end_time
         .parse::<DateTime<chrono::Utc>>()
-        .map_err(|_| format!("Invalid end_time: {end_time}"))?;
+        .map_err(|_e| format!("Invalid end_time: {end_time}"))?;
     if end <= start {
-        return Err("end_time must be after start_time".to_string());
+        return Err("end_time must be after start_time".to_owned());
     }
     Ok((start, end))
 }
@@ -30,6 +31,10 @@ fn parse_and_validate_times(
 // Commands
 // ---------------------------------------------------------------------------
 
+/// Creates a time entry manually (not via the live timer).
+///
+/// # Errors
+/// Returns a string error if validation fails, a timer is running, or the DB insert fails.
 #[tauri::command]
 pub async fn create_manual_entry(
     plan_id: String,
@@ -41,7 +46,7 @@ pub async fn create_manual_entry(
     timer: State<'_, Mutex<Option<ActiveTimer>>>,
 ) -> Result<TimeEntry, String> {
     if plan_id.is_empty() {
-        return Err("plan_id must not be empty".to_string());
+        return Err("plan_id must not be empty".to_owned());
     }
 
     let (start, _end) = parse_and_validate_times(&start_time, &end_time)?;
@@ -52,7 +57,7 @@ pub async fn create_manual_entry(
         guard.is_some()
     };
     if timer_running {
-        return Err("Cannot add a manual entry while a timer is running".to_string());
+        return Err("Cannot add a manual entry while a timer is running".to_owned());
     }
 
     let entry = TimeEntry {
@@ -73,6 +78,10 @@ pub async fn create_manual_entry(
     Ok(entry)
 }
 
+/// Updates an existing time entry's start/end times and notes.
+///
+/// # Errors
+/// Returns a string error if validation fails, the DB update fails, or the entry is not found.
 #[tauri::command]
 pub async fn update_entry(
     id: String,
@@ -96,6 +105,10 @@ pub async fn update_entry(
     Ok(entry)
 }
 
+/// Deletes a time entry by ID.
+///
+/// # Errors
+/// Returns a string error if the DB delete fails.
 #[tauri::command]
 pub async fn delete_entry(id: String, pool: State<'_, SqlitePool>) -> Result<(), String> {
     db::entries::delete_entry(&pool, &id)
@@ -112,27 +125,26 @@ mod tests {
     #[test]
     fn rejects_end_before_start() {
         let result = parse_and_validate_times("2024-03-15T11:00:00Z", "2024-03-15T10:00:00Z");
-        assert!(result.is_err());
-        assert!(result.unwrap_err().contains("after start_time"));
+        assert!(result.expect_err("should reject end before start").contains("after start_time"));
     }
 
     #[test]
     fn rejects_equal_times() {
-        let result = parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T10:00:00Z");
-        assert!(result.is_err());
+        parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T10:00:00Z")
+            .expect_err("should reject equal start and end times");
     }
 
     #[test]
     fn accepts_valid_range() {
-        let result = parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T11:00:00Z");
-        assert!(result.is_ok());
-        let (start, end) = result.unwrap();
+        let (start, end) =
+            parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T11:00:00Z")
+                .expect("valid range should be accepted");
         assert!(end > start);
     }
 
     #[test]
     fn rejects_unparseable_start() {
-        let result = parse_and_validate_times("not-a-date", "2024-03-15T11:00:00Z");
-        assert!(result.is_err());
+        parse_and_validate_times("not-a-date", "2024-03-15T11:00:00Z")
+            .expect_err("should reject unparseable start time");
     }
 }

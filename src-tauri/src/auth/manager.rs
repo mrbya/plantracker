@@ -8,16 +8,21 @@ use crate::auth::{
     oauth::{refresh_access_token, TokenSet},
 };
 
+/// Manages OAuth tokens and authentication state for the signed-in user.
 pub struct AuthManager {
+    /// The current token set, guarded by an async mutex to prevent concurrent refresh races.
     tokens: Mutex<Option<TokenSet>>,
     /// Cached display name — populated after login, cleared on logout.
     display_name: Mutex<Option<String>>,
+    /// Azure AD application (client) ID.
     client_id: String,
+    /// Azure AD tenant ID (or "common" for multi-tenant).
     tenant_id: String,
 }
 
 impl AuthManager {
     /// Creates a new `AuthManager`, pre-loading any existing tokens from the OS keychain.
+    #[must_use]
     pub fn new(client_id: String, tenant_id: String) -> Arc<Self> {
         let tokens = keychain::load_tokens().unwrap_or(None);
         Arc::new(Self {
@@ -29,6 +34,9 @@ impl AuthManager {
     }
 
     /// Returns a valid access token, refreshing silently if near expiry (< 60 s remaining).
+    ///
+    /// # Errors
+    /// Returns an error if the user is not authenticated or the token refresh fails.
     ///
     /// # Mutex safety
     /// The lock is always released before any `.await` point to prevent deadlocks.
@@ -46,7 +54,7 @@ impl AuthManager {
             }
         }; // lock released here
 
-        if expires_at > Utc::now() + Duration::seconds(60) {
+        if expires_at.signed_duration_since(Utc::now()) > Duration::seconds(60) {
             return Ok(access_token);
         }
 
@@ -62,6 +70,9 @@ impl AuthManager {
     }
 
     /// Stores a new `TokenSet` in memory and persists it to the keychain.
+    ///
+    /// # Errors
+    /// Returns an error if saving the tokens to the OS keychain fails.
     pub async fn set_tokens(&self, tokens: TokenSet) -> anyhow::Result<()> {
         keychain::save_tokens(&tokens)?;
         *self.tokens.lock().await = Some(tokens);
@@ -69,6 +80,9 @@ impl AuthManager {
     }
 
     /// Clears in-memory state and removes tokens from the keychain.
+    ///
+    /// # Errors
+    /// Returns an error if removing the tokens from the OS keychain fails.
     pub async fn clear(&self) -> anyhow::Result<()> {
         keychain::clear_tokens()?;
         *self.tokens.lock().await = None;
@@ -76,10 +90,12 @@ impl AuthManager {
         Ok(())
     }
 
+    /// Returns `true` if the user currently has a token set stored in memory.
     pub async fn is_authenticated(&self) -> bool {
         self.tokens.lock().await.is_some()
     }
 
+    /// Returns the cached display name, or `None` if it has not been fetched yet.
     pub async fn user_display_name(&self) -> Option<String> {
         self.display_name.lock().await.clone()
     }
@@ -89,7 +105,7 @@ impl AuthManager {
         *self.display_name.lock().await = Some(name);
     }
 
-    /// Returns the Azure AD client_id and tenant_id stored in this manager.
+    /// Returns the Azure AD `client_id` and `tenant_id` stored in this manager.
     pub fn credentials(&self) -> (String, String) {
         (self.client_id.clone(), self.tenant_id.clone())
     }

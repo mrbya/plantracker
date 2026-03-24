@@ -8,22 +8,33 @@ use crate::db;
 // Output types
 // ---------------------------------------------------------------------------
 
+/// A single time-entry row in a generated report.
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportEntry {
+    /// Display title of the associated task.
     pub task_title: String,
+    /// Display title of the associated plan.
     pub plan_title: String,
+    /// ISO 8601 start timestamp.
     pub start_time: String,
+    /// ISO 8601 end timestamp.
     pub end_time: String,
+    /// Duration of the entry in seconds.
     pub duration_seconds: i64,
+    /// Optional free-text notes attached to this entry.
     pub notes: Option<String>,
 }
 
+/// Result returned by `generate_report`.
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportResult {
+    /// All matching time entries within the requested date range.
     pub entries: Vec<ReportEntry>,
+    /// Sum of `duration_seconds` across all entries.
     pub grand_total_seconds: i64,
+    /// Human-readable label describing the report scope (task, plan, or all).
     pub subject_label: String,
 }
 
@@ -31,6 +42,10 @@ pub struct ReportResult {
 // generate_report
 // ---------------------------------------------------------------------------
 
+/// Generates a time report for the specified date range.
+///
+/// # Errors
+/// Returns a string error if the date arguments are invalid or a DB query fails.
 #[tauri::command]
 pub async fn generate_report(
     plan_id: Option<String>,
@@ -46,13 +61,24 @@ pub async fn generate_report(
 
     let to = {
         let (next_year, next_month) = if to_month == 12 {
-            (to_year + 1, 1u32)
+            (
+                to_year
+                    .checked_add(1)
+                    .ok_or_else(|| format!("Year overflow computing end of {to_year}-{to_month}"))?,
+                1,
+            )
         } else {
-            (to_year, to_month + 1)
+            (
+                to_year,
+                to_month
+                    .checked_add(1)
+                    .ok_or_else(|| format!("Month overflow computing end of {to_year}-{to_month}"))?,
+            )
         };
         NaiveDate::from_ymd_opt(next_year, next_month, 1)
             .ok_or_else(|| format!("Invalid to date: {to_year}-{to_month}"))?
-            - chrono::Duration::days(1)
+            .pred_opt()
+            .ok_or_else(|| format!("Date underflow computing end of {to_year}-{to_month}"))?
     };
 
     let raw_entries =
@@ -62,8 +88,10 @@ pub async fn generate_report(
 
     // Cache lookups to avoid redundant DB queries when many entries share the
     // same task or plan.
-    let mut task_cache: std::collections::HashMap<String, (String, String)> = Default::default();
-    let mut plan_cache: std::collections::HashMap<String, String> = Default::default();
+    let mut task_cache: std::collections::HashMap<String, (String, String)> =
+        std::collections::HashMap::default();
+    let mut plan_cache: std::collections::HashMap<String, String> =
+        std::collections::HashMap::default();
 
     let mut entries: Vec<ReportEntry> = Vec::with_capacity(raw_entries.len());
 
@@ -80,7 +108,7 @@ pub async fn generate_report(
                 (title, pid)
             }
         } else {
-            ("No specific task".to_string(), raw.plan_id.clone())
+            ("No specific task".to_owned(), raw.plan_id.clone())
         };
 
         let plan_title = if let Some(cached) = plan_cache.get(&plan_id_for_lookup) {
@@ -104,7 +132,7 @@ pub async fn generate_report(
             .parse::<chrono::DateTime<chrono::Utc>>()
             .map_err(|e| format!("Bad end_time '{end_time}': {e}"))?;
 
-        let duration_seconds = (end - start).num_seconds().max(0);
+        let duration_seconds = end.signed_duration_since(start).num_seconds().max(0);
 
         entries.push(ReportEntry {
             task_title,
@@ -129,7 +157,7 @@ pub async fn generate_report(
             _ => format!("Plan: {pid}"),
         }
     } else {
-        "All entries".to_string()
+        "All entries".to_owned()
     };
 
     Ok(ReportResult {
@@ -143,13 +171,19 @@ pub async fn generate_report(
 // export_report_csv
 // ---------------------------------------------------------------------------
 
+/// Formats a duration in seconds as `H:MM:SS` for CSV export.
 fn format_duration_csv(seconds: i64) -> String {
-    let h = seconds / 3600;
-    let m = (seconds % 3600) / 60;
-    let s = seconds % 60;
+    let h = seconds.div_euclid(3600);
+    let m = seconds.rem_euclid(3600).div_euclid(60);
+    let s = seconds.rem_euclid(60);
     format!("{h}:{m:02}:{s:02}")
 }
 
+/// Exports a report as a CSV file, prompting the user to choose a save location.
+///
+/// # Errors
+/// Returns a string error if the file dialog is cancelled, the path cannot be resolved,
+/// or writing the CSV fails.
 #[tauri::command]
 pub async fn export_report_csv(
     report: ReportResult,
@@ -169,9 +203,8 @@ pub async fn export_report_csv(
         .add_filter("CSV", &["csv"])
         .blocking_save_file();
 
-    let file_path = match file_path {
-        Some(p) => p,
-        None => return Err("Export cancelled".to_string()),
+    let Some(file_path) = file_path else {
+        return Err("Export cancelled".to_owned());
     };
 
     let path = file_path

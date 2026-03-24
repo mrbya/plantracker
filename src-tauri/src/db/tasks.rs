@@ -2,6 +2,10 @@ use sqlx::SqlitePool;
 
 use crate::models::Task;
 
+/// Inserts or updates a task row (conflict on `graph_id`).
+///
+/// # Errors
+/// Returns an error if the DB upsert fails.
 pub async fn upsert_task(pool: &SqlitePool, task: &Task) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
@@ -23,6 +27,10 @@ pub async fn upsert_task(pool: &SqlitePool, task: &Task) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Returns all tasks for the given plan, ordered by title.
+///
+/// # Errors
+/// Returns an error if the DB query fails.
 pub async fn list_tasks_for_plan(pool: &SqlitePool, plan_id: &str) -> anyhow::Result<Vec<Task>> {
     let rows = sqlx::query_as!(
         Task,
@@ -34,6 +42,10 @@ pub async fn list_tasks_for_plan(pool: &SqlitePool, plan_id: &str) -> anyhow::Re
     Ok(rows)
 }
 
+/// Looks up a task by its Microsoft Graph ID, returning `None` if not found.
+///
+/// # Errors
+/// Returns an error if the DB query fails.
 pub async fn get_task_by_graph_id(
     pool: &SqlitePool,
     graph_id: &str,
@@ -48,6 +60,10 @@ pub async fn get_task_by_graph_id(
     Ok(row)
 }
 
+/// Looks up a task by its local primary key, returning `None` if not found.
+///
+/// # Errors
+/// Returns an error if the DB query fails.
 pub async fn get_task(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Task>> {
     let row = sqlx::query_as!(
         Task,
@@ -80,10 +96,10 @@ mod tests {
     fn make_task(graph_id: &str, plan_id: &str, title: &str) -> Task {
         Task {
             id: Uuid::new_v4().to_string(),
-            graph_id: graph_id.to_string(),
-            plan_id: plan_id.to_string(),
-            title: title.to_string(),
-            synced_at: "2024-01-01T00:00:00Z".to_string(),
+            graph_id: graph_id.to_owned(),
+            plan_id: plan_id.to_owned(),
+            title: title.to_owned(),
+            synced_at: "2024-01-01T00:00:00Z".to_owned(),
         }
     }
 
@@ -93,11 +109,11 @@ mod tests {
         insert_plan(&pool, "p1").await;
 
         let task = make_task("gt1", "p1", "My Task");
-        upsert_task(&pool, &task).await.unwrap();
+        upsert_task(&pool, &task).await.expect("upsert task");
 
-        let fetched = get_task(&pool, &task.id).await.unwrap();
+        let fetched = get_task(&pool, &task.id).await.expect("get task");
         assert!(fetched.is_some());
-        assert_eq!(fetched.unwrap().graph_id, "gt1");
+        assert_eq!(fetched.expect("task should be Some").graph_id, "gt1");
     }
 
     #[tokio::test]
@@ -106,19 +122,22 @@ mod tests {
         insert_plan(&pool, "p1").await;
 
         let task = make_task("gt1", "p1", "Original Title");
-        upsert_task(&pool, &task).await.unwrap();
+        upsert_task(&pool, &task).await.expect("upsert task");
 
         // Re-upsert same graph_id with updated title
         let updated = Task {
             id: Uuid::new_v4().to_string(),
-            graph_id: "gt1".to_string(),
-            plan_id: "p1".to_string(),
-            title: "Updated Title".to_string(),
-            synced_at: "2024-06-01T00:00:00Z".to_string(),
+            graph_id: "gt1".to_owned(),
+            plan_id: "p1".to_owned(),
+            title: "Updated Title".to_owned(),
+            synced_at: "2024-06-01T00:00:00Z".to_owned(),
         };
-        upsert_task(&pool, &updated).await.unwrap();
+        upsert_task(&pool, &updated).await.expect("upsert updated task");
 
-        let fetched = get_task_by_graph_id(&pool, "gt1").await.unwrap().unwrap();
+        let fetched = get_task_by_graph_id(&pool, "gt1")
+            .await
+            .expect("get task by graph id")
+            .expect("task should exist");
         assert_eq!(fetched.title, "Updated Title");
         assert_eq!(fetched.synced_at, "2024-06-01T00:00:00Z");
     }
@@ -133,11 +152,11 @@ mod tests {
         let t2 = make_task("gt2", "p1", "Task B");
         let t3 = make_task("gt3", "p2", "Task C"); // different plan — must not appear
 
-        upsert_task(&pool, &t1).await.unwrap();
-        upsert_task(&pool, &t2).await.unwrap();
-        upsert_task(&pool, &t3).await.unwrap();
+        upsert_task(&pool, &t1).await.expect("upsert t1");
+        upsert_task(&pool, &t2).await.expect("upsert t2");
+        upsert_task(&pool, &t3).await.expect("upsert t3");
 
-        let results = list_tasks_for_plan(&pool, "p1").await.unwrap();
+        let results = list_tasks_for_plan(&pool, "p1").await.expect("list tasks for plan");
         assert_eq!(results.len(), 2);
         let ids: Vec<&str> = results.iter().map(|t| t.id.as_str()).collect();
         assert!(ids.contains(&t1.id.as_str()));
@@ -150,11 +169,11 @@ mod tests {
         insert_plan(&pool, "p1").await;
 
         let task = make_task("gt1", "p1", "My Task");
-        upsert_task(&pool, &task).await.unwrap();
+        upsert_task(&pool, &task).await.expect("upsert task");
 
-        let fetched = get_task_by_graph_id(&pool, "gt1").await.unwrap();
+        let fetched = get_task_by_graph_id(&pool, "gt1").await.expect("get task by graph id");
         assert!(fetched.is_some());
-        assert_eq!(fetched.unwrap().id, task.id);
+        assert_eq!(fetched.expect("task should be Some").id, task.id);
     }
 
     #[tokio::test]
@@ -163,16 +182,16 @@ mod tests {
         insert_plan(&pool, "p1").await;
 
         let task = make_task("gt1", "p1", "Will Be Deleted");
-        upsert_task(&pool, &task).await.unwrap();
+        upsert_task(&pool, &task).await.expect("upsert task");
 
         // Deleting the plan must cascade-delete the task
         sqlx::query("DELETE FROM plans WHERE id = ?")
             .bind("p1")
             .execute(&pool)
             .await
-            .unwrap();
+            .expect("delete plan");
 
-        let result = get_task(&pool, &task.id).await.unwrap();
+        let result = get_task(&pool, &task.id).await.expect("get task");
         assert!(result.is_none());
     }
 }

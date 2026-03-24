@@ -19,6 +19,10 @@ use crate::{
 // Read-only list commands (used by frontend to hydrate stores from SQLite)
 // ---------------------------------------------------------------------------
 
+/// Returns all plans stored in the local database.
+///
+/// # Errors
+/// Returns a string error if the DB query fails.
 #[tauri::command]
 pub async fn list_plans(pool: State<'_, SqlitePool>) -> Result<Vec<Plan>, String> {
     db::plans::list_plans(&pool)
@@ -26,6 +30,10 @@ pub async fn list_plans(pool: State<'_, SqlitePool>) -> Result<Vec<Plan>, String
         .map_err(|e| e.to_string())
 }
 
+/// Returns all tasks for the given plan stored in the local database.
+///
+/// # Errors
+/// Returns a string error if the DB query fails.
 #[tauri::command]
 pub async fn list_tasks_for_plan(
     plan_id: String,
@@ -36,14 +44,22 @@ pub async fn list_tasks_for_plan(
         .map_err(|e| e.to_string())
 }
 
+/// Result returned by `sync_plans_and_tasks`.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncResult {
+    /// Number of plans upserted from Graph.
     pub plans_count: usize,
+    /// Number of tasks upserted from Graph.
     pub tasks_count: usize,
+    /// ISO 8601 timestamp when the sync completed.
     pub synced_at: String,
 }
 
+/// Syncs plans and tasks from Microsoft Graph into the local database.
+///
+/// # Errors
+/// Returns a string error if authentication fails, a Graph request fails, or a DB upsert fails.
 #[tauri::command]
 pub async fn sync_plans_and_tasks(
     auth: State<'_, Arc<AuthManager>>,
@@ -79,7 +95,7 @@ pub async fn sync_plans_and_tasks(
     }
 
     // Fetch and upsert tasks for every plan.
-    let mut tasks_count = 0usize;
+    let mut tasks_count: usize = 0;
     for gp in &graph_plans {
         let graph_tasks = match fetch_tasks_for_plan(&client, &gp.id).await {
             Ok(t) => t,
@@ -113,7 +129,7 @@ pub async fn sync_plans_and_tasks(
             db::tasks::upsert_task(&pool, &task)
                 .await
                 .map_err(|e| e.to_string())?;
-            tasks_count += 1;
+            tasks_count = tasks_count.saturating_add(1);
         }
     }
 

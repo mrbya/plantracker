@@ -6,16 +6,21 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::auth::pkce;
 
+/// OAuth redirect URI — must match the Azure AD app registration exactly.
 const REDIRECT_URI: &str = "http://localhost:52721/callback";
 
 // ---------------------------------------------------------------------------
 // TokenSet
 // ---------------------------------------------------------------------------
 
+/// A set of OAuth 2.0 tokens returned by the Microsoft identity platform.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TokenSet {
+    /// Short-lived Bearer token for authenticating Graph API requests.
     pub access_token: String,
+    /// Long-lived token used to obtain new access tokens without re-authentication.
     pub refresh_token: String,
+    /// UTC timestamp at which the access token expires.
     pub expires_at: DateTime<Utc>,
 }
 
@@ -34,16 +39,23 @@ impl fmt::Debug for TokenSet {
 // Microsoft token endpoint response shapes
 // ---------------------------------------------------------------------------
 
+/// Raw JSON shape of a successful token endpoint response.
 #[derive(Deserialize)]
 struct TokenResponse {
+    /// Opaque Bearer token string.
     access_token: String,
+    /// Opaque refresh token string.
     refresh_token: String,
+    /// Token lifetime in seconds from the time of issuance.
     expires_in: i64,
 }
 
+/// Raw JSON shape of a token endpoint error response.
 #[derive(Deserialize)]
 struct ErrorResponse {
+    /// Machine-readable error code (e.g. `"invalid_grant"`).
     error: String,
+    /// Human-readable description of the error.
     error_description: Option<String>,
 }
 
@@ -57,6 +69,10 @@ struct ErrorResponse {
 /// 3. Opens the Microsoft authorization URL in the system browser.
 /// 4. Awaits the redirect callback, validates the CSRF state.
 /// 5. Exchanges the code for tokens and returns a `TokenSet`.
+///
+/// # Errors
+/// Returns an error if the local server cannot start, the browser cannot be opened,
+/// the callback contains an error, the CSRF state mismatches, or the token exchange fails.
 pub async fn start_login(
     app_handle: &tauri::AppHandle,
     client_id: &str,
@@ -77,7 +93,7 @@ pub async fn start_login(
         move |callback_url| {
             if let Ok(mut guard) = tx.lock() {
                 if let Some(sender) = guard.take() {
-                    let _ = sender.send(callback_url);
+                    drop(sender.send(callback_url));
                 }
             }
         },
@@ -102,6 +118,9 @@ pub async fn start_login(
 }
 
 /// Exchanges an authorization code for a `TokenSet`.
+///
+/// # Errors
+/// Returns an error if the HTTP request fails or the token endpoint returns an error.
 pub async fn exchange_code_for_tokens(
     code: &str,
     verifier: &str,
@@ -127,6 +146,9 @@ pub async fn exchange_code_for_tokens(
 }
 
 /// Silently refreshes an expired access token using a refresh token.
+///
+/// # Errors
+/// Returns an error if the HTTP request fails or the token endpoint returns an error.
 pub async fn refresh_access_token(
     refresh_token: &str,
     client_id: &str,
@@ -154,6 +176,7 @@ pub async fn refresh_access_token(
 // Helpers
 // ---------------------------------------------------------------------------
 
+/// Builds the Microsoft authorization URL with PKCE and CSRF state parameters.
 fn build_auth_url(client_id: &str, tenant_id: &str, challenge: &str, state: &str) -> String {
     format!(
         "https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize\
@@ -167,10 +190,14 @@ fn build_auth_url(client_id: &str, tenant_id: &str, challenge: &str, state: &str
     )
 }
 
+/// Extracts the `code` and `state` query parameters from an OAuth callback URL.
+///
+/// # Errors
+/// Returns an error if the URL contains an OAuth error response or is missing required parameters.
 fn parse_callback(url: &str) -> anyhow::Result<(String, String)> {
     // The callback URL may use the http: scheme with localhost — parse it manually
     // by splitting on '?' to extract query parameters.
-    let query = url.split_once('?').map(|(_, q)| q).unwrap_or("");
+    let query = url.split_once('?').map_or("", |(_, q)| q);
 
     let mut code = None;
     let mut state = None;
@@ -203,9 +230,13 @@ fn parse_callback(url: &str) -> anyhow::Result<(String, String)> {
     Ok((code, state))
 }
 
+/// Parses a token endpoint HTTP response into a `TokenSet`, or returns an error.
+///
+/// # Errors
+/// Returns an error if the response indicates failure or cannot be deserialised.
 async fn parse_token_response(resp: reqwest::Response) -> anyhow::Result<TokenSet> {
     if !resp.status().is_success() {
-        let err: ErrorResponse = resp.json().await.unwrap_or(ErrorResponse {
+        let err: ErrorResponse = resp.json().await.unwrap_or_else(|_| ErrorResponse {
             error: "unknown".into(),
             error_description: None,
         });
@@ -220,6 +251,8 @@ async fn parse_token_response(resp: reqwest::Response) -> anyhow::Result<TokenSe
     Ok(TokenSet {
         access_token: body.access_token,
         refresh_token: body.refresh_token,
-        expires_at: Utc::now() + Duration::seconds(body.expires_in),
+        expires_at: Utc::now()
+            .checked_add_signed(Duration::seconds(body.expires_in))
+            .unwrap_or_else(Utc::now),
     })
 }

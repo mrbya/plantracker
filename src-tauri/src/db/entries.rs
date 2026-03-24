@@ -1,8 +1,12 @@
-use chrono::{DateTime, Duration, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use sqlx::SqlitePool;
 
 use crate::models::TimeEntry;
 
+/// Inserts a new time entry row into the database.
+///
+/// # Errors
+/// Returns an error if the insert fails (e.g. FK constraint or duplicate ID).
 pub async fn insert_entry(pool: &SqlitePool, entry: &TimeEntry) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
@@ -22,6 +26,10 @@ pub async fn insert_entry(pool: &SqlitePool, entry: &TimeEntry) -> anyhow::Resul
     Ok(())
 }
 
+/// Sets the `end_time` of an entry, marking the timer as stopped.
+///
+/// # Errors
+/// Returns an error if the DB update fails.
 pub async fn update_entry_end_time(
     pool: &SqlitePool,
     id: &str,
@@ -38,6 +46,10 @@ pub async fn update_entry_end_time(
     Ok(())
 }
 
+/// Finds the entry with a `NULL` `end_time`, if any (i.e. the currently running timer).
+///
+/// # Errors
+/// Returns an error if the DB query fails.
 pub async fn find_active_entry(pool: &SqlitePool) -> anyhow::Result<Option<TimeEntry>> {
     let row = sqlx::query_as!(
         TimeEntry,
@@ -48,12 +60,16 @@ pub async fn find_active_entry(pool: &SqlitePool) -> anyhow::Result<Option<TimeE
     Ok(row)
 }
 
+/// Returns up to `limit` entries for the given task, ordered by `start_time DESC`.
+///
+/// # Errors
+/// Returns an error if the DB query fails.
 pub async fn list_entries_for_task(
     pool: &SqlitePool,
     task_id: &str,
     limit: u32,
 ) -> anyhow::Result<Vec<TimeEntry>> {
-    let limit = limit as i64;
+    let limit = i64::from(limit);
     let rows = sqlx::query_as!(
         TimeEntry,
         r#"SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE task_id = ? ORDER BY start_time DESC LIMIT ?"#,
@@ -65,12 +81,16 @@ pub async fn list_entries_for_task(
     Ok(rows)
 }
 
+/// Returns up to `limit` entries for the given plan, ordered by `start_time DESC`.
+///
+/// # Errors
+/// Returns an error if the DB query fails.
 pub async fn list_entries_for_plan(
     pool: &SqlitePool,
     plan_id: &str,
     limit: u32,
 ) -> anyhow::Result<Vec<TimeEntry>> {
-    let limit = limit as i64;
+    let limit = i64::from(limit);
     let rows = sqlx::query_as!(
         TimeEntry,
         r#"SELECT id as "id!", plan_id as "plan_id!", task_id, start_time as "start_time!", end_time, notes, created_at as "created_at!" FROM time_entries WHERE plan_id = ? ORDER BY start_time DESC LIMIT ?"#,
@@ -82,9 +102,12 @@ pub async fn list_entries_for_plan(
     Ok(rows)
 }
 
-/// List completed entries within an inclusive date range.
+/// Lists completed entries within an inclusive date range.
 /// Filters by `task_id` if provided, otherwise by `plan_id` if provided,
 /// otherwise returns all entries in the range.
+///
+/// # Errors
+/// Returns an error if `to` is the maximum representable date (overflow) or the DB query fails.
 pub async fn list_entries_in_range(
     pool: &SqlitePool,
     plan_id: Option<&str>,
@@ -94,7 +117,10 @@ pub async fn list_entries_in_range(
 ) -> anyhow::Result<Vec<TimeEntry>> {
     // Build ISO 8601 range bounds for lexicographic TEXT comparison in SQLite.
     let from_str = format!("{}T00:00:00Z", from.format("%Y-%m-%d"));
-    let to_str = format!("{}T00:00:00Z", (to + Duration::days(1)).format("%Y-%m-%d"));
+    let to_next = to
+        .succ_opt()
+        .ok_or_else(|| anyhow::anyhow!("Date out of range: {to}"))?;
+    let to_str = format!("{}T00:00:00Z", to_next.format("%Y-%m-%d"));
 
     if let Some(tid) = task_id {
         let rows = sqlx::query_as!(
@@ -156,6 +182,10 @@ pub async fn list_entries_in_range(
     Ok(rows)
 }
 
+/// Updates a time entry's `start_time`, `end_time`, and `notes` fields.
+///
+/// # Errors
+/// Returns an error if the DB update fails.
 pub async fn update_entry(
     pool: &SqlitePool,
     id: &str,
@@ -175,6 +205,10 @@ pub async fn update_entry(
     Ok(())
 }
 
+/// Fetches a single entry by its primary key, returning `None` if not found.
+///
+/// # Errors
+/// Returns an error if the DB query fails.
 pub async fn get_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<TimeEntry>> {
     let row = sqlx::query_as!(
         TimeEntry,
@@ -186,6 +220,10 @@ pub async fn get_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Tim
     Ok(row)
 }
 
+/// Deletes an entry by its primary key.
+///
+/// # Errors
+/// Returns an error if the DB delete fails.
 pub async fn delete_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<()> {
     sqlx::query!("DELETE FROM time_entries WHERE id = ?", id)
         .execute(pool)
@@ -234,12 +272,12 @@ mod tests {
     ) -> TimeEntry {
         TimeEntry {
             id: Uuid::new_v4().to_string(),
-            plan_id: plan_id.to_string(),
-            task_id: task_id.map(str::to_string),
-            start_time: start_time.to_string(),
-            end_time: end_time.map(str::to_string),
+            plan_id: plan_id.to_owned(),
+            task_id: task_id.map(str::to_owned),
+            start_time: start_time.to_owned(),
+            end_time: end_time.map(str::to_owned),
             notes: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
+            created_at: "2024-01-01T00:00:00Z".to_owned(),
         }
     }
 
@@ -254,17 +292,17 @@ mod tests {
             "2024-03-15T10:00:00Z",
             Some("2024-03-15T11:00:00Z"),
         );
-        insert_entry(&pool, &entry).await.unwrap();
+        insert_entry(&pool, &entry).await.expect("insert entry");
 
-        let fetched = get_entry(&pool, &entry.id).await.unwrap();
+        let fetched = get_entry(&pool, &entry.id).await.expect("get entry");
         assert!(fetched.is_some());
-        assert_eq!(fetched.unwrap().id, entry.id);
+        assert_eq!(fetched.expect("entry should be Some").id, entry.id);
     }
 
     #[tokio::test]
     async fn find_active_entry_none() {
         let pool = test_pool().await;
-        let result = find_active_entry(&pool).await.unwrap();
+        let result = find_active_entry(&pool).await.expect("find active entry");
         assert!(result.is_none());
     }
 
@@ -274,11 +312,11 @@ mod tests {
         insert_plan(&pool, "p1").await;
 
         let entry = make_entry("p1", None, "2024-03-15T10:00:00Z", None);
-        insert_entry(&pool, &entry).await.unwrap();
+        insert_entry(&pool, &entry).await.expect("insert entry");
 
-        let result = find_active_entry(&pool).await.unwrap();
+        let result = find_active_entry(&pool).await.expect("find active entry");
         assert!(result.is_some());
-        assert_eq!(result.unwrap().id, entry.id);
+        assert_eq!(result.expect("active entry should be Some").id, entry.id);
     }
 
     #[tokio::test]
@@ -287,13 +325,21 @@ mod tests {
         insert_plan(&pool, "p1").await;
 
         let entry = make_entry("p1", None, "2024-03-15T10:00:00Z", None);
-        insert_entry(&pool, &entry).await.unwrap();
+        insert_entry(&pool, &entry).await.expect("insert entry");
 
-        let end: DateTime<Utc> = "2024-03-15T11:00:00Z".parse().unwrap();
-        update_entry_end_time(&pool, &entry.id, end).await.unwrap();
+        let end: DateTime<Utc> = "2024-03-15T11:00:00Z".parse().expect("parse end time");
+        update_entry_end_time(&pool, &entry.id, end)
+            .await
+            .expect("update entry end time");
 
-        assert!(find_active_entry(&pool).await.unwrap().is_none());
-        let fetched = get_entry(&pool, &entry.id).await.unwrap().unwrap();
+        assert!(find_active_entry(&pool)
+            .await
+            .expect("find active entry")
+            .is_none());
+        let fetched = get_entry(&pool, &entry.id)
+            .await
+            .expect("get entry")
+            .expect("entry should exist after update");
         assert!(fetched.end_time.is_some());
     }
 
@@ -331,16 +377,18 @@ mod tests {
             Some("2024-03-15T11:00:00Z"),
         );
 
-        insert_entry(&pool, &e1).await.unwrap();
-        insert_entry(&pool, &e2).await.unwrap();
-        insert_entry(&pool, &e3).await.unwrap();
-        insert_entry(&pool, &e4).await.unwrap();
+        insert_entry(&pool, &e1).await.expect("insert e1");
+        insert_entry(&pool, &e2).await.expect("insert e2");
+        insert_entry(&pool, &e3).await.expect("insert e3");
+        insert_entry(&pool, &e4).await.expect("insert e4");
 
         // limit=2 returns the 2 most recent entries for t1 in DESC order
-        let results = list_entries_for_task(&pool, "t1", 2).await.unwrap();
+        let results = list_entries_for_task(&pool, "t1", 2)
+            .await
+            .expect("list entries for task");
         assert_eq!(results.len(), 2);
-        assert_eq!(results[0].id, e3.id);
-        assert_eq!(results[1].id, e2.id);
+        assert_eq!(results.first().expect("result[0]").id, e3.id);
+        assert_eq!(results.get(1).expect("result[1]").id, e2.id);
     }
 
     #[tokio::test]
@@ -372,11 +420,13 @@ mod tests {
             Some("2024-03-15T11:00:00Z"),
         );
 
-        insert_entry(&pool, &e1).await.unwrap();
-        insert_entry(&pool, &e2).await.unwrap();
-        insert_entry(&pool, &e3).await.unwrap();
+        insert_entry(&pool, &e1).await.expect("insert e1");
+        insert_entry(&pool, &e2).await.expect("insert e2");
+        insert_entry(&pool, &e3).await.expect("insert e3");
 
-        let results = list_entries_for_plan(&pool, "p1", 100).await.unwrap();
+        let results = list_entries_for_plan(&pool, "p1", 100)
+            .await
+            .expect("list entries for plan");
         assert_eq!(results.len(), 2);
         let ids: Vec<&str> = results.iter().map(|e| e.id.as_str()).collect();
         assert!(ids.contains(&e1.id.as_str()));
@@ -402,17 +452,17 @@ mod tests {
             Some("2024-04-01T11:00:00Z"),
         );
 
-        insert_entry(&pool, &in_range).await.unwrap();
-        insert_entry(&pool, &out_of_range).await.unwrap();
+        insert_entry(&pool, &in_range).await.expect("insert in_range");
+        insert_entry(&pool, &out_of_range).await.expect("insert out_of_range");
 
-        let from = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
-        let to = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
+        let from = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
+        let to = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
         let results = list_entries_in_range(&pool, None, Some("t1"), from, to)
             .await
-            .unwrap();
+            .expect("list entries in range");
 
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].id, in_range.id);
+        assert_eq!(results.first().expect("result[0]").id, in_range.id);
     }
 
     #[tokio::test]
@@ -440,18 +490,18 @@ mod tests {
             Some("2024-03-15T11:00:00Z"),
         );
 
-        insert_entry(&pool, &in_range).await.unwrap();
-        insert_entry(&pool, &out_of_range).await.unwrap();
-        insert_entry(&pool, &other_plan).await.unwrap();
+        insert_entry(&pool, &in_range).await.expect("insert in_range");
+        insert_entry(&pool, &out_of_range).await.expect("insert out_of_range");
+        insert_entry(&pool, &other_plan).await.expect("insert other_plan");
 
-        let from = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
-        let to = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
+        let from = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
+        let to = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
         let results = list_entries_in_range(&pool, Some("p1"), None, from, to)
             .await
-            .unwrap();
+            .expect("list entries in range");
 
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].id, in_range.id);
+        assert_eq!(results.first().expect("result[0]").id, in_range.id);
     }
 
     #[tokio::test]
@@ -468,17 +518,17 @@ mod tests {
         // Active entry (end_time IS NULL) — must be excluded from range results
         let active = make_entry("p1", None, "2024-03-15T12:00:00Z", None);
 
-        insert_entry(&pool, &completed).await.unwrap();
-        insert_entry(&pool, &active).await.unwrap();
+        insert_entry(&pool, &completed).await.expect("insert completed");
+        insert_entry(&pool, &active).await.expect("insert active");
 
-        let from = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
-        let to = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
+        let from = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
+        let to = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
         let results = list_entries_in_range(&pool, Some("p1"), None, from, to)
             .await
-            .unwrap();
+            .expect("list entries in range");
 
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].id, completed.id);
+        assert_eq!(results.first().expect("result[0]").id, completed.id);
     }
 
     #[tokio::test]
@@ -492,11 +542,11 @@ mod tests {
             "2024-03-15T10:00:00Z",
             Some("2024-03-15T11:00:00Z"),
         );
-        insert_entry(&pool, &entry).await.unwrap();
+        insert_entry(&pool, &entry).await.expect("insert entry");
 
-        delete_entry(&pool, &entry.id).await.unwrap();
+        delete_entry(&pool, &entry.id).await.expect("delete entry");
 
-        let result = get_entry(&pool, &entry.id).await.unwrap();
+        let result = get_entry(&pool, &entry.id).await.expect("get entry");
         assert!(result.is_none());
     }
 
@@ -509,7 +559,6 @@ mod tests {
             "2024-03-15T10:00:00Z",
             Some("2024-03-15T11:00:00Z"),
         );
-        let result = insert_entry(&pool, &entry).await;
-        assert!(result.is_err());
+        insert_entry(&pool, &entry).await.expect_err("should reject missing plan FK");
     }
 }

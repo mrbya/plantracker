@@ -1,5 +1,9 @@
 use tauri::Manager;
 
+/// Returns the platform-specific data directory path used by this application.
+///
+/// # Errors
+/// Returns a string error if the platform data directory cannot be resolved.
 #[tauri::command]
 pub async fn get_data_dir(app: tauri::AppHandle) -> Result<String, String> {
     #[cfg(target_os = "windows")]

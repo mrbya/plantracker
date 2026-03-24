@@ -10,20 +10,31 @@ use crate::{db, models::TimeEntry};
 // In-memory active timer state
 // ---------------------------------------------------------------------------
 
+/// In-memory state for the currently running timer (stored in Tauri managed state).
 pub struct ActiveTimer {
+    /// ID of the `time_entries` row created when the timer started.
     pub entry_id: String,
+    /// Local UUID of the plan being tracked.
     pub plan_id: String,
+    /// Local UUID of the task being tracked, or `None` for plan-level entries.
     pub task_id: Option<String>,
+    /// UTC timestamp when the timer was started.
     pub start_time: chrono::DateTime<Utc>,
 }
 
+/// Serialisable snapshot of the active timer, returned to the frontend.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActiveTimerInfo {
+    /// ID of the associated `time_entries` row.
     pub entry_id: String,
+    /// Local UUID of the plan being tracked.
     pub plan_id: String,
+    /// Local UUID of the task being tracked, or `None` for plan-level entries.
     pub task_id: Option<String>,
+    /// ISO 8601 start timestamp.
     pub start_time: String,
+    /// Number of seconds elapsed since the timer started.
     pub elapsed_seconds: i64,
 }
 
@@ -31,6 +42,10 @@ pub struct ActiveTimerInfo {
 // Commands
 // ---------------------------------------------------------------------------
 
+/// Starts a new timer for the given plan (and optionally task).
+///
+/// # Errors
+/// Returns a string error if `plan_id` is empty, a timer is already running, or the DB insert fails.
 #[tauri::command]
 pub async fn start_timer(
     plan_id: String,
@@ -39,7 +54,7 @@ pub async fn start_timer(
     timer: State<'_, Mutex<Option<ActiveTimer>>>,
 ) -> Result<TimeEntry, String> {
     if plan_id.is_empty() {
-        return Err("plan_id must not be empty".to_string());
+        return Err("plan_id must not be empty".to_owned());
     }
 
     // Check for duplicate — extract and drop lock before any await.
@@ -48,7 +63,7 @@ pub async fn start_timer(
         guard.is_some()
     };
     if already_running {
-        return Err("A timer is already running".to_string());
+        return Err("A timer is already running".to_owned());
     }
 
     let now = Utc::now();
@@ -78,6 +93,10 @@ pub async fn start_timer(
     Ok(entry)
 }
 
+/// Stops the currently running timer and saves the end time.
+///
+/// # Errors
+/// Returns a string error if no timer is running, the DB update fails, or the entry cannot be fetched.
 #[tauri::command]
 pub async fn stop_timer(
     pool: State<'_, SqlitePool>,
@@ -87,7 +106,7 @@ pub async fn stop_timer(
     let entry_id = {
         let guard = timer.lock().await;
         match guard.as_ref() {
-            None => return Err("No timer is currently running".to_string()),
+            None => return Err("No timer is currently running".to_owned()),
             Some(t) => t.entry_id.clone(),
         }
     };
@@ -110,6 +129,10 @@ pub async fn stop_timer(
     Ok(entry)
 }
 
+/// Returns the currently active timer's state, or `None` if no timer is running.
+///
+/// # Errors
+/// This command is infallible in practice; the `Err` variant is never returned.
 #[tauri::command]
 pub async fn get_active_timer(
     timer: State<'_, Mutex<Option<ActiveTimer>>>,
@@ -122,12 +145,16 @@ pub async fn get_active_timer(
             plan_id: t.plan_id.clone(),
             task_id: t.task_id.clone(),
             start_time: t.start_time.to_rfc3339(),
-            elapsed_seconds: (Utc::now() - t.start_time).num_seconds(),
+            elapsed_seconds: Utc::now().signed_duration_since(t.start_time).num_seconds(),
         })
     };
     Ok(info)
 }
 
+/// Returns the most recent time entries for the given task or plan, up to `limit`.
+///
+/// # Errors
+/// Returns a string error if the DB query fails.
 #[tauri::command]
 pub async fn get_recent_entries(
     task_id: Option<String>,
