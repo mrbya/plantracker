@@ -44,7 +44,7 @@ test:
     VITE_AZURE_CLIENT_ID: "test-client-id"
     VITE_AZURE_TENANT_ID: "test-tenant-id"
   script:
-    - just test-ci
+    - just ci-test
   coverage: '/^TOTAL\s+\S+\s+\S+\s+(\d+\.?\d+%)$/'
   artifacts:
     reports:

@@ -80,7 +80,7 @@ audit:
 [working-directory: 'src-tauri']
 test-rs *FLAGS:
     SQLX_OFFLINE=true cargo test --workspace --doc
-    SQLX_OFFLINE=true cargo test {{FLAGS}}
+    SQLX_OFFLINE=true cargo nextest run --all-features --workspace {{FLAGS}}
 
 # Runs frontend unit tests.
 test-js *FLAGS:
@@ -88,8 +88,8 @@ test-js *FLAGS:
 
 # Runs all unit tests.
 test:
-    @just test-rs
     @just test-js
+    @just test-rs
 
 # Runs tests with a coverage report for js/ts/svelte sources.
 test-cov-js:
@@ -136,6 +136,21 @@ build:
 build-windows:
     cargo tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc
 
+# Cleans build artefacts for rs sources.
+[working-directory: 'src-tauri']
+clean-rs:
+    cargo clean
+
+# Cleans build artefacts for js/ts/svelte sources.
+clean-js:
+    rm -rf .svelte-kit
+    rm -rf coverage
+
+# Cleans build artefacts.
+clean:
+    @just clean-js
+    @just clean-rs
+
 # A thorough codebase check ran before running ci-builds.
 thorough-check:
     @just fmt-js-check
@@ -159,6 +174,10 @@ docs-api:
 # Generates documentation for frontend UI.
 docs-ui:
     pnpm docs:ui
+
+# Cleans generated project docs.
+docs-clean:
+    rm -rf docs-page
 
 # Generates full project documentation.
 docs:
@@ -185,16 +204,17 @@ pre-commit:
     @just audit
     @just precache
     @just test
-    @just build
     @just index
 
 # Runs checks and tests run by ci.
-test-ci:
+ci-test:
     @just deps-ci
     @just thorough-check
     @just precache-check
+    @just clean-rs
     @just unused
     @just audit
+    @just clean-rs
     @just test-cov
 
 # Full app build used by ci.
