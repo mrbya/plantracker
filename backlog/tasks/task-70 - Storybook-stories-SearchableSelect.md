@@ -1,9 +1,10 @@
 ---
 id: TASK-70
 title: 'Storybook stories: SearchableSelect'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:49'
+updated_date: '2026-03-25 14:56'
 labels:
   - storybook
   - docs
@@ -38,9 +39,15 @@ Create `src/stories/SearchableSelect.stories.svelte` covering `src/lib/component
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Idle story shows closed combobox with placeholder text
-- [ ] #2 Keyboard navigation (ArrowDown, Enter, Escape) works in the canvas
-- [ ] #3 Disabled story shows greyed-out input that cannot be opened
-- [ ] #4 NoResults story shows the 'No results' fallback list item
-- [ ] #5 Sentinel option (value='') is never filtered out when typing
+- [x] #1 Idle story shows closed combobox with placeholder text
+- [x] #2 Keyboard navigation (ArrowDown, Enter, Escape) works in the canvas
+- [x] #3 Disabled story shows greyed-out input that cannot be opened
+- [x] #4 NoResults story shows the 'No results' fallback list item
+- [x] #5 Sentinel option (value='') is never filtered out when typing
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/SearchableSelect.stories.svelte` with Idle, PreSelected, WithSentinelOption, Disabled, ManyOptions (22 options), and NoResults stories. The NoResults story uses a `play` function that types a non-matching string ("xyzzy") and asserts the "No results" fallback option is visible.
+<!-- SECTION:FINAL_SUMMARY:END -->

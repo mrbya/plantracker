@@ -25,7 +25,7 @@
     "docs:api": "typedoc",
     "docs:ui": "storybook build --output-dir docs-page/frontend-ui",
     "docs:build": "node scripts/build-docs.mjs",
-    "docs:show": "http-server docs-page -o"
+    "docs:show": "http-server docs-page -c-1 -g -o"
   },
   "license": "MIT",
   "dependencies": {

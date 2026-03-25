@@ -1,31 +1,61 @@
 <script module>
   import { defineMeta } from "@storybook/addon-svelte-csf";
-  import Button from "./Button.svelte";
   import { fn } from "storybook/test";
+  import Button from "$lib/components/ui/Button.svelte";
 
-  // More on how to set up stories at: https://storybook.js.org/docs/writing-stories
+  const onClick = fn();
+
   const { Story } = defineMeta({
-    title: "Example/Button",
+    title: "PlanTracker/UI/Button",
     component: Button,
     tags: ["autodocs"],
     argTypes: {
-      backgroundColor: { control: "color" },
-      size: {
+      variant: {
         control: { type: "select" },
-        options: ["small", "medium", "large"],
+        options: ["primary", "ghost", "danger", "success"],
       },
-    },
-    args: {
-      onclick: fn(),
     },
   });
 </script>
 
-<!-- More on writing stories with args: https://storybook.js.org/docs/writing-stories/args -->
-<Story name="Primary" args={{ primary: true, label: "Button" }} />
+<Story name="Primary">
+  <Button variant="primary" onclick={onClick}>Save entry</Button>
+</Story>
 
-<Story name="Secondary" args={{ label: "Button" }} />
+<Story name="Ghost">
+  <Button variant="ghost" onclick={onClick}>Cancel</Button>
+</Story>
 
-<Story name="Large" args={{ size: "large", label: "Button" }} />
+<Story name="Danger">
+  <Button variant="danger" onclick={onClick}>Delete entry</Button>
+</Story>
 
-<Story name="Small" args={{ size: "small", label: "Button" }} />
+<Story name="Success">
+  <Button variant="success" onclick={onClick}>Start timer</Button>
+</Story>
+
+<Story name="Loading">
+  <Button variant="primary" loading={true}>Saving…</Button>
+</Story>
+
+<Story name="Disabled">
+  <Button variant="primary" disabled={true}>Save entry</Button>
+</Story>
+
+<Story name="AllVariants">
+  <div class="variants-row">
+    <Button variant="primary" onclick={onClick}>Primary</Button>
+    <Button variant="ghost" onclick={onClick}>Ghost</Button>
+    <Button variant="danger" onclick={onClick}>Danger</Button>
+    <Button variant="success" onclick={onClick}>Success</Button>
+  </div>
+</Story>
+
+<style>
+  .variants-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+</style>

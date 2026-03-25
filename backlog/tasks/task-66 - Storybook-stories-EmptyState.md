@@ -1,9 +1,10 @@
 ---
 id: TASK-66
 title: 'Storybook stories: EmptyState'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:49'
+updated_date: '2026-03-25 14:55'
 labels:
   - storybook
   - docs
@@ -34,6 +35,12 @@ Create `src/stories/EmptyState.stories.svelte` covering `src/lib/components/ui/E
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Icon and message render centred with muted styling
-- [ ] #2 message arg is editable in the Storybook controls panel
+- [x] #1 Icon and message render centred with muted styling
+- [x] #2 message arg is editable in the Storybook controls panel
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/EmptyState.stories.svelte` with NoEntries, NoTasks, and NoResults stories. The `message` prop is exposed as a Storybook arg with a text control so it can be edited freely in the controls panel.
+<!-- SECTION:FINAL_SUMMARY:END -->

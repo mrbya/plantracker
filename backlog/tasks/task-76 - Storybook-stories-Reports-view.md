@@ -1,9 +1,10 @@
 ---
 id: TASK-76
 title: 'Storybook stories: Reports view'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:50'
+updated_date: '2026-03-25 15:04'
 labels:
   - storybook
   - docs
@@ -51,8 +52,14 @@ const fixtureReport: ReportResult = {
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 NoEntries story shows EmptyState
-- [ ] #2 WithEntries story shows grand total formatted as Xh Ym and all entry rows
-- [ ] #3 Loading story shows spinner / disabled controls
-- [ ] #4 No invoke() errors in Storybook console
+- [x] #1 NoEntries story shows EmptyState
+- [x] #2 WithEntries story shows grand total formatted as Xh Ym and all entry rows
+- [x] #3 Loading story shows spinner / disabled controls
+- [x] #4 No invoke() errors in Storybook console
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/views/Reports.stories.svelte` with NoEntries, WithEntries, AllPlansFilter, and Loading stories. Each story overrides `invoke('generate_report')` with the appropriate fixture and uses a `play` function to click Generate. The fixture report has 3 entries totalling 4h 02m (14520s).
+<!-- SECTION:FINAL_SUMMARY:END -->

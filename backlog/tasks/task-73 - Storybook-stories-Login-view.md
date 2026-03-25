@@ -1,9 +1,10 @@
 ---
 id: TASK-73
 title: 'Storybook stories: Login view'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:50'
+updated_date: '2026-03-25 15:04'
 labels:
   - storybook
   - docs
@@ -38,7 +39,13 @@ Create `src/stories/views/Login.stories.svelte` covering `src/views/Login.svelte
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Idle story shows enabled sign-in button
-- [ ] #2 SigningIn story shows disabled button with Spinner
-- [ ] #3 No invoke() errors in console
+- [x] #1 Idle story shows enabled sign-in button
+- [x] #2 SigningIn story shows disabled button with Spinner
+- [x] #3 No invoke() errors in console
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/views/Login.stories.svelte` with Idle and SigningIn stories. The SigningIn story uses a `play` function that overrides `invoke('login')` with a never-resolving promise and clicks the button, freezing the UI in the loading state.
+<!-- SECTION:FINAL_SUMMARY:END -->

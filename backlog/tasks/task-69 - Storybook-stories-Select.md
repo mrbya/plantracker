@@ -1,9 +1,10 @@
 ---
 id: TASK-69
 title: 'Storybook stories: Select'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:49'
+updated_date: '2026-03-25 14:56'
 labels:
   - storybook
   - docs
@@ -34,7 +35,13 @@ Create `src/stories/Select.stories.svelte` covering `src/lib/components/ui/Selec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Placeholder option renders as disabled/hidden when a real value is selected
-- [ ] #2 PreSelected story shows correct option highlighted on render
-- [ ] #3 Custom chevron icon visible in all stories
+- [x] #1 Placeholder option renders as disabled/hidden when a real value is selected
+- [x] #2 PreSelected story shows correct option highlighted on render
+- [x] #3 Custom chevron icon visible in all stories
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/Select.stories.svelte` with WithPlaceholder, PreSelected, and ManyOptions (12 options) stories. Uses realistic plan names as option labels.
+<!-- SECTION:FINAL_SUMMARY:END -->

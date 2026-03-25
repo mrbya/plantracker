@@ -1,9 +1,10 @@
 ---
 id: TASK-72
 title: 'Storybook stories: Layout'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:50'
+updated_date: '2026-03-25 15:01'
 labels:
   - storybook
   - docs
@@ -44,8 +45,14 @@ Seed the `auth` store with a fake user name so the avatar and sign-out button re
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Sidebar renders with all 4 nav icons and the avatar/sign-out area
-- [ ] #2 Active nav button has accent highlight
-- [ ] #3 Avatar shows correct initials derived from userDisplayName
-- [ ] #4 No unhandled invoke() errors in the Storybook console
+- [x] #1 Sidebar renders with all 4 nav icons and the avatar/sign-out area
+- [x] #2 Active nav button has accent highlight
+- [x] #3 Avatar shows correct initials derived from userDisplayName
+- [x] #4 No unhandled invoke() errors in the Storybook console
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/Layout.stories.svelte` with TimeTrackingActive, ManualEntryActive, ReportsActive, SettingsActive, and UnknownUser stories. Navigation stories use `play` functions to click the correct sidebar button. Three Tauri plugin mocks added (`tauri-api-core`, `tauri-plugin-opener`, `tauri-plugin-store`) and wired in `.storybook/main.ts` via `viteFinal` so all view components render without a running Tauri process. Documented that `userDisplayName` shows "?" in isolation (avatar requires `initAuth()` called from `+page.svelte`).
+<!-- SECTION:FINAL_SUMMARY:END -->

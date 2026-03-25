@@ -1,9 +1,10 @@
 ---
 id: TASK-65
 title: 'Storybook stories: Badge'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:49'
+updated_date: '2026-03-25 14:55'
 labels:
   - storybook
   - docs
@@ -34,6 +35,12 @@ Create `src/stories/Badge.stories.svelte` covering `src/lib/components/ui/Badge.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Green, red, and yellow badge variants all render with the correct Catppuccin tinted background and border
-- [ ] #2 AllColors story shows all three variants side-by-side
+- [x] #1 Green, red, and yellow badge variants all render with the correct Catppuccin tinted background and border
+- [x] #2 AllColors story shows all three variants side-by-side
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/Badge.stories.svelte` with Running (green), Stopped (red), Warning (yellow), and AllColors stories. Slot content passed via children snippet.
+<!-- SECTION:FINAL_SUMMARY:END -->

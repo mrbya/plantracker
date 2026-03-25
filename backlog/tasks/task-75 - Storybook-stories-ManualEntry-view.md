@@ -1,9 +1,10 @@
 ---
 id: TASK-75
 title: 'Storybook stories: ManualEntry view'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:50'
+updated_date: '2026-03-25 15:04'
 labels:
   - storybook
   - docs
@@ -37,7 +38,13 @@ Seed the `planner` store with fixture plans/tasks. Mock `invoke('create_entry')`
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 FormFilled story shows all inputs populated with values
-- [ ] #2 Saving story shows disabled save button with Spinner
-- [ ] #3 No invoke() errors in Storybook console
+- [x] #1 FormFilled story shows all inputs populated with values
+- [x] #2 Saving story shows disabled save button with Spinner
+- [x] #3 No invoke() errors in Storybook console
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/views/ManualEntry.stories.svelte` with EmptyForm, FormFilled, NoPlans, and Saving stories. FormFilled uses `play` to fill date/time/notes fields. Saving overrides `invoke('create_manual_entry')` with a never-resolving promise and clicks Save Entry.
+<!-- SECTION:FINAL_SUMMARY:END -->

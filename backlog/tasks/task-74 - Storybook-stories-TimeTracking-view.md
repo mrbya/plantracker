@@ -1,9 +1,10 @@
 ---
 id: TASK-74
 title: 'Storybook stories: TimeTracking view'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:50'
+updated_date: '2026-03-25 15:04'
 labels:
   - storybook
   - docs
@@ -50,8 +51,14 @@ const fixtureTasks = [
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 NoPlans story shows EmptyState component
-- [ ] #2 TimerRunning story shows elapsed time formatted as Xh Ym and a stop button
-- [ ] #3 TimerRunning stop button is styled as danger variant
-- [ ] #4 No invoke() errors in Storybook console
+- [x] #1 NoPlans story shows EmptyState component
+- [x] #2 TimerRunning story shows elapsed time formatted as Xh Ym and a stop button
+- [x] #3 TimerRunning stop button is styled as danger variant
+- [x] #4 No invoke() errors in Storybook console
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/views/TimeTracking.stories.svelte` with NoPlans, IdleWithPlans, PlanSelected, TimerRunning, and TimerRunningNoTask stories. Timer stories use `start()` from the timer store (via the mocked invoke) and then override `elapsedSeconds` to a fixed value. Fixture plans and entries are seeded via store writables.
+<!-- SECTION:FINAL_SUMMARY:END -->

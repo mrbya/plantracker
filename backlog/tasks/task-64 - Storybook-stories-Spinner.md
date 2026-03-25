@@ -1,9 +1,10 @@
 ---
 id: TASK-64
 title: 'Storybook stories: Spinner'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:49'
+updated_date: '2026-03-25 14:54'
 labels:
   - storybook
   - docs
@@ -34,7 +35,13 @@ Create `src/stories/Spinner.stories.svelte` covering `src/lib/components/ui/Spin
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Both size stories render the correct pixel dimensions (12px sm, 18px md)
-- [ ] #2 Spinner animates continuously in the canvas
-- [ ] #3 InsideButton story shows the spinner rendered inside a disabled Button
+- [x] #1 Both size stories render the correct pixel dimensions (12px sm, 18px md)
+- [x] #2 Spinner animates continuously in the canvas
+- [x] #3 InsideButton story shows the spinner rendered inside a disabled Button
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/Spinner.stories.svelte` with Medium, Small, and InsideButton stories. Medium/Small use direct args; InsideButton renders a Button with `loading={true}` to show the sm spinner in its natural context.
+<!-- SECTION:FINAL_SUMMARY:END -->

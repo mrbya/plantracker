@@ -1,9 +1,10 @@
 ---
 id: TASK-67
 title: 'Storybook stories: Card'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:49'
+updated_date: '2026-03-25 14:55'
 labels:
   - storybook
   - docs
@@ -34,7 +35,13 @@ Create `src/stories/Card.stories.svelte` covering `src/lib/components/ui/Card.sv
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 WithTitle renders a header row separated from the body by a border
-- [ ] #2 WithoutTitle renders body only with no header
-- [ ] #3 title arg is editable in controls panel
+- [x] #1 WithTitle renders a header row separated from the body by a border
+- [x] #2 WithoutTitle renders body only with no header
+- [x] #3 title arg is editable in controls panel
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/Card.stories.svelte` with WithTitle, WithoutTitle, and WithComplexContent (table of entries) stories. The `title` arg is editable in the controls panel.
+<!-- SECTION:FINAL_SUMMARY:END -->

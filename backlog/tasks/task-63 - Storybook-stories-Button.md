@@ -1,9 +1,10 @@
 ---
 id: TASK-63
 title: 'Storybook stories: Button'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:48'
+updated_date: '2026-03-25 14:54'
 labels:
   - storybook
   - docs
@@ -39,8 +40,14 @@ Create `src/stories/Button.stories.svelte` covering the app's `src/lib/component
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 All 7 stories render without errors
-- [ ] #2 Loading story shows spinner and button is non-interactive
-- [ ] #3 Disabled story shows reduced opacity and not-allowed cursor
-- [ ] #4 All four variant colours match the Catppuccin Mocha palette
+- [x] #1 All 7 stories render without errors
+- [x] #2 Loading story shows spinner and button is non-interactive
+- [x] #3 Disabled story shows reduced opacity and not-allowed cursor
+- [x] #4 All four variant colours match the Catppuccin Mocha palette
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/Button.stories.svelte` with 7 stories: Primary, Ghost, Danger, Success, Loading, Disabled, AllVariants. Uses `@storybook/addon-svelte-csf` `defineMeta`/`Story` pattern with snippet children to pass slot content. `onclick` arg wired to `fn()` for the interactions panel. AllVariants renders all four variants side-by-side.
+<!-- SECTION:FINAL_SUMMARY:END -->

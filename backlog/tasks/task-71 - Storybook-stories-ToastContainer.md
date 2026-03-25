@@ -1,9 +1,10 @@
 ---
 id: TASK-71
 title: 'Storybook stories: ToastContainer'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-03-25 14:49'
+updated_date: '2026-03-25 15:01'
 labels:
   - storybook
   - docs
@@ -45,8 +46,14 @@ Create a thin story wrapper that:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Success/error/warning dots render in the correct Catppuccin colours
-- [ ] #2 MultipleToasts shows all three stacked in bottom-right corner
-- [ ] #3 Empty story renders without errors and shows nothing
-- [ ] #4 Toasts do not auto-dismiss during story viewing
+- [x] #1 Success/error/warning dots render in the correct Catppuccin colours
+- [x] #2 MultipleToasts shows all three stacked in bottom-right corner
+- [x] #3 Empty story renders without errors and shows nothing
+- [x] #4 Toasts do not auto-dismiss during story viewing
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `src/stories/ToastContainer.stories.svelte` with SuccessToast, ErrorToast, WarningToast, MultipleToasts, and Empty stories. Each story seeds the `notifications` writable store directly (bypassing the 4-second auto-dismiss) so toasts remain visible for inspection.
+<!-- SECTION:FINAL_SUMMARY:END -->
