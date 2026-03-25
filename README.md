@@ -2,6 +2,7 @@
 [![Latest Release](https://gitlab.com/family-treasure/plantracker/-/badges/release.svg)](https://gitlab.com/family-treasure/plantracker/-/releases)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![pipeline status](https://gitlab.com/byacrates/hoy/badges/master/pipeline.svg)](https://gitlab.com/byacrates/hoy/-/commits/master)
+[![dev-docs](https://gitlab.com/%{project_path}/-/badges/custom.svg?key_text=de+docs&value_text=pages&key_color=555&value_color=1f883d)](https://family-treasure.gitlab.io/plantracker/)
 
 > A cross-platform desktop app for tracking time spent on Microsoft Planner tasks.
 
