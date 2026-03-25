@@ -108,6 +108,6 @@ docs:
   rules:
     - if: $[[ inputs.build_docs ]] == true
   script:
-    - just docs-ci
+    - just ci-docs
   pages: true
 
