@@ -6,4 +6,14 @@ repos:
         language: unsupported
         entry: just pre-commit
         pass_filenames: false
-        files: $
+        files: >
+          (?x)^(
+            src-tauri/.*\.rs|
+            src/.*\.(ts|svelte)|
+            .*\.js|
+            package\.json|
+            tsconfig\.json
+            pnpm.*\.json|
+            justfile|
+            \.prettierrc
+          )$
