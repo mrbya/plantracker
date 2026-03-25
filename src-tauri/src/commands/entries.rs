@@ -10,7 +10,28 @@ use crate::{commands::timer::ActiveTimer, db, models::TimeEntry};
 // Shared validation helper
 // ---------------------------------------------------------------------------
 
-/// Parses and validates start/end time strings, ensuring end is strictly after start.
+/// Parses and validates a pair of ISO 8601 timestamp strings for a time entry.
+///
+/// Both strings are parsed as [`DateTime<chrono::Utc>`] and the relationship between
+/// them is checked. This helper is called by both [`create_manual_entry`] and
+/// [`update_entry`] before any database write.
+///
+/// # Arguments
+///
+/// - `start_time`: ISO 8601 timestamp string for the start of the interval.
+/// - `end_time`: ISO 8601 timestamp string for the end of the interval.
+///
+/// # Returns
+///
+/// `Ok((start, end))` — the parsed timestamps as [`DateTime<chrono::Utc>`] values.
+///
+/// # Errors
+///
+/// Returns a string error if:
+/// - `start_time` cannot be parsed as a valid `DateTime<Utc>`,
+/// - `end_time` cannot be parsed as a valid `DateTime<Utc>`, or
+/// - `end_time` is equal to or before `start_time` (durations of zero or negative length
+///   are not permitted).
 fn parse_and_validate_times(
     start_time: &str,
     end_time: &str,
@@ -31,10 +52,34 @@ fn parse_and_validate_times(
 // Commands
 // ---------------------------------------------------------------------------
 
-/// Creates a time entry manually (not via the live timer).
+/// Creates a completed time entry manually, bypassing the live timer.
+///
+/// This command is used by the Manual Entry view to record time that was not tracked
+/// in real time. It validates the provided timestamps, checks that no timer is currently
+/// running (to avoid ambiguous state), creates a new [`TimeEntry`] with a fresh UUID,
+/// and inserts it into `SQLite`.
+///
+/// # Arguments
+///
+/// - `plan_id`: Local UUID of the plan. Must not be empty.
+/// - `task_id`: Optional local UUID of the task. `None` creates a plan-level entry.
+/// - `start_time`: ISO 8601 start timestamp string.
+/// - `end_time`: ISO 8601 end timestamp string.
+/// - `notes`: Optional free-text notes.
+/// - `pool`: Tauri managed state reference to the shared `SQLite` connection pool.
+/// - `timer`: Tauri managed state reference to the `Mutex<Option<ActiveTimer>>`.
+///
+/// # Returns
+///
+/// `Ok(TimeEntry)` — the newly created entry row.
 ///
 /// # Errors
-/// Returns a string error if validation fails, a timer is running, or the DB insert fails.
+///
+/// Returns a string error if:
+/// - `plan_id` is empty,
+/// - time validation fails (see [`parse_and_validate_times`]),
+/// - a timer is currently running (manual entries are rejected while a timer is active), or
+/// - the `SQLite` insert fails (e.g. `plan_id` foreign-key violation).
 #[tauri::command]
 pub async fn create_manual_entry(
     plan_id: String,
@@ -80,8 +125,31 @@ pub async fn create_manual_entry(
 
 /// Updates an existing time entry's start/end times and notes.
 ///
+/// Validates the new timestamps before writing to ensure `end_time` is strictly after
+/// `start_time`. After the update, the modified row is fetched from `SQLite` and
+/// returned so the frontend always receives the persisted values.
+///
+/// This command only updates `start_time`, `end_time`, and `notes`. The `plan_id`,
+/// `task_id`, and `created_at` fields cannot be changed via this command.
+///
+/// # Arguments
+///
+/// - `id`: Local UUID of the entry to update.
+/// - `start_time`: New ISO 8601 start timestamp string.
+/// - `end_time`: New ISO 8601 end timestamp string.
+/// - `notes`: New optional free-text notes. `None` clears any existing notes.
+/// - `pool`: Tauri managed state reference to the shared `SQLite` connection pool.
+///
+/// # Returns
+///
+/// `Ok(TimeEntry)` — the entry row as it exists in `SQLite` after the update.
+///
 /// # Errors
-/// Returns a string error if validation fails, the DB update fails, or the entry is not found.
+///
+/// Returns a string error if:
+/// - time validation fails (see [`parse_and_validate_times`]),
+/// - the `SQLite` update fails, or
+/// - the entry is not found after the update (the ID does not exist).
 #[tauri::command]
 pub async fn update_entry(
     id: String,
@@ -105,10 +173,24 @@ pub async fn update_entry(
     Ok(entry)
 }
 
-/// Deletes a time entry by ID.
+/// Deletes a time entry by its local UUID.
+///
+/// Permanently removes the `time_entries` row with the given `id`. The deletion is
+/// not reversible. No cascade effects occur from this deletion because no other table
+/// references `time_entries` with a foreign key.
+///
+/// # Arguments
+///
+/// - `id`: Local UUID of the entry to delete.
+/// - `pool`: Tauri managed state reference to the shared `SQLite` connection pool.
+///
+/// # Returns
+///
+/// `Ok(())` on success.
 ///
 /// # Errors
-/// Returns a string error if the DB delete fails.
+///
+/// Returns a string error if the `SQLite` delete statement fails.
 #[tauri::command]
 pub async fn delete_entry(id: String, pool: State<'_, SqlitePool>) -> Result<(), String> {
     db::entries::delete_entry(&pool, &id)

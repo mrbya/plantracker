@@ -1,4 +1,17 @@
 <script lang="ts">
+  /**
+   * Empty-state placeholder shown in place of an empty list or table.
+   *
+   * Renders a centred icon and message with muted styling to signal that there
+   * is no content to display — as opposed to a loading or error state.  Always
+   * use this component rather than rendering nothing when a list has zero items,
+   * so the user understands the absence of content is intentional.
+   *
+   * Props:
+   * - `message` — contextual explanation of why the list is empty and what
+   *               the user can do, e.g. `"No entries yet. Start a timer to
+   *               track time."`.
+   */
   import { CircleSlash2 } from "lucide-svelte";
   let { message }: { message: string } = $props();
 </script>

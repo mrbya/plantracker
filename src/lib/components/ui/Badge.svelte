@@ -1,4 +1,16 @@
 <script lang="ts">
+  /**
+   * Coloured pill badge for short status labels.
+   *
+   * Renders an inline `<span>` with a semi-transparent tinted background and
+   * matching border, using Catppuccin Mocha semantic colour variables.
+   *
+   * Props:
+   * - `color`    — one of `"green"` (maps to `--success`), `"red"` (maps to
+   *                `--danger`), or `"yellow"` (maps to `--warning`).
+   * - `children` — slot content; typically a short text label such as
+   *                `"Running"` or `"Stopped"`.
+   */
   import type { Snippet } from "svelte";
   let {
     color,

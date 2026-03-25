@@ -1,4 +1,22 @@
 <script lang="ts">
+  /**
+   * Styled native `<select>` wrapper.
+   *
+   * Renders a plain HTML `<select>` element with Catppuccin Mocha theming and
+   * a custom chevron icon injected via a CSS background image.  Use this
+   * component for short, fixed option lists.  For long or searchable lists use
+   * `SearchableSelect.svelte` instead.
+   *
+   * Props:
+   * - `options`     — array of `{ value, label }` pairs rendered as `<option>`
+   *                   elements.
+   * - `value`       — bindable currently selected value string.
+   * - `placeholder` — optional label for a disabled, hidden "Select…" option
+   *                   shown when no value is selected.
+   * - `id`          — forwarded to the underlying `<select>` for label
+   *                   association.
+   * - `onchange`    — callback fired after the user selects a new option.
+   */
   let {
     options,
     value = $bindable(""),

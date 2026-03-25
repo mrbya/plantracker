@@ -1,4 +1,29 @@
 <script lang="ts">
+  /**
+   * Time Tracking view — the primary timer interface.
+   *
+   * Allows the user to select a plan and optional task, start/stop a timer,
+   * and review recent time entries in a table.  The plan and task selections
+   * are shared with the other views via the `planner` store so switching tabs
+   * preserves the context.
+   *
+   * Scoping for `getRecentEntries`:
+   *   - Task selected  → entries for that specific task
+   *   - Plan only      → entries for the plan (all tasks combined)
+   *   - Neither        → entries for all plans
+   *
+   * Timer button states:
+   *   - `$isRunning === false` → green "Start Timer" button (disabled if no plan selected)
+   *   - `$isRunning === true`  → red "Stop — Xh Ym" button showing elapsed time
+   *   Both states are disabled while `timerBusy` is `true` to prevent double-clicks.
+   *
+   * Delete confirmation:
+   *   Rather than a modal dialog, a two-step inline pattern is used: the first
+   *   click on the delete icon sets `confirmDeleteId` to the entry's ID,
+   *   replacing the icon with "Sure? / Cancel" text buttons.  This avoids
+   *   blocking the entire UI.  Only one row can be in the confirm state at a
+   *   time because `confirmDeleteId` holds a single ID.
+   */
   import { onMount } from "svelte";
 
   import { deleteEntry, getRecentEntries } from "$lib/api";

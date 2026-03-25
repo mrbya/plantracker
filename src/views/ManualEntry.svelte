@@ -1,4 +1,36 @@
 <script lang="ts">
+  /**
+   * Manual Entry view — create and edit time entries without the live timer.
+   *
+   * Supports two modes controlled by `editingId`:
+   * - **Create mode** (`editingId === null`): submitting the form calls
+   *   `createManualEntry` and inserts a new row.
+   * - **Edit mode** (`editingId !== null`): submitting calls `updateEntry`
+   *   and the row being edited is highlighted in the table.  Clicking "Edit"
+   *   on a table row populates the form fields and scrolls to the top.
+   *   Clicking "Cancel" or completing an update resets `editingId` to `null`.
+   *
+   * Date/time field design:
+   *   Start and end timestamps are captured as two separate fields each:
+   *   an `<input type="date">` for the calendar portion and a plain text
+   *   `<input>` constrained to `HH:MM` format for the time portion.  This
+   *   avoids the inconsistent native `datetime-local` picker behaviour across
+   *   platforms and gives full control over visual styling.
+   *   `fieldsToIso` assembles these into an ISO 8601 string for the backend;
+   *   `isoToFields` decomposes an existing ISO string back into the field
+   *   values when loading an entry for editing.
+   *
+   * Validation rules (checked in `validate()`):
+   *   - A plan must be selected (in create mode).
+   *   - Start date and time must be provided and in `HH:MM` 24h format.
+   *   - End date and time must be provided and in `HH:MM` 24h format.
+   *   - End timestamp must be strictly after start timestamp.
+   *
+   * Delete confirmation uses the same two-step inline pattern as TimeTracking:
+   *   first click arms the row; "Sure?" / "Cancel" appear in place of the
+   *   action buttons.  Deleting an entry that is currently open in the form
+   *   also resets the form via `resetForm()`.
+   */
   import { onMount } from "svelte";
 
   import {

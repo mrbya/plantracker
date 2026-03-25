@@ -1,4 +1,21 @@
 <script lang="ts">
+  /**
+   * Themed button component.
+   *
+   * Wraps a native `<button>` with Catppuccin Mocha styling and a built-in
+   * loading state.  When `loading` is `true` a small `Spinner` is shown
+   * alongside the slot content and the button is automatically disabled.
+   *
+   * Props:
+   * - `variant`  — visual style: `"primary"` (accent fill), `"ghost"` (border
+   *                only), `"danger"` (red fill), or `"success"` (green fill).
+   *                Defaults to `"primary"`.
+   * - `disabled` — disables the button independently of `loading`.
+   * - `loading`  — shows a spinner and prevents interaction.
+   * - `onclick`  — click handler forwarded to the native `<button>`.
+   * - `title`    — tooltip text; forwarded to the native `<button>`.
+   * - `children` — slot content rendered next to the spinner (if present).
+   */
   import Spinner from "./Spinner.svelte";
 
   let {

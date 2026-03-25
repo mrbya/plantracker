@@ -3,10 +3,28 @@ use sqlx::SqlitePool;
 
 use crate::models::TimeEntry;
 
-/// Inserts a new time entry row into the database.
+/// Inserts a new [`TimeEntry`] row into the `time_entries` table.
+///
+/// The `plan_id` field must reference an existing row in the `plans` table.
+/// If `task_id` is `Some`, it must reference an existing row in the `tasks` table.
+/// Both constraints are enforced by `SQLite` foreign keys, provided
+/// `PRAGMA foreign_keys = ON` was executed after opening the pool (see [`super::init_db`]).
+///
+/// An entry with `end_time = None` represents an active timer. The application
+/// enforces an at-most-one-active invariant at the command layer: callers must check
+/// [`find_active_entry`] before inserting a new active entry.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `entry`: The [`TimeEntry`] to insert. Its `id` must be a fresh UUID.
 ///
 /// # Errors
-/// Returns an error if the insert fails (e.g. FK constraint or duplicate ID).
+///
+/// Returns an error if:
+/// - the `SQLite` insert fails,
+/// - `entry.plan_id` does not reference an existing plan (foreign-key violation), or
+/// - `entry.task_id` is `Some` but does not reference an existing task.
 pub async fn insert_entry(pool: &SqlitePool, entry: &TimeEntry) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
@@ -26,10 +44,24 @@ pub async fn insert_entry(pool: &SqlitePool, entry: &TimeEntry) -> anyhow::Resul
     Ok(())
 }
 
-/// Sets the `end_time` of an entry, marking the timer as stopped.
+/// Sets the `end_time` of a [`TimeEntry`], marking its timer as stopped.
+///
+/// After this call the row's `end_time` column is set to an ISO 8601 string
+/// derived from `end_time.to_rfc3339()`. The entry will no longer be returned by
+/// [`find_active_entry`], which queries for rows with `end_time IS NULL`.
+///
+/// This function is called exclusively by [`crate::commands::timer::stop_timer`] after
+/// the user stops a running timer.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `id`: The local UUID primary key of the entry to update.
+/// - `end_time`: The UTC timestamp to record as the end of the interval.
 ///
 /// # Errors
-/// Returns an error if the DB update fails.
+///
+/// Returns an error if the `SQLite` update statement fails.
 pub async fn update_entry_end_time(
     pool: &SqlitePool,
     id: &str,
@@ -46,10 +78,31 @@ pub async fn update_entry_end_time(
     Ok(())
 }
 
-/// Finds the entry with a `NULL` `end_time`, if any (i.e. the currently running timer).
+/// Finds the currently active timer entry (the row with `end_time IS NULL`), if any.
+///
+/// At most one such row should exist at any given time. This function is called in two
+/// contexts:
+///
+/// 1. **Application startup** — [`crate::run`] calls this to detect a timer that was
+///    left running when the app was previously force-quit. If found, the
+///    [`crate::commands::timer::ActiveTimer`] in-memory state is restored from the row,
+///    ensuring the elapsed duration is computed correctly.
+///
+/// 2. **Timer start guard** — [`crate::commands::timer::start_timer`] calls this to
+///    enforce the at-most-one-active invariant before inserting a new active entry.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+///
+/// # Returns
+///
+/// - `Ok(Some(entry))` if an active timer row is found.
+/// - `Ok(None)` if no row has `end_time IS NULL`.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn find_active_entry(pool: &SqlitePool) -> anyhow::Result<Option<TimeEntry>> {
     let row = sqlx::query_as!(
         TimeEntry,
@@ -60,10 +113,27 @@ pub async fn find_active_entry(pool: &SqlitePool) -> anyhow::Result<Option<TimeE
     Ok(row)
 }
 
-/// Returns up to `limit` entries for the given task, ordered by `start_time DESC`.
+/// Returns the most recent completed entries for a given task, limited to `limit` rows.
+///
+/// Only rows with a non-`NULL` `end_time` are returned — active timers are excluded.
+/// Results are ordered by `start_time DESC` so the most recently started entry appears
+/// first. This function is called by [`crate::commands::timer::get_recent_entries`] when
+/// a `task_id` is provided.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `task_id`: The local UUID of the task whose entries to fetch.
+/// - `limit`: Maximum number of rows to return.
+///
+/// # Returns
+///
+/// `Ok(entries)` — up to `limit` completed [`TimeEntry`] rows for the given task,
+/// ordered newest-first.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn list_entries_for_task(
     pool: &SqlitePool,
     task_id: &str,
@@ -81,10 +151,28 @@ pub async fn list_entries_for_task(
     Ok(rows)
 }
 
-/// Returns up to `limit` entries for the given plan, ordered by `start_time DESC`.
+/// Returns the most recent completed entries for a given plan, limited to `limit` rows.
+///
+/// This includes both task-level entries (where `task_id IS NOT NULL`) and plan-level
+/// entries (where `task_id IS NULL`) that belong to the plan. Only rows with a non-`NULL`
+/// `end_time` are returned — active timers are excluded. Results are ordered by
+/// `start_time DESC`. This function is called by
+/// [`crate::commands::timer::get_recent_entries`] when only a `plan_id` is provided.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `plan_id`: The local UUID of the plan whose entries to fetch.
+/// - `limit`: Maximum number of rows to return.
+///
+/// # Returns
+///
+/// `Ok(entries)` — up to `limit` completed [`TimeEntry`] rows for the given plan,
+/// ordered newest-first.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn list_entries_for_plan(
     pool: &SqlitePool,
     plan_id: &str,
@@ -102,12 +190,33 @@ pub async fn list_entries_for_plan(
     Ok(rows)
 }
 
-/// Lists completed entries within an inclusive date range.
-/// Filters by `task_id` if provided, otherwise by `plan_id` if provided,
-/// otherwise returns all entries in the range.
+/// Lists all completed entries whose `start_time` falls within an inclusive date range.
+///
+/// The scoping priority is: task > plan > all entries. Specifically:
+/// - If `task_id` is `Some`, only entries for that task are returned (regardless of `plan_id`).
+/// - If `task_id` is `None` but `plan_id` is `Some`, all entries for that plan are returned.
+/// - If both are `None`, all entries in the date range are returned.
+///
+/// The date range is converted to ISO 8601 strings for lexicographic comparison in
+/// `SQLite` (which stores datetimes as `TEXT`). Because `SQLite` compares `TEXT`
+/// lexicographically, ISO 8601 format (`YYYY-MM-DDTHH:MM:SSZ`) is required for correct
+/// ordering and range filtering. Active timers (`end_time IS NULL`) are always excluded.
+///
+/// Results are ordered by `start_time DESC`.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `plan_id`: Optional local UUID to scope results to a specific plan.
+/// - `task_id`: Optional local UUID to scope results to a specific task (takes priority over `plan_id`).
+/// - `from`: Inclusive start date of the range (converted to `YYYY-MM-DDT00:00:00Z`).
+/// - `to`: Inclusive end date of the range (converted to the first moment of the following day).
 ///
 /// # Errors
-/// Returns an error if `to` is the maximum representable date (overflow) or the DB query fails.
+///
+/// Returns an error if:
+/// - `to` is the maximum representable [`NaiveDate`] (overflow when computing the next day), or
+/// - any `SQLite` query fails.
 pub async fn list_entries_in_range(
     pool: &SqlitePool,
     plan_id: Option<&str>,
@@ -184,8 +293,22 @@ pub async fn list_entries_in_range(
 
 /// Updates a time entry's `start_time`, `end_time`, and `notes` fields.
 ///
+/// Used by [`crate::commands::entries::update_entry`] when the user edits a previously
+/// recorded (completed) entry from the manual entry or report view. The `id` column is
+/// not changed. Callers are responsible for validating that `end_time` is strictly after
+/// `start_time` before calling this function.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `id`: The local UUID primary key of the entry to update.
+/// - `start_time`: ISO 8601 start timestamp string.
+/// - `end_time`: ISO 8601 end timestamp string.
+/// - `notes`: Optional free-text notes; `None` clears any existing notes.
+///
 /// # Errors
-/// Returns an error if the DB update fails.
+///
+/// Returns an error if the `SQLite` update statement fails.
 pub async fn update_entry(
     pool: &SqlitePool,
     id: &str,
@@ -205,10 +328,25 @@ pub async fn update_entry(
     Ok(())
 }
 
-/// Fetches a single entry by its primary key, returning `None` if not found.
+/// Fetches a single [`TimeEntry`] by its local UUID primary key.
+///
+/// Used after [`update_entry_end_time`] or [`update_entry`] to return the freshly
+/// modified row to the caller without a separate query, and by
+/// [`crate::commands::timer::stop_timer`] to return the completed entry to the frontend.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `id`: The local UUID primary key of the entry to fetch.
+///
+/// # Returns
+///
+/// - `Ok(Some(entry))` if a row with the given `id` exists.
+/// - `Ok(None)` if no such row is found.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn get_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<TimeEntry>> {
     let row = sqlx::query_as!(
         TimeEntry,
@@ -220,10 +358,20 @@ pub async fn get_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Tim
     Ok(row)
 }
 
-/// Deletes an entry by its primary key.
+/// Deletes a time entry by its local UUID primary key.
+///
+/// Called by [`crate::commands::entries::delete_entry`] when the user removes an entry
+/// from the UI. The deletion is permanent and cannot be undone. No cascade effects
+/// occur from this deletion because no other table references `time_entries`.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `id`: The local UUID primary key of the entry to delete.
 ///
 /// # Errors
-/// Returns an error if the DB delete fails.
+///
+/// Returns an error if the `SQLite` delete statement fails.
 pub async fn delete_entry(pool: &SqlitePool, id: &str) -> anyhow::Result<()> {
     sqlx::query!("DELETE FROM time_entries WHERE id = ?", id)
         .execute(pool)

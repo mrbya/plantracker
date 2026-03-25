@@ -1,4 +1,25 @@
 <script lang="ts">
+  /**
+   * Settings view — user preferences and account management.
+   *
+   * Organised into five sections:
+   *
+   * | Section    | Controls                                              |
+   * |------------|-------------------------------------------------------|
+   * | Entries    | Recent entries limit (number input, saves on blur)    |
+   * | Sync       | Auto-sync frequency (select); manual "Sync Now" button|
+   * | Storage    | Data directory path display; "Open Folder" shortcut   |
+   * | Appearance | Theme choice (dark / light / system)                  |
+   * | Account    | Signed-in user name; "Sign Out" button                |
+   *
+   * Blur-vs-keystroke saving rationale:
+   *   The entries-limit field saves via `onblur` (when the user leaves the
+   *   field) rather than on every keystroke to avoid persisting intermediate
+   *   invalid states (e.g., an empty field while the user is deleting and
+   *   retyping).  If the blurred value is invalid the field resets to the
+   *   current store value.  All other controls (selects) save immediately
+   *   on change because they can only produce valid values.
+   */
   import { onMount } from "svelte";
   import { openPath } from "@tauri-apps/plugin-opener";
 

@@ -8,11 +8,19 @@ use crate::db;
 // Output types
 // ---------------------------------------------------------------------------
 
-/// A single time-entry row in a generated report.
+/// A single enriched time-entry row in a generated report.
+///
+/// Unlike the raw [`crate::models::TimeEntry`] struct, `ReportEntry` includes resolved
+/// display titles for the task and plan, and a pre-computed `duration_seconds` value.
+/// Title resolution is performed inside [`generate_report`] using cached `SQLite` lookups
+/// so that many entries sharing the same task or plan do not each require a separate query.
+///
+/// `ReportEntry` is also used as input to [`export_report_csv`] when the user exports
+/// the report to a file.
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportEntry {
-    /// Display title of the associated task.
+    /// Display title of the associated task, or `"No specific task"` for plan-level entries.
     pub task_title: String,
     /// Display title of the associated plan.
     pub plan_title: String,
@@ -20,21 +28,27 @@ pub struct ReportEntry {
     pub start_time: String,
     /// ISO 8601 end timestamp.
     pub end_time: String,
-    /// Duration of the entry in seconds.
+    /// Duration of the entry in whole seconds (`end_time - start_time`, minimum 0).
     pub duration_seconds: i64,
-    /// Optional free-text notes attached to this entry.
+    /// Optional free-text notes attached to this entry by the user.
     pub notes: Option<String>,
 }
 
-/// Result returned by `generate_report`.
+/// The complete result of a [`generate_report`] call, as returned to the frontend.
+///
+/// This struct is passed directly to [`export_report_csv`] when the user chooses to
+/// export the report — the frontend serialises the same `ReportResult` object it received
+/// from `generate_report` and sends it back to the export command.
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReportResult {
-    /// All matching time entries within the requested date range.
+    /// All matching completed [`ReportEntry`] rows within the requested date range,
+    /// ordered by `start_time DESC`.
     pub entries: Vec<ReportEntry>,
-    /// Sum of `duration_seconds` across all entries.
+    /// Sum of `duration_seconds` across all entries in `entries`.
     pub grand_total_seconds: i64,
-    /// Human-readable label describing the report scope (task, plan, or all).
+    /// Human-readable label describing the scope of the report:
+    /// `"Task: <title>"`, `"Plan: <title>"`, or `"All entries"`.
     pub subject_label: String,
 }
 
@@ -42,10 +56,41 @@ pub struct ReportResult {
 // generate_report
 // ---------------------------------------------------------------------------
 
-/// Generates a time report for the specified date range.
+/// Generates a time report for the specified month range.
+///
+/// The scoping priority for entries is: task > plan > all entries. Specifically:
+/// - If `task_id` is `Some`, only entries for that task are included.
+/// - If `task_id` is `None` but `plan_id` is `Some`, all entries for that plan are included.
+/// - If both are `None`, all entries in the date range are included.
+///
+/// The date range is specified as year/month pairs (`from_year`/`from_month` through
+/// `to_year`/`to_month`). The range is inclusive at both ends: it spans from the first
+/// day of `from_year`/`from_month` through the last day of `to_year`/`to_month`.
+///
+/// Task and plan titles are resolved from `SQLite` with an in-memory cache to avoid
+/// redundant queries when many entries share the same task or plan.
+///
+/// # Arguments
+///
+/// - `plan_id`: Optional local UUID to scope results to a specific plan.
+/// - `task_id`: Optional local UUID to scope results to a specific task.
+/// - `from_year`: Start year (e.g. `2024`).
+/// - `from_month`: Start month, 1–12.
+/// - `to_year`: End year (e.g. `2024`).
+/// - `to_month`: End month, 1–12.
+/// - `pool`: Tauri managed state reference to the shared `SQLite` connection pool.
+///
+/// # Returns
+///
+/// `Ok(ReportResult)` containing all matching entries with resolved titles, the grand
+/// total duration, and a human-readable scope label.
 ///
 /// # Errors
-/// Returns a string error if the date arguments are invalid or a DB query fails.
+///
+/// Returns a string error if:
+/// - the `from` or `to` date arguments produce an invalid date (e.g. month 0 or 13),
+/// - an arithmetic overflow occurs when computing the last day of the `to` month, or
+/// - any `SQLite` query fails.
 #[tauri::command]
 pub async fn generate_report(
     plan_id: Option<String>,
@@ -172,6 +217,18 @@ pub async fn generate_report(
 // ---------------------------------------------------------------------------
 
 /// Formats a duration in seconds as `H:MM:SS` for CSV export.
+///
+/// The hour component is not zero-padded (e.g. `1:05:03` for 1 hour, 5 minutes, 3 seconds),
+/// but minutes and seconds are always two digits. This matches the `HH:MM:SS` style
+/// recommended in the UI conventions for CSV exports.
+///
+/// # Arguments
+///
+/// - `seconds`: Total duration in whole seconds.
+///
+/// # Returns
+///
+/// A string in `H:MM:SS` format (e.g. `"2:34:00"`, `"0:05:30"`, `"10:00:00"`).
 fn format_duration_csv(seconds: i64) -> String {
     let h = seconds.div_euclid(3600);
     let m = seconds.rem_euclid(3600).div_euclid(60);
@@ -179,11 +236,33 @@ fn format_duration_csv(seconds: i64) -> String {
     format!("{h}:{m:02}:{s:02}")
 }
 
-/// Exports a report as a CSV file, prompting the user to choose a save location.
+/// Exports a [`ReportResult`] as a CSV file, prompting the user to choose a save path.
+///
+/// Opens a native save-file dialog (via `tauri-plugin-dialog`) pre-filled with a default
+/// filename of `plantracker-report-YYYY-MM-DD.csv`. If the user dismisses the dialog
+/// without choosing a path, the command returns an error with the sentinel string
+/// `"Export cancelled"` so the frontend can distinguish cancellation from a real error.
+///
+/// The CSV includes columns: `Task`, `Plan`, `Date`, `Start`, `End`, `Duration`, `Notes`,
+/// and a final `Grand Total` row with the summed duration in `H:MM:SS` format.
+///
+/// # Arguments
+///
+/// - `report`: The [`ReportResult`] to export, typically the value returned by a prior
+///   call to [`generate_report`].
+/// - `app`: Tauri application handle, used to access the dialog plugin.
+///
+/// # Returns
+///
+/// `Ok(path)` — the absolute path of the file that was written, as a `String`.
 ///
 /// # Errors
-/// Returns a string error if the file dialog is cancelled, the path cannot be resolved,
-/// or writing the CSV fails.
+///
+/// Returns a string error (or the sentinel `"Export cancelled"`) if:
+/// - the user dismisses the file dialog without choosing a path,
+/// - the chosen path cannot be resolved to a filesystem path,
+/// - the CSV file cannot be created (e.g. permission denied), or
+/// - writing any CSV record fails.
 #[tauri::command]
 pub async fn export_report_csv(
     report: ReportResult,

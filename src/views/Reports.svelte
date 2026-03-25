@@ -1,4 +1,33 @@
 <script lang="ts">
+  /**
+   * Reports view — generate and export time-tracking summaries.
+   *
+   * Allows the user to select a date range and an optional plan/task scope,
+   * generate a tabular report from the local SQLite database, and export it
+   * as a CSV file.
+   *
+   * Scope priority: `taskId` → `planId` → all plans.  The plan and task
+   * dropdowns mirror the shared `planner` store selection so context carries
+   * over from the Time Tracking view.
+   *
+   * Date range design:
+   *   From/To are expressed as month + year pairs (not full calendar pickers)
+   *   because time reports are typically summarised at monthly granularity.
+   *   Both selectors default to the current month and year on mount.
+   *
+   * Report lifecycle:
+   *   - `generated` becomes `true` once a generate attempt completes (success
+   *     or error).  Before then the results area is hidden entirely to avoid
+   *     showing a stale "No entries" message.
+   *   - `report` holds the last successful `ReportResult`, or `null` if the
+   *     last attempt failed.
+   *   - The "Export CSV" button is disabled until `report` is non-null.
+   *
+   * Export cancellation sentinel:
+   *   If the user dismisses the file save dialog the backend throws an error
+   *   whose message contains the string `"Export cancelled"`.  This is
+   *   detected and silently swallowed so no error toast is shown.
+   */
   import { exportReportCsv, generateReport } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
   import EmptyState from "$lib/components/ui/EmptyState.svelte";

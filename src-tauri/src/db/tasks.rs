@@ -2,10 +2,29 @@ use sqlx::SqlitePool;
 
 use crate::models::Task;
 
-/// Inserts or updates a task row (conflict on `graph_id`).
+/// Inserts a new task row, or updates an existing one if the `graph_id` already exists.
+///
+/// The upsert uses `ON CONFLICT(graph_id)`, meaning the conflict key is the Microsoft
+/// Graph task ID rather than the local UUID. When a conflict occurs, `plan_id`, `title`,
+/// and `synced_at` are updated while the local `id` (primary key) is preserved, ensuring
+/// that any existing foreign-key references from `time_entries.task_id` remain valid.
+///
+/// `task.plan_id` must be the **local UUID** of the parent plan, not the Graph plan ID.
+/// The caller (typically [`crate::commands::sync::sync_plans_and_tasks`]) is responsible
+/// for resolving the local UUID from the Graph ID via
+/// [`crate::db::plans::get_plan_by_graph_id`] before constructing the [`Task`].
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `task`: The [`Task`] to insert or update. `task.graph_id` is the conflict key.
 ///
 /// # Errors
-/// Returns an error if the DB upsert fails.
+///
+/// Returns an error if:
+/// - the `SQLite` statement fails, or
+/// - `task.plan_id` does not reference an existing row in `plans` (foreign-key violation,
+///   provided `PRAGMA foreign_keys = ON` is active).
 pub async fn upsert_task(pool: &SqlitePool, task: &Task) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
@@ -27,10 +46,25 @@ pub async fn upsert_task(pool: &SqlitePool, task: &Task) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Returns all tasks for the given plan, ordered by title.
+/// Returns all tasks belonging to a given plan, ordered alphabetically by title.
+///
+/// This function reads entirely from `SQLite` — no network request is made. It is called
+/// by [`crate::commands::sync::list_tasks_for_plan`] to populate the frontend task
+/// dropdown whenever the user selects a plan.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `plan_id`: The **local UUID** of the parent plan.
+///
+/// # Returns
+///
+/// `Ok(tasks)` — a `Vec<Task>` sorted by `title ASC`, possibly empty if no tasks for
+/// this plan have been synced yet.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn list_tasks_for_plan(pool: &SqlitePool, plan_id: &str) -> anyhow::Result<Vec<Task>> {
     let rows = sqlx::query_as!(
         Task,
@@ -42,10 +76,24 @@ pub async fn list_tasks_for_plan(pool: &SqlitePool, plan_id: &str) -> anyhow::Re
     Ok(rows)
 }
 
-/// Looks up a task by its Microsoft Graph ID, returning `None` if not found.
+/// Looks up a task by its Microsoft Graph ID.
+///
+/// Useful when processing Graph API responses that contain Graph task IDs and a local
+/// UUID lookup is needed to maintain `SQLite` foreign-key relationships.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `graph_id`: The Microsoft Graph task ID to look up.
+///
+/// # Returns
+///
+/// - `Ok(Some(task))` if a row with the given `graph_id` exists.
+/// - `Ok(None)` if no such row is found.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn get_task_by_graph_id(
     pool: &SqlitePool,
     graph_id: &str,
@@ -60,10 +108,26 @@ pub async fn get_task_by_graph_id(
     Ok(row)
 }
 
-/// Looks up a task by its local primary key, returning `None` if not found.
+/// Looks up a task by its local `SQLite` primary key (UUID).
+///
+/// Used in report generation to resolve the display title and parent plan of a task
+/// when building [`crate::commands::reports::ReportEntry`] rows from raw `time_entries`
+/// data.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `id`: The local UUID primary key of the task to fetch.
+///
+/// # Returns
+///
+/// - `Ok(Some(task))` if a task with the given local `id` exists.
+/// - `Ok(None)` if no task with that `id` is found (e.g. the task was deleted and
+///   `time_entries.task_id` was set to `NULL` by the cascade rule).
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn get_task(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Task>> {
     let row = sqlx::query_as!(
         Task,

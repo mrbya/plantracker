@@ -1,7 +1,37 @@
 //! `PlanTracker` — Tauri application backend.
 //!
-//! Initialises the `SQLite` database, OAuth auth manager, and active-timer state,
-//! then wires all Tauri commands and runs the event loop.
+//! This crate contains the complete Rust backend for `PlanTracker`. It is responsible
+//! for wiring together the four primary subsystems — database, authentication, Microsoft
+//! Graph client, and Tauri command handlers — and then launching the Tauri event loop.
+//!
+//! # Startup sequence (inside [`run`])
+//!
+//! 1. **`.env` load** — `dotenvy` is asked to load a `.env` file from the working directory,
+//!    overriding any variables already present in the environment. This is a convenience for
+//!    local development; in production builds the variables come from the environment directly.
+//!
+//! 2. **Database initialisation** — [`db::init_db`] creates the `SQLite` file if it does not
+//!    exist, applies all pending migrations, and enables `PRAGMA foreign_keys = ON`. The
+//!    resulting [`sqlx::SqlitePool`] is registered as Tauri managed state so every command
+//!    handler can access it via `tauri::State<'_, SqlitePool>`.
+//!
+//! 3. **`AuthManager` creation** — [`auth::manager::AuthManager::new`] reads `VITE_AZURE_CLIENT_ID`
+//!    and `VITE_AZURE_TENANT_ID` from the environment and attempts to load any previously saved
+//!    [`auth::oauth::TokenSet`] from the OS keychain. If keychain access fails the manager starts
+//!    in an unauthenticated state; no panic is raised. The manager is wrapped in
+//!    [`std::sync::Arc`] and registered as managed state.
+//!
+//! 4. **Timer state restore** — [`db::entries::find_active_entry`] is queried at startup.
+//!    If a `time_entries` row with `end_time IS NULL` is found (which happens when the app was
+//!    force-quit while a timer was running), its `start_time` is parsed into an
+//!    [`commands::timer::ActiveTimer`] and placed in the managed `Mutex`. This ensures the
+//!    timer resumes correctly rather than leaving a zombie entry in the database.
+//!
+//! # Command registration
+//!
+//! All Tauri command functions **must** be listed inside `tauri::generate_handler![]`. An
+//! omitted command will compile without error but will silently return an "unknown command"
+//! error to the frontend at runtime.
 
 #![allow(clippy::module_name_repetitions)]
 // clippy WARN level lints
@@ -83,9 +113,22 @@ use commands::timer::ActiveTimer;
 
 /// Builds and runs the Tauri application.
 ///
+/// This function is the single entry point for the entire application backend.
+/// It performs all four startup steps described in the crate-level documentation,
+/// registers every Tauri plugin and command handler, and then blocks on the Tauri
+/// event loop until the window is closed.
+///
+/// The function does **not** return under normal operation. It only returns (with
+/// an implicit `()`) after the event loop exits, which in practice means the process
+/// is about to terminate.
+///
 /// # Panics
-/// Panics if the database cannot be initialised or the Tauri runtime encounters
-/// an unrecoverable error during startup.
+///
+/// Panics if:
+/// - the `SQLite` database cannot be initialised (e.g. the data directory is not
+///   writable or a migration fails), or
+/// - the Tauri runtime encounters an unrecoverable error during startup (e.g. the
+///   `WebView` cannot be created).
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Load .env file if present (dev convenience). Uses override so values from

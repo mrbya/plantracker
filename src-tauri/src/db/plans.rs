@@ -2,10 +2,26 @@ use sqlx::SqlitePool;
 
 use crate::models::Plan;
 
-/// Inserts or updates a plan row (conflict on `graph_id`).
+/// Inserts a new plan row, or updates an existing one if the `graph_id` already exists.
+///
+/// The upsert uses `ON CONFLICT(graph_id)`, which means the conflict key is the
+/// Microsoft Graph plan ID, not the local UUID. When a conflict occurs, only `title`
+/// and `synced_at` are updated; the local `id` (primary key) is preserved. This
+/// ensures that foreign-key references from the `tasks` and `time_entries` tables
+/// remain valid across repeated syncs.
+///
+/// If the plan is genuinely new (no row with the same `graph_id` exists), the full
+/// row is inserted verbatim, including the locally generated UUID in `id`.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `plan`: The [`Plan`] to insert or update. `plan.graph_id` is the conflict key.
 ///
 /// # Errors
-/// Returns an error if the DB upsert fails.
+///
+/// Returns an error if the `SQLite` statement fails (e.g. a constraint other than
+/// the `graph_id` unique index is violated).
 pub async fn upsert_plan(pool: &SqlitePool, plan: &Plan) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
@@ -25,10 +41,24 @@ pub async fn upsert_plan(pool: &SqlitePool, plan: &Plan) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Returns all plans ordered by title.
+/// Returns all plans currently stored in the local database, ordered alphabetically by title.
+///
+/// This function reads entirely from `SQLite` — no network request is made. It is called
+/// by [`crate::commands::sync::list_plans`] to hydrate the frontend plan dropdown after
+/// the app starts and after each sync completes.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+///
+/// # Returns
+///
+/// `Ok(plans)` — a `Vec<Plan>` sorted by `title ASC`, possibly empty if no plans have
+/// been synced yet.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn list_plans(pool: &SqlitePool) -> anyhow::Result<Vec<Plan>> {
     let rows = sqlx::query_as!(
         Plan,
@@ -39,10 +69,24 @@ pub async fn list_plans(pool: &SqlitePool) -> anyhow::Result<Vec<Plan>> {
     Ok(rows)
 }
 
-/// Looks up a plan by its Microsoft Graph ID, returning `None` if not found.
+/// Looks up a plan by its Microsoft Graph ID.
+///
+/// Used during sync to resolve the local UUID of a plan that was just upserted,
+/// so that task rows can be created with the correct `plan_id` foreign key.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `graph_id`: The Microsoft Graph plan ID to look up.
+///
+/// # Returns
+///
+/// - `Ok(Some(plan))` if a row with the given `graph_id` exists.
+/// - `Ok(None)` if no such row is found.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn get_plan_by_graph_id(
     pool: &SqlitePool,
     graph_id: &str,
@@ -57,10 +101,24 @@ pub async fn get_plan_by_graph_id(
     Ok(row)
 }
 
-/// Looks up a plan by its local primary key, returning `None` if not found.
+/// Looks up a plan by its local `SQLite` primary key (UUID).
+///
+/// Used in report generation to resolve the display title of a plan when building
+/// [`crate::commands::reports::ReportEntry`] rows from raw `time_entries` data.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `id`: The local UUID primary key of the plan to fetch.
+///
+/// # Returns
+///
+/// - `Ok(Some(plan))` if a plan with the given local `id` exists.
+/// - `Ok(None)` if no plan with that `id` is found.
 ///
 /// # Errors
-/// Returns an error if the DB query fails.
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn get_plan(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Plan>> {
     let row = sqlx::query_as!(
         Plan,

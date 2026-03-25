@@ -1,4 +1,26 @@
 <script lang="ts">
+  /**
+   * Login view — the unauthenticated entry point.
+   *
+   * Displayed by `+page.svelte` whenever `$isAuthenticated` is `false`.
+   * Renders a centred card with the app name, tagline, and a single
+   * "Sign in with Microsoft" button.
+   *
+   * OAuth flow:
+   *   Clicking the button calls `login()` from the `auth` store, which
+   *   invokes the `login` Tauri command.  The backend opens the system browser
+   *   at the Microsoft OAuth 2.0 PKCE authorisation URL, starts a local HTTP
+   *   server on `localhost:52721` to receive the callback, exchanges the
+   *   authorisation code for tokens, stores them in the OS keychain, and
+   *   returns the updated `AuthStatus`.  The auth store then sets
+   *   `isAuthenticated = true`, which causes `+page.svelte` to render
+   *   `Layout` instead of this view.
+   *
+   * Loading state:
+   *   The button is disabled and shows a spinner while `login()` is awaited.
+   *   `loading` is reset in the `finally` block whether the login succeeds,
+   *   fails, or the user cancels the browser flow.
+   */
   import Button from "$lib/components/ui/Button.svelte";
   import { login } from "$lib/stores/auth";
 

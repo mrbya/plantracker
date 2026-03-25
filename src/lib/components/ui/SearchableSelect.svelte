@@ -1,4 +1,33 @@
 <script lang="ts">
+  /**
+   * Accessible combobox (searchable dropdown) component.
+   *
+   * Implements a fully keyboard-navigable combobox pattern using a plain text
+   * input and an absolutely-positioned `<ul>` listbox.  Suitable for long
+   * option lists (plans, tasks) where filtering by typing is essential.  For
+   * short, fixed lists use the simpler `Select.svelte` instead.
+   *
+   * Features:
+   * - Type-to-filter: typing into the input filters the displayed options
+   *   (case-insensitive substring match).
+   * - Blank-value sentinel: options with `value === ""` (e.g. "All plans",
+   *   "No specific task") are always shown regardless of the query.
+   * - Keyboard navigation: `ArrowDown`/`ArrowUp` move the highlight;
+   *   `Enter`/`Tab` confirm; `Escape` closes.
+   * - Click-outside dismissal via the `clickOutside` use-action.
+   * - Full ARIA: `role="combobox"`, `aria-expanded`, `aria-controls`,
+   *   `aria-activedescendant`, `role="listbox"`, `role="option"`.
+   *
+   * Props:
+   * - `options`     — array of `{ value, label }` pairs.
+   * - `value`       — bindable currently selected value string.
+   * - `placeholder` — text shown in the input when no value is selected and
+   *                   the panel is closed.
+   * - `id`          — used to wire ARIA `aria-controls` and option IDs;
+   *                   should be unique within the page.
+   * - `onchange`    — called after a selection is committed.
+   * - `disabled`    — greys out the input and prevents interaction.
+   */
   import { clickOutside } from "$lib/actions/clickOutside";
 
   let {
