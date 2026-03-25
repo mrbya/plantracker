@@ -191,18 +191,19 @@ docs-show:
     fi
     pnpm docs:show
 
-docs-ci:
+ci-docs:
     @just deps-ci
+    @just check
     @just docs
     mv ./docs-page ./public
 
 # Runs formating, tests and checks necessary before a commit.
 pre-commit:
     @just fmt
+    @just precache
     @just thorough-check
     @just unused
     @just audit
-    @just precache
     @just test
     @just index
 
