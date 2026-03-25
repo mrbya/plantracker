@@ -1,6 +1,6 @@
 [package]
 name = "plantracker"
-version = "0.1.0"
+version = "0.1.1"
 description = "A cross-platform desktop app for tracking time spent on Microsoft Planner tasks"
 authors = ["mrbya"]
 edition = "2021"
