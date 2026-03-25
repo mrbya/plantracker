@@ -66,7 +66,7 @@ pub struct GraphUser {
 /// All Graph list endpoints may return results across multiple pages using `OData`
 /// continuation links. When a response contains more items than fit on a single page,
 /// the `@odata.nextLink` field holds the absolute URL of the next page. The
-/// [`crate::graph::planner::fetch_all_pages`] helper follows these links until
+/// `graph::planner::fetch_all_pages` helper follows these links until
 /// `next_link` is `None`, accumulating all items into a single `Vec`.
 ///
 /// Only the two fields required for pagination are modelled; other `OData` metadata

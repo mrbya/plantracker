@@ -63,9 +63,9 @@ pub struct Task {
 /// - `end_time = Some(...)` means the interval is **completed**.
 ///
 /// The application enforces an at-most-one-active invariant: before inserting a new entry
-/// with `end_time = NULL`, the `start_timer` command checks [`db::entries::find_active_entry`]
-/// and returns an error if one already exists. On startup, [`lib::run`] queries for any row
-/// with `end_time IS NULL` and restores the in-memory [`commands::timer::ActiveTimer`] state
+/// with `end_time = NULL`, the `start_timer` command checks `db::entries::find_active_entry`
+/// and returns an error if one already exists. On startup, [`crate::run`] queries for any row
+/// with `end_time IS NULL` and restores the in-memory [`crate::commands::timer::ActiveTimer`] state
 /// from it, ensuring the elapsed time is computed correctly across restarts.
 ///
 /// The `task_id` field is optional. A `None` value means the entry is tracked at the plan

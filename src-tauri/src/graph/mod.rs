@@ -17,6 +17,6 @@ pub mod models;
 ///
 /// Provides high-level functions ([`planner::fetch_my_plans`],
 /// [`planner::fetch_tasks_for_plan`], [`planner::fetch_user_info`]) that handle `OData`
-/// pagination via [`planner::fetch_all_pages`], returning fully collected `Vec` results
+/// pagination via `planner::fetch_all_pages`, returning fully collected `Vec` results
 /// to the caller.
 pub mod planner;

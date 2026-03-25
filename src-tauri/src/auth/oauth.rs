@@ -105,7 +105,7 @@ struct ErrorResponse {
 ///    for this login attempt.
 /// 2. **Local callback server** — `tauri-plugin-oauth` starts an HTTP server on port 52721.
 ///    A one-shot channel passes the raw callback URL from the server thread back to this task.
-/// 3. **Browser open** — the Microsoft authorization URL (built by [`build_auth_url`]) is
+/// 3. **Browser open** — the Microsoft authorization URL (built by `build_auth_url`) is
 ///    opened in the user's default system browser via `tauri-plugin-opener`.
 /// 4. **Callback receive** — the function awaits the one-shot channel. The channel fires
 ///    when Microsoft redirects the user to `http://localhost:52721/callback?code=...&state=...`
@@ -186,7 +186,7 @@ pub async fn start_login(
 /// the party exchanging the code is the same party that initiated the login.
 ///
 /// The redirect URI in the POST body must exactly match the one used in the
-/// authorization request and in the Azure AD app registration; see [`REDIRECT_URI`].
+/// authorization request and in the Azure AD app registration; see `REDIRECT_URI`.
 ///
 /// # Arguments
 ///
@@ -203,7 +203,7 @@ pub async fn start_login(
 ///
 /// Returns an error if:
 /// - the HTTP POST request fails (network error, DNS failure, etc.), or
-/// - the token endpoint returns a non-success HTTP status (see [`parse_token_response`]).
+/// - the token endpoint returns a non-success HTTP status (see `parse_token_response`).
 pub async fn exchange_code_for_tokens(
     code: &str,
     verifier: &str,

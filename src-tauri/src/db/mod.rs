@@ -68,7 +68,7 @@ fn resolve_db_path(app: &tauri::AppHandle) -> anyhow::Result<std::path::PathBuf>
 ///
 /// # Arguments
 ///
-/// - `app_handle`: Tauri application handle forwarded to [`resolve_db_path`].
+/// - `app_handle`: Tauri application handle forwarded to `resolve_db_path`.
 ///
 /// # Returns
 ///
@@ -78,7 +78,7 @@ fn resolve_db_path(app: &tauri::AppHandle) -> anyhow::Result<std::path::PathBuf>
 /// # Errors
 ///
 /// Returns an error if:
-/// - the database path cannot be resolved (see [`resolve_db_path`]),
+/// - the database path cannot be resolved (see `resolve_db_path`),
 /// - `SQLite` cannot open or create the file at the resolved path,
 /// - the `PRAGMA foreign_keys = ON` statement fails, or
 /// - any migration file fails to apply.

@@ -53,7 +53,7 @@ where
 /// Returns all Microsoft Planner plans visible to the signed-in user.
 ///
 /// Calls `GET /me/planner/plans` and follows all `@odata.nextLink` pages via
-/// [`fetch_all_pages`]. The returned [`GraphPlan`] values are subsequently mapped to
+/// `fetch_all_pages`. The returned [`GraphPlan`] values are subsequently mapped to
 /// local [`crate::models::Plan`] structs and upserted into `SQLite` by
 /// [`crate::commands::sync::sync_plans_and_tasks`].
 ///
@@ -76,7 +76,7 @@ pub async fn fetch_my_plans(client: &GraphClient) -> anyhow::Result<Vec<GraphPla
 /// Returns all tasks in a specific Microsoft Planner plan.
 ///
 /// Calls `GET /planner/plans/{plan_id}/tasks` and follows all `@odata.nextLink` pages
-/// via [`fetch_all_pages`]. The returned [`GraphTask`] values are subsequently mapped to
+/// via `fetch_all_pages`. The returned [`GraphTask`] values are subsequently mapped to
 /// local [`crate::models::Task`] structs and upserted into `SQLite` by
 /// [`crate::commands::sync::sync_plans_and_tasks`].
 ///

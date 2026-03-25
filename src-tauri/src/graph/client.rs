@@ -58,7 +58,7 @@ impl GraphClient {
     /// Issues a GET request to `{GRAPH_BASE}{path}` with a valid bearer token.
     ///
     /// This is the primary entry point for Graph API requests that use relative paths.
-    /// The `path` argument is appended directly to [`GRAPH_BASE`], so it must begin
+    /// The `path` argument is appended directly to `GRAPH_BASE`, so it must begin
     /// with a `/` (e.g. `"/me/planner/plans"`).
     ///
     /// Internally delegates to [`GraphClient::get_url`] with the fully-formed URL, which
@@ -77,7 +77,7 @@ impl GraphClient {
     /// Returns an error if:
     /// - a valid bearer token cannot be obtained from [`AuthManager`],
     /// - the HTTP request fails (network error, DNS, etc.),
-    /// - the Graph API returns a non-2xx status (see [`parse_response`]), or
+    /// - the Graph API returns a non-2xx status (see `parse_response`), or
     /// - the response body cannot be deserialised as `T`.
     pub async fn get<T: DeserializeOwned>(&self, path: &str) -> anyhow::Result<T> {
         let url = format!("{GRAPH_BASE}{path}");
@@ -88,7 +88,7 @@ impl GraphClient {
     ///
     /// This method is used for two cases:
     /// 1. **Pagination** — `@odata.nextLink` values are absolute URLs that must be
-    ///    used verbatim without the [`GRAPH_BASE`] prefix.
+    ///    used verbatim without the `GRAPH_BASE` prefix.
     /// 2. **Internal delegation** from [`GraphClient::get`] after URL construction.
     ///
     /// ## Error handling
@@ -100,7 +100,7 @@ impl GraphClient {
     /// - **`429 Too Many Requests`**: The `Retry-After` header is read (defaulting to 10 s
     ///   if absent or unparseable) and the thread sleeps for that duration before retrying
     ///   the request once with a fresh token.
-    /// - **Other non-2xx**: Forwarded to [`parse_response`], which extracts the Graph
+    /// - **Other non-2xx**: Forwarded to `parse_response`, which extracts the Graph
     ///   error message and returns it as an `anyhow` error.
     ///
     /// # Arguments

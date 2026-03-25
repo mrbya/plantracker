@@ -10,7 +10,7 @@ pub mod auth;
 ///
 /// Exposes [`entries::create_manual_entry`], [`entries::update_entry`], and
 /// [`entries::delete_entry`]. All three commands go through
-/// [`entries::parse_and_validate_times`] to ensure `end_time` is strictly after
+/// `entries::parse_and_validate_times` to ensure `end_time` is strictly after
 /// `start_time` before writing to `SQLite`.
 pub mod entries;
 

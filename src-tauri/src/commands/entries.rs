@@ -77,7 +77,7 @@ fn parse_and_validate_times(
 ///
 /// Returns a string error if:
 /// - `plan_id` is empty,
-/// - time validation fails (see [`parse_and_validate_times`]),
+/// - time validation fails (see `parse_and_validate_times`),
 /// - a timer is currently running (manual entries are rejected while a timer is active), or
 /// - the `SQLite` insert fails (e.g. `plan_id` foreign-key violation).
 #[tauri::command]
@@ -147,7 +147,7 @@ pub async fn create_manual_entry(
 /// # Errors
 ///
 /// Returns a string error if:
-/// - time validation fails (see [`parse_and_validate_times`]),
+/// - time validation fails (see `parse_and_validate_times`),
 /// - the `SQLite` update fails, or
 /// - the entry is not found after the update (the ID does not exist).
 #[tauri::command]
