@@ -106,9 +106,10 @@ docs:
   stage: docs
   rules:
     - if: $[[ inputs.build_docs ]] == true
-  artifacts:
-    paths:
-      - public
   script:
     - just check
     - just docs-ci
+  artifacts:
+    paths:
+      - public
+
