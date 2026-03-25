@@ -27,31 +27,31 @@
 <Story name="WithComplexContent">
   <Card title="Recent Entries">
     <table class="entry-table">
-        <thead>
-          <tr>
-            <th>Task</th>
-            <th>Duration</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Implement auth flow</td>
-            <td>2h 30m</td>
-            <td>2026-03-24</td>
-          </tr>
-          <tr>
-            <td>Write migration</td>
-            <td>1h 15m</td>
-            <td>2026-03-23</td>
-          </tr>
-          <tr>
-            <td>Graph API client</td>
-            <td>3h 00m</td>
-            <td>2026-03-22</td>
-          </tr>
-        </tbody>
-      </table>
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Duration</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Implement auth flow</td>
+          <td>2h 30m</td>
+          <td>2026-03-24</td>
+        </tr>
+        <tr>
+          <td>Write migration</td>
+          <td>1h 15m</td>
+          <td>2026-03-23</td>
+        </tr>
+        <tr>
+          <td>Graph API client</td>
+          <td>3h 00m</td>
+          <td>2026-03-22</td>
+        </tr>
+      </tbody>
+    </table>
   </Card>
 </Story>
 

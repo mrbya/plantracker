@@ -102,10 +102,12 @@
 <!-- Sprint 12 pre-selected, tasks visible in task dropdown -->
 <Story
   name="PlanSelected"
-  loaders={[() => {
-    seedPlans();
-    selectedPlan.set(fixturePlans[0]);
-  }]}
+  loaders={[
+    () => {
+      seedPlans();
+      selectedPlan.set(fixturePlans[0]);
+    },
+  ]}
   play={async () => {
     seedPlans();
     selectedPlan.set(fixturePlans[0]);
@@ -121,11 +123,13 @@
 -->
 <Story
   name="TimerRunning"
-  loaders={[() => {
-    seedPlans();
-    selectedPlan.set(fixturePlans[0]);
-    selectedTask.set(fixtureTasks[0]);
-  }]}
+  loaders={[
+    () => {
+      seedPlans();
+      selectedPlan.set(fixturePlans[0]);
+      selectedTask.set(fixtureTasks[0]);
+    },
+  ]}
   play={async () => {
     seedPlans();
     selectedPlan.set(fixturePlans[0]);
@@ -139,10 +143,12 @@
 <!-- Timer running but no task selected (plan-level entry) -->
 <Story
   name="TimerRunningNoTask"
-  loaders={[() => {
-    seedPlans();
-    selectedPlan.set(fixturePlans[0]);
-  }]}
+  loaders={[
+    () => {
+      seedPlans();
+      selectedPlan.set(fixturePlans[0]);
+    },
+  ]}
   play={async () => {
     seedPlans();
     selectedPlan.set(fixturePlans[0]);

@@ -60,7 +60,11 @@
 <!-- Plans loaded, form fields at their default (today's date, current time) -->
 <Story
   name="EmptyForm"
-  loaders={[() => { seedPlans(); }]}
+  loaders={[
+    () => {
+      seedPlans();
+    },
+  ]}
 />
 
 <!--
@@ -69,10 +73,12 @@
 -->
 <Story
   name="FormFilled"
-    loaders={[() => {
-    seedPlans();
-    selectedPlan.set(fixturePlans[0]);
-  }]}
+  loaders={[
+    () => {
+      seedPlans();
+      selectedPlan.set(fixturePlans[0]);
+    },
+  ]}
   play={async ({ canvasElement }) => {
     seedPlans();
     selectedPlan.set(fixturePlans[0]);
@@ -127,10 +133,12 @@
 -->
 <Story
   name="Saving"
-  loaders={[() => {
-    seedPlans();
-    selectedPlan.set(fixturePlans[0]);
-  }]}
+  loaders={[
+    () => {
+      seedPlans();
+      selectedPlan.set(fixturePlans[0]);
+    },
+  ]}
   play={async ({ canvasElement }) => {
     setInvokeHandler("create_manual_entry", () => new Promise(() => {}));
 
