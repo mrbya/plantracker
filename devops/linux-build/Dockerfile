@@ -44,8 +44,19 @@ RUN rustup component add llvm-tools-preview && \
     cargo install cargo-llvm-cov && \
     cargo install cargo-nextest --locked
 
-RUN pnpm add -g playwright && \
-    pnpm exec playwright install-deps && \
-    pnpm exec playwright install
+ARG NODE_VERSION=v22.13.0
+
+RUN apt-get update && apt-get install -y curl ca-certificates xz-utils --no-install-recommends \
+    && curl -fsSL https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.xz \
+       -o /tmp/node.tar.xz \
+    && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
+    && rm /tmp/node.tar.xz \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/root/.local/share/pnpm/bin:${PATH}"
+
+RUN npm install -g playwright && \
+    npm exec playwright install-deps && \
+    npm exec playwright install
 
 CMD ["bash"]
