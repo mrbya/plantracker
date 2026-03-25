@@ -156,7 +156,7 @@ Build for release:
 just build
 ```
 
-Before committing work:
+Before committing work if not using pre-commit hooks:
 ```bash
 just pre-commit
 ```
