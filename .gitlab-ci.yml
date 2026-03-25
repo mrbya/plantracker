@@ -1,3 +1,12 @@
+image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
+
+spec:
+  inputs:
+    build_docs:
+      type: boolean
+      default: false
+      description: "Build project docs and deploy them to gitlab pages (manual web trigger only)"
+
 workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
@@ -8,6 +17,7 @@ stages:
   - test
   - build
   - release
+  - docs
 
 variables:
   SQLX_OFFLINE: "true"
@@ -24,7 +34,6 @@ cache:
 
 test:
   stage: test
-  image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
   variables:
     SQLX_OFFLINE: "true"
     VITE_AZURE_CLIENT_ID: "test-client-id"
@@ -41,7 +50,6 @@ test:
 
 build:
   stage: build
-  image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
   variables:
     VITE_AZURE_CLIENT_ID: $VITE_AZURE_CLIENT_ID
     VITE_AZURE_TENANT_ID: $VITE_AZURE_TENANT_ID
@@ -90,3 +98,13 @@ upload-release:
            --data "{\"name\":\"PlanTracker ${CI_COMMIT_TAG}\",\"tag_name\":\"${CI_COMMIT_TAG}\",\"assets\":{\"links\":[${LINKS_JSON}]}}" \
            "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases"
 
+docs:
+  stage: docs
+  rules:
+    - if: $[[ inputs.build_docs ]] == true
+  artifacts:
+    paths:
+      - public
+  script:
+    - just check
+    - just docs-ci

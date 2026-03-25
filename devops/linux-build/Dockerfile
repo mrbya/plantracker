@@ -44,4 +44,8 @@ RUN rustup component add llvm-tools-preview && \
     cargo install cargo-llvm-cov && \
     cargo install cargo-nextest --locked
 
+RUN pnpm add -g playwright && \
+    pnpm exec playwright install-deps && \
+    pnpm exec playwright install
+
 CMD ["bash"]

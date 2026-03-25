@@ -13,6 +13,9 @@ deps *FLAGS:
 deps-ci:
     @just deps --frozen-lockfile
 
+deps-playwright:
+    pnpm exec playwright install
+
 # Apply strict formatting to js/ts/svelte sources.
 fmt-js:
     pnpm format
@@ -169,6 +172,11 @@ docs-show:
     fi
     pnpm docs:show
 
+docs-ci:
+    @just deps-ci
+    @just docs
+    mv ./docs-page ./public
+
 # Runs formating, tests and checks necessary before a commit.
 pre-commit:
     @just fmt
@@ -262,8 +270,9 @@ init:
     pnpm_major=$(pnpm --version 2>/dev/null | cut -d. -f1)
     [[ "${pnpm_major:-0}" -lt 11 ]] && npm install -g pnpm@next-11 || true
 
-    echo # Synch node_modules
+    echo # Synch node_modules and misc dependencies
     pnpm install
+    just deps-playwright
 
     echo # Creating local .env file from .env.example
     cp .env.example .env
