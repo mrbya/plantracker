@@ -94,7 +94,13 @@ test-js-coverage:
 # Pre caches db queries.
 [working-directory: 'src-tauri']
 precache *FLAGS:
-    cargo sqlx prepare --workspace {{FLAGS}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    SCRATCH=$(mktemp -d)
+    DB="sqlite:${SCRATCH}/prepare.db"
+    cargo sqlx database create -D "$DB"
+    cargo sqlx migrate run -D "$DB"
+    cargo sqlx prepare --workspace -D "$DB" {{FLAGS}}
 
 # Chechs pre-cached db queries.
 precache-check:
