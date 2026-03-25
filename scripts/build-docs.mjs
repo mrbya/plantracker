@@ -1,0 +1,188 @@
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(__dirname, '..');
+const docsSiteDir = join(repoRoot, 'docs-site');
+const cargoDocDir = join(repoRoot, 'src-tauri', 'target', 'doc');
+
+function run(command) {
+  console.log(`\n> ${command}`);
+  execSync(command, {
+    cwd: repoRoot,
+    stdio: 'inherit',
+    env: process.env
+  });
+}
+
+function cleanDir(path) {
+  rmSync(path, { recursive: true, force: true });
+  mkdirSync(path, { recursive: true });
+}
+
+function copyDir(from, to) {
+  rmSync(to, { recursive: true, force: true });
+  mkdirSync(dirname(to), { recursive: true });
+  cpSync(from, to, { recursive: true });
+}
+
+function writeLandingPage() {
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PlanTracker documentation</title>
+    <style>
+      :root {
+        color-scheme: dark light;
+        --bg: #11111b;
+        --panel: #1e1e2e;
+        --panel-2: #313244;
+        --text: #cdd6f4;
+        --muted: #a6adc8;
+        --accent: #89b4fa;
+        --border: #45475a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, var(--bg), #181825);
+        color: var(--text);
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 24px 64px;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 3vw, 3rem);
+      }
+      p.lead {
+        margin: 0 0 28px;
+        color: var(--muted);
+        max-width: 72ch;
+        line-height: 1.6;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+        margin-top: 28px;
+      }
+      .card {
+        display: block;
+        padding: 20px;
+        border-radius: 18px;
+        background: rgba(30, 30, 46, 0.95);
+        border: 1px solid var(--border);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        background: rgba(49, 50, 68, 0.98);
+      }
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 10px;
+        font-size: 0.8rem;
+        color: var(--accent);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 1.2rem;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .notes {
+        margin-top: 36px;
+        padding: 20px;
+        border-radius: 18px;
+        background: rgba(30, 30, 46, 0.75);
+        border: 1px solid var(--border);
+      }
+      .notes h3 {
+        margin-top: 0;
+      }
+      code {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.92em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PlanTracker documentation</h1>
+      <p class="lead">
+        Unified entry point for the generated backend Rust docs, frontend TypeScript API docs,
+        and frontend UI documentation.
+      </p>
+
+      <section class="grid">
+        <a class="card" href="./backend/plantracker/index.html">
+          <span class="eyebrow">Rust backend</span>
+          <h2>cargo doc</h2>
+          <p>
+            Generated from <code>src-tauri/</code>. Covers commands, auth, database, Graph integration,
+            shared models, and internal backend modules.
+          </p>
+        </a>
+
+        <a class="card" href="./frontend-api/index.html">
+          <span class="eyebrow">Frontend TypeScript</span>
+          <h2>TypeDoc</h2>
+          <p>
+            Generated from <code>src/lib/api</code>, <code>stores</code>, <code>utils</code>,
+            <code>types.ts</code>, and route <code>.ts</code> modules.
+          </p>
+        </a>
+
+        <a class="card" href="./frontend-ui/index.html">
+          <span class="eyebrow">Frontend UI</span>
+          <h2>Storybook</h2>
+          <p>
+            Story-based documentation for reusable Svelte components, view states, and UI behaviour.
+          </p>
+        </a>
+      </section>
+
+      <section class="notes">
+        <h3>Suggested workflow</h3>
+        <p>
+          Run <code>just docs</code> from the repository root. The generated documentation site
+          will be written into <code>docs-site/</code>.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>`;
+
+  writeFileSync(join(docsSiteDir, 'index.html'), html, 'utf8');
+}
+
+cleanDir(docsSiteDir);
+
+run('just docs-rs');
+run('just docs-api');
+run('just docs-ui');
+
+if (!existsSync(cargoDocDir)) {
+  throw new Error(`cargo doc output not found at: ${cargoDocDir}`);
+}
+
+copyDir(cargoDocDir, join(docsSiteDir, 'backend'));
+writeLandingPage();
+
+console.log(`\nDocumentation site generated at: ${docsSiteDir}`);

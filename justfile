@@ -146,8 +146,24 @@ index:
 
 # Generates documentation for rs sources.
 [working-directory: 'src-tauri']
-doc-rs *FLAGS:
+docs-rs *FLAGS:
     RUSTDOCFLAGS="--default-theme ayu" cargo doc --no-deps --all-features --document-private-items --workspace {{FLAGS}}
+
+# Generates documentation for frontend API.
+docs-api:
+    pnpm docs:api
+
+# Generates documentation for frontend UI.
+docs-ui:
+    pnpm docs:ui
+
+# Generates full project documentation.
+docs:
+    pnpm docs:build
+
+# Runs and opens generated project docs in a http server.
+docs-show:
+    pnpm docs:show
 
 # Runs formating, tests and checks necessary before a commit.
 pre-commit:
