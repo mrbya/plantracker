@@ -297,3 +297,6 @@ init:
     echo # Creating local .env file from .env.example
     cp .env.example .env
 
+    echo # Installing git pre-commit hooks
+    pre-commit --version || pip install pre-commit
+    pre-commit install || echo "Failed to install pre-commit hooks!" 1>&2
