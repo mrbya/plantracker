@@ -207,7 +207,9 @@ mod tests {
     #[test]
     fn rejects_end_before_start() {
         let result = parse_and_validate_times("2024-03-15T11:00:00Z", "2024-03-15T10:00:00Z");
-        assert!(result.expect_err("should reject end before start").contains("after start_time"));
+        assert!(result
+            .expect_err("should reject end before start")
+            .contains("after start_time"));
     }
 
     #[test]
@@ -218,9 +220,8 @@ mod tests {
 
     #[test]
     fn accepts_valid_range() {
-        let (start, end) =
-            parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T11:00:00Z")
-                .expect("valid range should be accepted");
+        let (start, end) = parse_and_validate_times("2024-03-15T10:00:00Z", "2024-03-15T11:00:00Z")
+            .expect("valid range should be accepted");
         assert!(end > start);
     }
 

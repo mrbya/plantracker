@@ -170,7 +170,9 @@ mod tests {
             title: "Updated Title".to_owned(),
             synced_at: "2024-06-01T00:00:00Z".to_owned(),
         };
-        upsert_plan(&pool, &updated).await.expect("upsert updated plan");
+        upsert_plan(&pool, &updated)
+            .await
+            .expect("upsert updated plan");
 
         let fetched = get_plan_by_graph_id(&pool, "g1")
             .await

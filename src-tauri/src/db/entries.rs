@@ -600,8 +600,12 @@ mod tests {
             Some("2024-04-01T11:00:00Z"),
         );
 
-        insert_entry(&pool, &in_range).await.expect("insert in_range");
-        insert_entry(&pool, &out_of_range).await.expect("insert out_of_range");
+        insert_entry(&pool, &in_range)
+            .await
+            .expect("insert in_range");
+        insert_entry(&pool, &out_of_range)
+            .await
+            .expect("insert out_of_range");
 
         let from = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
         let to = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
@@ -638,9 +642,15 @@ mod tests {
             Some("2024-03-15T11:00:00Z"),
         );
 
-        insert_entry(&pool, &in_range).await.expect("insert in_range");
-        insert_entry(&pool, &out_of_range).await.expect("insert out_of_range");
-        insert_entry(&pool, &other_plan).await.expect("insert other_plan");
+        insert_entry(&pool, &in_range)
+            .await
+            .expect("insert in_range");
+        insert_entry(&pool, &out_of_range)
+            .await
+            .expect("insert out_of_range");
+        insert_entry(&pool, &other_plan)
+            .await
+            .expect("insert other_plan");
 
         let from = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
         let to = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
@@ -666,7 +676,9 @@ mod tests {
         // Active entry (end_time IS NULL) — must be excluded from range results
         let active = make_entry("p1", None, "2024-03-15T12:00:00Z", None);
 
-        insert_entry(&pool, &completed).await.expect("insert completed");
+        insert_entry(&pool, &completed)
+            .await
+            .expect("insert completed");
         insert_entry(&pool, &active).await.expect("insert active");
 
         let from = NaiveDate::from_ymd_opt(2024, 3, 15).expect("valid date");
@@ -707,6 +719,8 @@ mod tests {
             "2024-03-15T10:00:00Z",
             Some("2024-03-15T11:00:00Z"),
         );
-        insert_entry(&pool, &entry).await.expect_err("should reject missing plan FK");
+        insert_entry(&pool, &entry)
+            .await
+            .expect_err("should reject missing plan FK");
     }
 }

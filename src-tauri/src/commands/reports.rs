@@ -107,17 +107,17 @@ pub async fn generate_report(
     let to = {
         let (next_year, next_month) = if to_month == 12 {
             (
-                to_year
-                    .checked_add(1)
-                    .ok_or_else(|| format!("Year overflow computing end of {to_year}-{to_month}"))?,
+                to_year.checked_add(1).ok_or_else(|| {
+                    format!("Year overflow computing end of {to_year}-{to_month}")
+                })?,
                 1,
             )
         } else {
             (
                 to_year,
-                to_month
-                    .checked_add(1)
-                    .ok_or_else(|| format!("Month overflow computing end of {to_year}-{to_month}"))?,
+                to_month.checked_add(1).ok_or_else(|| {
+                    format!("Month overflow computing end of {to_year}-{to_month}")
+                })?,
             )
         };
         NaiveDate::from_ymd_opt(next_year, next_month, 1)

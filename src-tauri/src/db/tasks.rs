@@ -196,7 +196,9 @@ mod tests {
             title: "Updated Title".to_owned(),
             synced_at: "2024-06-01T00:00:00Z".to_owned(),
         };
-        upsert_task(&pool, &updated).await.expect("upsert updated task");
+        upsert_task(&pool, &updated)
+            .await
+            .expect("upsert updated task");
 
         let fetched = get_task_by_graph_id(&pool, "gt1")
             .await
@@ -220,7 +222,9 @@ mod tests {
         upsert_task(&pool, &t2).await.expect("upsert t2");
         upsert_task(&pool, &t3).await.expect("upsert t3");
 
-        let results = list_tasks_for_plan(&pool, "p1").await.expect("list tasks for plan");
+        let results = list_tasks_for_plan(&pool, "p1")
+            .await
+            .expect("list tasks for plan");
         assert_eq!(results.len(), 2);
         let ids: Vec<&str> = results.iter().map(|t| t.id.as_str()).collect();
         assert!(ids.contains(&t1.id.as_str()));
@@ -235,7 +239,9 @@ mod tests {
         let task = make_task("gt1", "p1", "My Task");
         upsert_task(&pool, &task).await.expect("upsert task");
 
-        let fetched = get_task_by_graph_id(&pool, "gt1").await.expect("get task by graph id");
+        let fetched = get_task_by_graph_id(&pool, "gt1")
+            .await
+            .expect("get task by graph id");
         assert!(fetched.is_some());
         assert_eq!(fetched.expect("task should be Some").id, task.id);
     }
