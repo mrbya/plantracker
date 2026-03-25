@@ -1,11 +1,12 @@
-image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
-
 spec:
   inputs:
     build_docs:
       type: boolean
       default: false
       description: "Build project docs and deploy them to gitlab pages (manual web trigger only)"
+---
+
+image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
 
 workflow:
   rules:
