@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.1.1] — 2026-03-25
+
+### Added
+
+#### UI
+- **Light theme** — Catppuccin Latte palette; toggle between dark (Mocha) and light (Latte) in Settings
+- **Searchable dropdowns** — Plan and Task selectors replaced with a filtered combobox; supports keyboard navigation and works with long lists
+- **Plan-level time entries** — Entries can now be logged against a plan with no specific task selected ("No specific task" option in the task dropdown)
+- **"All plans" / "All tasks" report scope** — Reports can now aggregate across all plans or all tasks without requiring a specific selection
+
+#### Developer tooling & documentation
+- **Storybook UI docs** (`just docs-ui`) — Interactive component showcase for all UI primitives and full-page views; Tauri native APIs mocked in-browser with per-story handler overrides
+- **TypeDoc frontend API docs** (`just docs-api`) — Generated API reference for invoke wrappers, stores, types, and utilities
+- **Cargo docs** (`just docs-rs`) — Generated Rust backend API reference
+- **Unified docs workflow** — `just docs` builds all three doc sets and stitches them together under a shared landing page; `just docs-show` opens the result locally
+- **SBOM generation** — Software Bill of Materials generated as part of the release artefacts
+- Unit tests for duration and datetime utility functions
+- `pnpm` workspace config for monorepo tooling
+- ESLint flat config with Svelte and TypeScript-ESLint rules; stricter Clippy lint profile for Rust
+- GitLab CI docs generation job; CI now builds and publishes the full documentation page on manualy prompted pipeline runs
+
+### Changed
+
+- Report output reworked: grand total displayed prominently above the entry table; entries grouped and sorted by date
+- Plan/Task dropdowns in Time Tracking, Manual Entry, and Reports replaced with the new `SearchableSelect` component
+- `just pre-commit` and `just ci-build` recipes updated to include linting, audit, and doc generation steps
+- Docker CI image updated for Linux build jobs
+- `just precache` recipe fixed to correctly regenerate the sqlx offline query cache
+
+---
+
 ## [0.1.0] — 2026-03-21
 
 First release.

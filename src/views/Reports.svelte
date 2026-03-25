@@ -1,9 +1,39 @@
 <script lang="ts">
+  /**
+   * Reports view — generate and export time-tracking summaries.
+   *
+   * Allows the user to select a date range and an optional plan/task scope,
+   * generate a tabular report from the local SQLite database, and export it
+   * as a CSV file.
+   *
+   * Scope priority: `taskId` → `planId` → all plans.  The plan and task
+   * dropdowns mirror the shared `planner` store selection so context carries
+   * over from the Time Tracking view.
+   *
+   * Date range design:
+   *   From/To are expressed as month + year pairs (not full calendar pickers)
+   *   because time reports are typically summarised at monthly granularity.
+   *   Both selectors default to the current month and year on mount.
+   *
+   * Report lifecycle:
+   *   - `generated` becomes `true` once a generate attempt completes (success
+   *     or error).  Before then the results area is hidden entirely to avoid
+   *     showing a stale "No entries" message.
+   *   - `report` holds the last successful `ReportResult`, or `null` if the
+   *     last attempt failed.
+   *   - The "Export CSV" button is disabled until `report` is non-null.
+   *
+   * Export cancellation sentinel:
+   *   If the user dismisses the file save dialog the backend throws an error
+   *   whose message contains the string `"Export cancelled"`.  This is
+   *   detected and silently swallowed so no error toast is shown.
+   */
   import { exportReportCsv, generateReport } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
   import EmptyState from "$lib/components/ui/EmptyState.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import Select from "$lib/components/ui/Select.svelte";
+  import SearchableSelect from "$lib/components/ui/SearchableSelect.svelte";
   import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
@@ -13,6 +43,8 @@
     tasksByPlan,
   } from "$lib/stores/planner";
   import type { ReportResult } from "$lib/types";
+  import { formatDateTime } from "$lib/utils/datetime";
+  import { formatDuration } from "$lib/utils/duration";
 
   // ---------------------------------------------------------------------------
   // Month helpers
@@ -33,22 +65,6 @@
     { value: "12", label: "December" },
   ];
 
-  const SHORT_MONTHS = [
-    "",
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
   // ---------------------------------------------------------------------------
   // Date range state (defaults to current month/year)
   // ---------------------------------------------------------------------------
@@ -66,15 +82,19 @@
   let selectedPlanId = $state($selectedPlan?.id ?? "");
   let selectedTaskId = $state($selectedTask?.id ?? "");
 
-  const planOptions = $derived(
-    $plans.map((p) => ({ value: p.id, label: p.title })),
-  );
+  const planOptions = $derived([
+    { value: "", label: "All plans" },
+    ...$plans.map((p) => ({ value: p.id, label: p.title })),
+  ]);
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
-          value: t.id,
-          label: t.title,
-        }))
+      ? [
+          { value: "", label: "All tasks" },
+          ...($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+            value: t.id,
+            label: t.title,
+          })),
+        ]
       : [],
   );
 
@@ -93,13 +113,6 @@
       selectedPlanId = task.planId;
     }
   }
-
-  $effect(() => {
-    selectedPlanId = $selectedPlan?.id ?? "";
-  });
-  $effect(() => {
-    selectedTaskId = $selectedTask?.id ?? "";
-  });
 
   // ---------------------------------------------------------------------------
   // Report state
@@ -145,17 +158,6 @@
       exporting = false;
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Derived totals for table footer
-  // ---------------------------------------------------------------------------
-
-  const grandHours = $derived(
-    report ? Math.floor(report.grandTotalSeconds / 3600) : 0,
-  );
-  const grandMinutes = $derived(
-    report ? Math.floor((report.grandTotalSeconds % 3600) / 60) : 0,
-  );
 </script>
 
 <div class="view">
@@ -190,21 +192,21 @@
     <div class="filter-group">
       <div class="field">
         <label class="label" for="plan-select">Plan</label>
-        <Select
+        <SearchableSelect
           id="plan-select"
           options={planOptions}
           bind:value={selectedPlanId}
-          placeholder="All plans"
           onchange={onPlanChange}
         />
       </div>
       <div class="field">
         <label class="label" for="task-select">Task</label>
-        <Select
+        <SearchableSelect
           id="task-select"
           options={taskOptions}
           bind:value={selectedTaskId}
-          placeholder={selectedPlanId ? "All tasks" : "Select a plan first"}
+          placeholder={selectedPlanId ? undefined : "Select a plan first"}
+          disabled={!selectedPlanId}
           onchange={onTaskChange}
         />
       </div>
@@ -237,38 +239,38 @@
       {#if report}
         <h3 class="subject-label">{report.subjectLabel}</h3>
 
-        {#if report.monthlyTotals.length === 0}
+        {#if report.entries.length === 0}
           <EmptyState message="No entries found for this period." />
         {:else}
+          <div class="grand-total">
+            Total: <strong>{formatDuration(report.grandTotalSeconds)}</strong>
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Month</th>
-                  <th class="num-col">Hours</th>
-                  <th class="num-col">Minutes</th>
+                  <th>Task</th>
+                  <th>Plan</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th class="num-col">Duration</th>
+                  <th>Notes</th>
                 </tr>
               </thead>
               <tbody>
-                {#each report.monthlyTotals as row (row.year + "-" + row.month)}
+                {#each report.entries as entry, i (i)}
                   <tr>
-                    <td>{SHORT_MONTHS[row.month]} {row.year}</td>
-                    <td class="num-col muted"
-                      >{Math.floor(row.totalSeconds / 3600)}</td
+                    <td>{entry.taskTitle}</td>
+                    <td class="muted">{entry.planTitle}</td>
+                    <td class="muted">{formatDateTime(entry.startTime)}</td>
+                    <td class="muted">{formatDateTime(entry.endTime)}</td>
+                    <td class="num-col"
+                      >{formatDuration(entry.durationSeconds)}</td
                     >
-                    <td class="num-col muted"
-                      >{Math.floor((row.totalSeconds % 3600) / 60)}</td
-                    >
+                    <td class="muted notes-col">{entry.notes ?? "—"}</td>
                   </tr>
                 {/each}
               </tbody>
-              <tfoot>
-                <tr class="grand-total-row">
-                  <td>Grand Total</td>
-                  <td class="num-col">{grandHours}</td>
-                  <td class="num-col">{grandMinutes}</td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         {/if}
@@ -390,13 +392,20 @@
     color: var(--text-muted);
   }
 
-  tfoot tr td {
-    border-top: 1px solid var(--border);
-    border-bottom: none;
+  .grand-total {
+    font-size: var(--font-size-base);
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
   }
 
-  .grand-total-row td {
-    font-weight: 600;
+  .grand-total strong {
     color: var(--text);
+    font-weight: 600;
+  }
+
+  .notes-col {
+    max-width: 20rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

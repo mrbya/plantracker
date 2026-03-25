@@ -1,6 +1,6 @@
 [package]
 name = "plantracker"
-version = "0.1.0"
+version = "0.1.1"
 description = "A cross-platform desktop app for tracking time spent on Microsoft Planner tasks"
 authors = ["mrbya"]
 edition = "2021"
@@ -43,3 +43,5 @@ sha2 = "0.10"
 rand = "0.8"
 csv = "1"
 
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }

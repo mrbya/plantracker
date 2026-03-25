@@ -1,4 +1,7 @@
 # PlanTracker
+[![Latest Release](https://gitlab.com/family-treasure/plantracker/-/badges/release.svg)](https://gitlab.com/family-treasure/plantracker/-/releases)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![pipeline status](https://gitlab.com/byacrates/hoy/badges/master/pipeline.svg)](https://gitlab.com/byacrates/hoy/-/commits/master)
 
 > A cross-platform desktop app for tracking time spent on Microsoft Planner tasks.
 
@@ -20,6 +23,9 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 - [Development](#development)
   * [Prerequisites](#prerequisites)
   * [Getting Started](#getting-started)
+  * [Documentation](#documentation)
+    + [Structure](#structure)
+    + [Generate Docs](#generate-docs)
 - [Project Structure](#project-structure)
 - [Authentication Setup](#authentication-setup)
   * [1. Register an Azure AD Application](#1-register-an-azure-ad-application)
@@ -38,7 +44,7 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 
 - **Time Tracking** — Start/stop timers against any Planner task
 - **Manual Entry** — Log time with explicit start/end times
-- **Reports** — Monthly breakdowns, plan/task totals, CSV export
+- **Reports** — Grand total + per-entry breakdown, plan/task filter, CSV export
 - **Offline-first** — All data stored locally; Microsoft Graph syncs task metadata
 - **Secure auth** — OAuth 2.0 PKCE via system browser (no credentials stored in app)
 
@@ -51,11 +57,11 @@ Built with **Tauri + Rust** on the backend and **Svelte + TypeScript** on the fr
 | Desktop shell | [Tauri 2](https://tauri.app/) |
 | Backend language | [Rust](https://rust-lang.org/) |
 | Database | [SQLite](https://sqlite.org/) via [`sqlx`](https://github.com/launchbadge/sqlx) |
-| Frontend framework | [Svelte 5](https://svelte.dev/) + TypeScript |
+| Frontend framework | [Svelte 5](https://svelte.dev/) + [TypeScript](https://www.typescriptlang.org/) |
 | Build tool | [Vite](https://vite.dev/) |
 | Authentication | [OAuth 2.0 PKCE](https://www.oauth.com/oauth2-servers/pkce/) → [Microsoft Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/) |
 | API | [Microsoft Graph Tasks API](https://learn.microsoft.com/en-us/graph/api/resources/plannertask) |
-| Theming | [Catppuccin Mocha](https://catppuccin.com/palette/) |
+| Theming | [Catppuccin Mocha](https://catppuccin.com/palette/) (Dark - `Mocha`, Light - `Latte`)|
 | Font | [JetBrains Mono Nerd Font](https://www.programmingfonts.org/#jetbrainsmono) |
 
 ---
@@ -78,7 +84,7 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 
 ### Time Tracking
 
-- Select a **Plan** then a **Task** (or pick a task directly — plan auto-fills)
+- Select a **Plan** then a **Task**
 - Hit **Start** to begin timing; **Stop** to save the entry
 - Last *N* entries shown below (configurable in settings)
 
@@ -87,15 +93,15 @@ sudo apt install libwebkit2gtk-4.1-dev libssl-dev libayatana-appindicator3-dev l
 - Same plan/task dropdowns
 - Pick **start** and **end** datetime
 - Optional **notes** field
-- Submit saves directly to SQLite
+- Submit to save
 
 ### Reports
 
 - Select a **date range** (month + year, from/to)
 - Select a **plan** (and optionally a **task**)
 - Click **Generate** to build the report table
-- Table shows: monthly totals, grand total, plan or task total
-- **Export CSV** saves the report to your Downloads folder
+- Table shows: grand total at top, then individual entries (task, plan, start, end, duration, notes)
+- **Export CSV** to export report to a .csv file
 
 ---
 
@@ -128,8 +134,8 @@ time_entries   id, task_id, start_time, end_time, notes, created_at
 
 - [Rust toolchain](https://rustup.rs/) (stable, 1.77+)
 - [Node.js](https://nodejs.org/) 20+ and `pnpm`
-- [Tauri CLI v2](https://tauri.app/start/): `cargo install tauri-cli --version "^2"` or bootstrap using `just init`
-- A registered **Azure AD application** (see [Authentication Setup](#authentication-setup))
+- [Tauri CLI v2](https://tauri.app/start/): `cargo install tauri-cli --version "^2"` or bootstrap using `just init` (see [Getting Started](#getting-started))
+- A registered **Azure Entra ID application** (see [Authentication Setup](#authentication-setup))
 
 ### Getting Started
 
@@ -150,7 +156,7 @@ Build for release:
 just build
 ```
 
-Before committing work:
+Before committing work if not using pre-commit hooks:
 ```bash
 just pre-commit
 ```
@@ -161,6 +167,33 @@ just list
 ```
 
 ---
+
+### Documentation
+
+#### Structure
+
+Project documentation is comprised of this README and 3 sets of generated docs:
+
+1. Rust backend docs generated using `just docs-rs`:
+    - Uses `cargo doc`
+    - Covers backend API commands, auth, database, Graph integration, shared models, and internal backend modules
+
+2. Frontend API docs generated using `just docs-api`:
+    - Uses `TypeDoc`
+    - Covers fronted typescript API - backend command invoke wrappers, type mirrors, utils, stores, route `.ts` mdules
+    - Includes docs from `docs/frontend-api`
+
+3. Frontend UI docs generated using `just docs-ui`:
+    - Uses `Storybook`
+    - Covers UI elements showcases, animations, usage examples and more
+    - Includes overview from `.storybook/docs`
+
+All these are strapped together using a custom landing page from `docs/landing-page`
+
+#### Generate Docs
+
+To generate the full project docs suite use `just docs`
+To preview generated docs page use `just docs-show`
 
 ## Project Structure
 
@@ -179,20 +212,22 @@ plantracker/
 │   │   ├── stores/                   # Svelte stores (auth, planner, timer, notifications, settings)
 │   │   ├── theme/                    # CSS theming variables
 │   │   ├── types.ts                  # TypeScript types mirroring Rust structs
+│   │   │
 │   │   └── utils/
-│   │       └── duration.ts           # Utilities to format unix time
+│   │       ├── datetime.ts           # Utilities to format datetimes
+│   │       └── duration.ts           # Utilities to format durations
 │   │
 │   ├── routes/                       # Frontend API routes
 │   │   ├── +layout.svelte
 │   │   ├── +layout.ts
 │   │   └── +page.svelte
 │   │
+│   ├── stories/                      # Storybook stories
+│   │   ├── __mocks__/                # In-browser mocks for Tauri native modules
+│   │   ├── views/                    # Stories for full-page views
+│   │   └── *.stories.svelte          # Stories for UI primitives
+│   │
 │   └── views/                        # Full-page views
-│       ├── Login.svelte
-│       ├── TimeTracking.svelte
-│       ├── ManualEntry.svelte
-│       ├── Reports.svelte
-│       └── Settings.svelte
 │
 ├── src-tauri/                        # Tauri / Rust backend
 │   ├── src/
@@ -201,14 +236,17 @@ plantracker/
 │   │   ├── db/                       # sqlx query functions: plans, tasks, entries
 │   │   ├── graph/                    # Microsoft Graph client + models
 │   │   ├── models.rs                 # Shared Rust structs (serde, camelCase)
-│   │   ├── lib.rs
-│   │   └── main.rs
+│   │   ├── lib.rs                    # Backend crate lib definitions and setup
+│   │   └── main.rs                   # Tauri backend entrypoint
 │   │
 │   ├── migrations/                   # SQLite migration files (0001_initial.sql, …)
+│   ├── .sqlx/                        # Offline DB query cache for compile-time checks
 │   └── Cargo.toml
 │
 ├── static/                           # Bundled static artefacts (fonts, icons, etc.)
 │   └── fonts/
+│
+├── .storybook/                       # UI docs configuration
 │
 ├── devops/
 │   ├── linux-build/Dockerfile        # CI image for Linux builds
@@ -255,6 +293,7 @@ In your `.env` file:
 ```env
 VITE_AZURE_CLIENT_ID=your-client-id-here
 VITE_AZURE_TENANT_ID=your-tenant-id-here
+GITLAB_IMAGE_REGISTRY=registry.gitlab.com/family-treasure/plantracker
 ```
 
 > `common` allows both personal and work/school Microsoft accounts. Replace with your tenant ID to restrict to a single organisation.
@@ -276,17 +315,18 @@ User clicks "Sign In"
 
 ## Development Notes
 
-- **sqlx compile-time checks**: Run `cargo sqlx prepare` after changing queries to regenerate `.sqlx/` offline query cache
-- **Hot reload**: `cargo tauri dev` supports Vite HMR for the frontend; Rust recompiles on backend changes
-- **Logging**: Backend uses `tracing` crate; logs viewable in the terminal running `tauri dev`
+- **sqlx compile-time checks**: Run `just precache` after changing queries to regenerate `.sqlx/` offline query cache
+- **Hot reload**: `just dev` supports Vite HMR for the frontend; Rust recompiles on backend changes
+- **Logging**: Backend uses `tracing` crate; logs visible in the terminal running `tauri dev`
 - **Font**: JetBrainsMono Nerd Font is bundled in `static/fonts/` and loaded via `@font-face` — no system installation required
 
 ---
 
 ## Roadmap
 
-- [ ] Dark/light theme toggle (Catppuccin Latte)
-- [ ] Task search / filter in dropdowns
+- [x] Dark/light theme toggle (Catppuccin Latte)
+- [x] Task search / filter in dropdowns
+- [ ] Multi-lang localizations
 - [ ] Idle detection (pause timer when system is idle)
 - [ ] System tray with quick start/stop
 - [ ] Sync time entries back to Planner task comments

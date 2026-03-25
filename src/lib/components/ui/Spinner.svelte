@@ -1,4 +1,16 @@
 <script lang="ts">
+  /**
+   * Animated loading indicator.
+   *
+   * Renders a CSS-animated circular spinner using `--border` as the track
+   * colour and `--accent` as the rotating arc.  Used inside `Button` when
+   * `loading={true}` and as a standalone indicator in content areas while
+   * data is being fetched.
+   *
+   * Props:
+   * - `size` — `"sm"` (12 × 12 px, used inside buttons) or `"md"` (18 × 18 px,
+   *            used in content areas).  Defaults to `"md"`.
+   */
   let { size = "md" }: { size?: "sm" | "md" } = $props();
 </script>
 

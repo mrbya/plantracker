@@ -1,4 +1,15 @@
 <script lang="ts">
+  /**
+   * Raised content container with an optional header.
+   *
+   * Renders a rounded box with a `--bg-input` background and a `--border`
+   * outline.  When `title` is provided, a header row is rendered above the
+   * body with the title displayed in uppercase small-caps style.
+   *
+   * Props:
+   * - `title`    — optional header text shown above the body content.
+   * - `children` — slot content rendered inside the card body.
+   */
   let {
     title,
     children,

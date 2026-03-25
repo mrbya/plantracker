@@ -1,0 +1,30 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/lib/api",
+    "src/lib/stores",
+    "src/lib/types.ts",
+    "src/lib/utils",
+    "src/routes"
+  ],
+  "entryPointStrategy": "expand",
+  "tsconfig": "tsconfig.json",
+  "out": "docs-page/frontend-api",
+  "readme": "docs/frontend-api/index.md",
+  "projectDocuments": ["docs/frontend-api/guides/*.md"],
+  "searchInDocuments": true,
+  "exclude": [
+    "**/*.svelte",
+    "**/*.stories.*",
+    "**/*.story.*",
+    "**/*.spec.*",
+    "**/*.test.*",
+    ".storybook/**"
+  ],
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "hideGenerator": true,
+  "categorizeByGroup": true,
+  "sort": ["source-order"]
+}

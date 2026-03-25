@@ -1,4 +1,22 @@
 <script lang="ts">
+  /**
+   * Styled text input component.
+   *
+   * Wraps a native `<input>` with a `<label>` and optional inline error
+   * message, all themed with Catppuccin Mocha CSS variables.  The label text
+   * doubles as the `for`/`id` pair for accessibility.
+   *
+   * Props:
+   * - `type`    — HTML input type attribute; defaults to `"text"`.
+   * - `value`   — bindable current input value string.
+   * - `label`   — optional label text rendered above the input; also used as
+   *               the `id` for the `<input>` and the `for` on the `<label>`.
+   * - `error`   — optional validation error message rendered below the input
+   *               in red; also applies a red border to the input field.
+   * - `onblur`  — callback forwarded to the native `<input>` `blur` event;
+   *               used to trigger deferred validation (e.g., the entries-limit
+   *               field in Settings saves on blur rather than on every keystroke).
+   */
   let {
     type = "text",
     value = $bindable(""),

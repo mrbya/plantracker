@@ -13,6 +13,9 @@ deps *FLAGS:
 deps-ci:
     @just deps --frozen-lockfile
 
+deps-playwright:
+    pnpm exec playwright install
+
 # Apply strict formatting to js/ts/svelte sources.
 fmt-js:
     pnpm format
@@ -73,10 +76,45 @@ audit:
     @just audit-js
     @just audit-rs
 
+# Runs rust unit tests.
+[working-directory: 'src-tauri']
+test-rs *FLAGS:
+    SQLX_OFFLINE=true cargo test --workspace --doc
+    SQLX_OFFLINE=true cargo nextest run --all-features --workspace {{FLAGS}}
+
+# Runs frontend unit tests.
+test-js *FLAGS:
+    pnpm test {{FLAGS}}
+
+# Runs all unit tests.
+test:
+    @just test-js
+    @just test-rs
+
+# Runs tests with a coverage report for js/ts/svelte sources.
+test-cov-js:
+    pnpm test:coverage
+
+# Runs tests with a coverage report for rs sources.
+[working-directory: 'src-tauri']
+test-cov-rs *FLAGS:
+    cargo llvm-cov nextest --all-features --workspace {{FLAGS}}
+
+# Runs tests with a coverage report for rs sources.
+test-cov:
+    @just test-cov-js
+    @just test-cov-rs
+
 # Pre caches db queries.
 [working-directory: 'src-tauri']
 precache *FLAGS:
-    cargo sqlx prepare --workspace {{FLAGS}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    SCRATCH=$(mktemp -d)
+    DB="sqlite:${SCRATCH}/prepare.db"
+    cargo sqlx database create -D "$DB"
+    cargo sqlx migrate run -D "$DB"
+    cargo sqlx prepare --workspace -D "$DB" {{FLAGS}}
 
 # Chechs pre-cached db queries.
 precache-check:
@@ -98,8 +136,22 @@ build:
 build-windows:
     cargo tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc
 
-# A thorough codebase check ran before
-# commiting and ci builds.
+# Cleans build artefacts for rs sources.
+[working-directory: 'src-tauri']
+clean-rs:
+    cargo clean
+
+# Cleans build artefacts for js/ts/svelte sources.
+clean-js:
+    rm -rf .svelte-kit
+    rm -rf coverage
+
+# Cleans build artefacts.
+clean:
+    @just clean-js
+    @just clean-rs
+
+# A thorough codebase check ran before running ci-builds.
 thorough-check:
     @just fmt-js-check
     @just fmt-rs --check
@@ -110,24 +162,82 @@ thorough-check:
 index:
     pnpm index README.md
 
-# Runs all checks neccesary before a commit.
-# Checks formatting, code quality, and more
+# Generates documentation for rs sources.
+[working-directory: 'src-tauri']
+docs-rs *FLAGS:
+    RUSTDOCFLAGS="--default-theme ayu" cargo doc --no-deps --all-features --document-private-items --workspace {{FLAGS}}
+
+# Generates documentation for frontend API.
+docs-api:
+    pnpm docs:api
+
+# Generates documentation for frontend UI.
+docs-ui:
+    pnpm docs:ui
+
+# Cleans generated project docs.
+docs-clean:
+    rm -rf docs-page
+
+# Generates full project documentation.
+docs:
+    pnpm docs:build
+
+# Runs and opens generated project docs in a http server.
+docs-show:
+    #!/usr/bin/env bash
+    if [ ! -f docs-page/index.html ]; then
+        just docs
+    fi
+    pnpm docs:show
+
+docs-ci:
+    @just deps-ci
+    @just docs
+    mv ./docs-page ./public
+
+# Runs formating, tests and checks necessary before a commit.
 pre-commit:
+    @just fmt
     @just thorough-check
     @just unused
     @just audit
-    @just precache-check
-    @just icons
-    @just build
+    @just precache
+    @just test
     @just index
+
+# Runs checks and tests run by ci.
+ci-test:
+    @just deps-ci
+    @just thorough-check
+    @just precache-check
+    @just clean-rs
+    @just unused
+    @just audit
+    @just clean-rs
+    @just test-cov
 
 # Full app build used by ci.
 ci-build:
     @just deps-ci
-    @just thorough-check
-    @just precache-check
-    @just icons
     @just build
+    @just build-windows
+
+# Generate SBOM for rs sources.
+[working-directory: 'src-tauri']
+sbom-rs:
+    mkdir -p ../sbom
+    cargo sbom > ../sbom/sbom-backend.json
+
+# Generate SBOM for js/ts/svelte sources.
+sbom-js:
+    mkdir -p sbom
+    pnpm sbom --sbom-format spdx --prod > sbom/sbom-frontend.json
+
+# Generates SBOM for all sources.
+sbom:
+    @just sbom-rs
+    @just sbom-js
 
 # Build linux-build-image.
 docker-linux:
@@ -149,7 +259,7 @@ docker-linux:
     sudo docker push "${IMAGE}"
     sudo docker push "${IMAGE_LATEST}"
 
-# Initializes the project, installing all necessary tooling. Should be run once before beginning of development.
+# Initializes the project by installing all necessary tooling. Should be run once before beginning of development.
 init:
     echo # installing nightly, windows-msvc target and xwin
     rustup install nightly
@@ -168,16 +278,25 @@ init:
     echo # Installing sqlx cli for db migrations and pre-caching 
     cargo sqlx -V || cargo binstall sqlx-cli --no-confirm
 
-    echo # Installing things required by `just pre-commit`
+    echo # Installing test, coverage, lint, audit and other utilities
+    rustup component add llvm-tools-preview
+    cargo binstall cargo-llvm-cov --no-confirm
+    cargo nextest -V || cargo binstall nextest --no-confirm
     cargo udeps -V || cargo binstall cargo-udeps --no-confirm
     cargo audit fix -V || cargo install cargo-audit --locked --features=fix
+    cargo sbom -V || cargo binstall cargo-sbom --no-confirm
 
     echo # Installing pnpm
-    pnpm -v || npm install -g pnpm
+    pnpm_major=$(pnpm --version 2>/dev/null | cut -d. -f1)
+    [[ "${pnpm_major:-0}" -lt 11 ]] && npm install -g pnpm@next-11 || true
 
-    echo # Synch node_modules
+    echo # Synch node_modules and misc dependencies
     pnpm install
+    just deps-playwright
 
     echo # Creating local .env file from .env.example
     cp .env.example .env
 
+    echo # Installing git pre-commit hooks
+    pre-commit --version || pip install pre-commit
+    pre-commit install || echo "Failed to install pre-commit hooks!" 1>&2

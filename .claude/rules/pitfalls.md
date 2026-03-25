@@ -71,8 +71,9 @@ The resulting base64url string is 86 characters — well within RFC 7636's 43–
 // In init sequence, after init_db():
 if let Some(entry) = db::entries::find_active_entry(&pool).await? {
     *timer.lock().await = Some(ActiveTimer {
-        entry_id: entry.id.clone(),
-        task_id: entry.task_id.clone(),
+        entry_id:   entry.id.clone(),
+        plan_id:    entry.plan_id.clone(),
+        task_id:    entry.task_id.clone(),  // Option<String>
         start_time: entry.start_time.parse()?,
     });
 }

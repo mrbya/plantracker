@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT id as \"id!\", plan_id as \"plan_id!\", task_id, start_time as \"start_time!\", end_time, notes, created_at as \"created_at!\"\n        FROM time_entries\n        WHERE start_time >= ?\n          AND start_time <  ?\n          AND end_time IS NOT NULL\n        ORDER BY start_time DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "plan_id!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "task_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_time!",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "end_time",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "notes",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 6,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "1f23d10dc05397308194505f8d98a934e04a21da0f4cc30c6bf6b9df5635ce5f"
+}

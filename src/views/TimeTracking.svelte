@@ -1,11 +1,35 @@
 <script lang="ts">
+  /**
+   * Time Tracking view — the primary timer interface.
+   *
+   * Allows the user to select a plan and optional task, start/stop a timer,
+   * and review recent time entries in a table.  The plan and task selections
+   * are shared with the other views via the `planner` store so switching tabs
+   * preserves the context.
+   *
+   * Scoping for `getRecentEntries`:
+   *   - Task selected  → entries for that specific task
+   *   - Plan only      → entries for the plan (all tasks combined)
+   *   - Neither        → entries for all plans
+   *
+   * Timer button states:
+   *   - `$isRunning === false` → green "Start Timer" button (disabled if no plan selected)
+   *   - `$isRunning === true`  → red "Stop — Xh Ym" button showing elapsed time
+   *   Both states are disabled while `timerBusy` is `true` to prevent double-clicks.
+   *
+   * Delete confirmation:
+   *   Rather than a modal dialog, a two-step inline pattern is used: the first
+   *   click on the delete icon sets `confirmDeleteId` to the entry's ID,
+   *   replacing the icon with "Sure? / Cancel" text buttons.  This avoids
+   *   blocking the entire UI.  Only one row can be in the confirm state at a
+   *   time because `confirmDeleteId` holds a single ID.
+   */
   import { onMount } from "svelte";
-  import { get } from "svelte/store";
 
   import { deleteEntry, getRecentEntries } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
   import EmptyState from "$lib/components/ui/EmptyState.svelte";
-  import Select from "$lib/components/ui/Select.svelte";
+  import SearchableSelect from "$lib/components/ui/SearchableSelect.svelte";
   import Spinner from "$lib/components/ui/Spinner.svelte";
   import { addError, addSuccess } from "$lib/stores/notifications";
   import {
@@ -33,10 +57,13 @@
   );
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
-          value: t.id,
-          label: t.title,
-        }))
+      ? [
+          { value: "", label: "No specific task" },
+          ...($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+            value: t.id,
+            label: t.title,
+          })),
+        ]
       : [],
   );
 
@@ -57,14 +84,6 @@
     }
     loadEntries();
   }
-
-  // Sync selectedPlanId/selectedTaskId when store changes externally
-  $effect(() => {
-    selectedPlanId = $selectedPlan?.id ?? "";
-  });
-  $effect(() => {
-    selectedTaskId = $selectedTask?.id ?? "";
-  });
 
   // ---------------------------------------------------------------------------
   // Entries table
@@ -112,10 +131,10 @@
   let timerBusy = $state(false);
 
   async function handleStart() {
-    if (!selectedTaskId) return;
+    if (!selectedPlanId) return;
     timerBusy = true;
     try {
-      await start(selectedTaskId);
+      await start(selectedPlanId, selectedTaskId || undefined);
       await loadEntries();
     } finally {
       timerBusy = false;
@@ -162,7 +181,7 @@
     <div class="dropdowns">
       <div class="field">
         <label class="label" for="plan-select">Plan</label>
-        <Select
+        <SearchableSelect
           id="plan-select"
           options={planOptions}
           bind:value={selectedPlanId}
@@ -173,13 +192,12 @@
 
       <div class="field">
         <label class="label" for="task-select">Task</label>
-        <Select
+        <SearchableSelect
           id="task-select"
           options={taskOptions}
           bind:value={selectedTaskId}
-          placeholder={selectedPlanId
-            ? "Select a task…"
-            : "Select a plan first"}
+          placeholder={selectedPlanId ? undefined : "Select a plan first"}
+          disabled={!selectedPlanId}
           onchange={onTaskChange}
         />
       </div>
@@ -199,7 +217,7 @@
         <Button
           variant="success"
           loading={timerBusy}
-          disabled={timerBusy || !selectedTaskId}
+          disabled={timerBusy || !selectedPlanId}
           onclick={handleStart}
           title={$isRunning ? "A timer is already running" : undefined}
         >
@@ -219,7 +237,7 @@
         <span>Loading…</span>
       </div>
     {:else if entries.length === 0}
-      <EmptyState message="No entries yet. Select a task and start a timer." />
+      <EmptyState message="No entries yet. Select a plan and start a timer." />
     {:else}
       <div class="table-wrap">
         <table>
@@ -235,12 +253,12 @@
           </thead>
           <tbody>
             {#each entries as entry (entry.id)}
-              {@const task = taskById[entry.taskId]}
-              {@const planTitle = task ? planById[task.planId] : "—"}
+              {@const task = entry.taskId ? taskById[entry.taskId] : null}
+              {@const planTitle = planById[entry.planId] ?? "—"}
               {@const dur = entryDurationSeconds(entry)}
               <tr>
-                <td>{task?.title ?? entry.taskId}</td>
-                <td class="muted">{planTitle ?? "—"}</td>
+                <td>{task?.title ?? "No specific task"}</td>
+                <td class="muted">{planTitle}</td>
                 <td class="muted">{formatDateTime(entry.startTime)}</td>
                 <td>
                   {#if entry.endTime}

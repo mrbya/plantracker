@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT id as \"id!\", task_id as \"task_id!\", start_time as \"start_time!\", end_time, notes, created_at as \"created_at!\"\n        FROM time_entries\n        WHERE start_time >= ?\n          AND start_time <  ?\n          AND end_time IS NOT NULL\n        ORDER BY start_time DESC\n        ",
+  "query": "SELECT id as \"id!\", plan_id as \"plan_id!\", task_id, start_time as \"start_time!\", end_time, notes, created_at as \"created_at!\" FROM time_entries WHERE task_id = ? ORDER BY start_time DESC LIMIT ?",
   "describe": {
     "columns": [
       {
@@ -9,28 +9,33 @@
         "type_info": "Text"
       },
       {
-        "name": "task_id!",
+        "name": "plan_id!",
         "ordinal": 1,
         "type_info": "Text"
       },
       {
-        "name": "start_time!",
+        "name": "task_id",
         "ordinal": 2,
         "type_info": "Text"
       },
       {
-        "name": "end_time",
+        "name": "start_time!",
         "ordinal": 3,
         "type_info": "Text"
       },
       {
-        "name": "notes",
+        "name": "end_time",
         "ordinal": 4,
         "type_info": "Text"
       },
       {
-        "name": "created_at!",
+        "name": "notes",
         "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 6,
         "type_info": "Text"
       }
     ],
@@ -40,11 +45,12 @@
     "nullable": [
       true,
       false,
+      true,
       false,
       true,
       true,
       false
     ]
   },
-  "hash": "9ad0b809afb455e5bb3fbcf4b3d0d1ff0faff34e877a5398de59f649b2e3d730"
+  "hash": "4ce4599a6de3d9baca66ec9ef969ca4a0a2f9dfb4c0f27eae882ad7e0e424e8c"
 }

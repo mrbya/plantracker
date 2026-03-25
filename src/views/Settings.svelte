@@ -1,4 +1,25 @@
 <script lang="ts">
+  /**
+   * Settings view — user preferences and account management.
+   *
+   * Organised into five sections:
+   *
+   * | Section    | Controls                                              |
+   * |------------|-------------------------------------------------------|
+   * | Entries    | Recent entries limit (number input, saves on blur)    |
+   * | Sync       | Auto-sync frequency (select); manual "Sync Now" button|
+   * | Storage    | Data directory path display; "Open Folder" shortcut   |
+   * | Appearance | Theme choice (dark / light / system)                  |
+   * | Account    | Signed-in user name; "Sign Out" button                |
+   *
+   * Blur-vs-keystroke saving rationale:
+   *   The entries-limit field saves via `onblur` (when the user leaves the
+   *   field) rather than on every keystroke to avoid persisting intermediate
+   *   invalid states (e.g., an empty field while the user is deleting and
+   *   retyping).  If the blurred value is invalid the field resets to the
+   *   current store value.  All other controls (selects) save immediately
+   *   on change because they can only produce valid values.
+   */
   import { onMount } from "svelte";
   import { openPath } from "@tauri-apps/plugin-opener";
 
@@ -18,6 +39,7 @@
     syncFrequency,
     type SyncFrequency,
   } from "$lib/stores/settings";
+  import { themeChoice, saveTheme, type ThemeChoice } from "$lib/stores/theme";
   import { formatDateTime } from "$lib/utils/datetime";
 
   // ---------------------------------------------------------------------------
@@ -26,10 +48,6 @@
 
   let limitInput = $state(String($entriesLimit));
 
-  $effect(() => {
-    limitInput = String($entriesLimit);
-  });
-
   async function onLimitBlur() {
     const parsed = parseInt(limitInput, 10);
     if (!isNaN(parsed) && parsed > 0) {
@@ -37,6 +55,22 @@
     } else {
       limitInput = String($entriesLimit); // reset on invalid input
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Theme
+  // ---------------------------------------------------------------------------
+
+  const THEME_OPTIONS = [
+    { value: "dark", label: "Dark" },
+    { value: "light", label: "Light" },
+    { value: "system", label: "System Default" },
+  ];
+
+  let themeValue = $state($themeChoice);
+
+  async function onThemeChange() {
+    await saveTheme(themeValue as ThemeChoice);
   }
 
   // ---------------------------------------------------------------------------
@@ -50,10 +84,6 @@
   ];
 
   let syncFreqValue = $state($syncFrequency);
-
-  $effect(() => {
-    syncFreqValue = $syncFrequency;
-  });
 
   async function onSyncFreqChange() {
     await saveSyncFrequency(syncFreqValue as SyncFrequency);
@@ -178,6 +208,26 @@
         <Button variant="ghost" disabled={!dataDir} onclick={handleOpenFolder}>
           Open Folder
         </Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Appearance section -->
+  <section class="settings-section">
+    <h3 class="section-title">Appearance</h3>
+    <div class="setting-row">
+      <div class="setting-info">
+        <span class="setting-label">Theme</span>
+        <span class="setting-desc"
+          >Controls the colour scheme of the application.</span
+        >
+      </div>
+      <div class="setting-control">
+        <Select
+          options={THEME_OPTIONS}
+          bind:value={themeValue}
+          onchange={onThemeChange}
+        />
       </div>
     </div>
   </section>

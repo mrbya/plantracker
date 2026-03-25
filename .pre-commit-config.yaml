@@ -1,0 +1,19 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pre-commit
+        name: Pre commit formating, linter checks and tests
+        language: unsupported
+        entry: just pre-commit
+        pass_filenames: false
+        files: >
+          (?x)^(
+            src-tauri/.*\.rs|
+            src/.*\.(ts|svelte)|
+            .*\.js|
+            package\.json|
+            tsconfig\.json
+            pnpm.*\.json|
+            justfile|
+            \.prettierrc
+          )$

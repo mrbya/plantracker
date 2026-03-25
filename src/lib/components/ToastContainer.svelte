@@ -1,4 +1,22 @@
 <script lang="ts">
+  /**
+   * Fixed-position toast notification container.
+   *
+   * Renders all active `Notification` entries from the `notifications` store
+   * as stacked toast cards anchored to the bottom-right corner of the viewport.
+   * Each toast slides in from below via a CSS animation and is automatically
+   * removed after 4 seconds (managed by the store, not this component).
+   *
+   * Colour coding via BEM modifier classes:
+   * - `toast--success` → green dot (`--success`)
+   * - `toast--error`   → red dot (`--danger`)
+   * - `toast--warning` → yellow dot (`--warning`)
+   *
+   * The container uses `pointer-events: none` so toasts never block
+   * interaction with the content beneath them.  Individual toasts inherit
+   * this and are therefore not clickable (intentional — there is no dismiss
+   * button; they auto-expire).
+   */
   import { notifications } from "$lib/stores/notifications";
 </script>
 

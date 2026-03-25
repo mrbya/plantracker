@@ -1,4 +1,36 @@
 <script lang="ts">
+  /**
+   * Manual Entry view — create and edit time entries without the live timer.
+   *
+   * Supports two modes controlled by `editingId`:
+   * - **Create mode** (`editingId === null`): submitting the form calls
+   *   `createManualEntry` and inserts a new row.
+   * - **Edit mode** (`editingId !== null`): submitting calls `updateEntry`
+   *   and the row being edited is highlighted in the table.  Clicking "Edit"
+   *   on a table row populates the form fields and scrolls to the top.
+   *   Clicking "Cancel" or completing an update resets `editingId` to `null`.
+   *
+   * Date/time field design:
+   *   Start and end timestamps are captured as two separate fields each:
+   *   an `<input type="date">` for the calendar portion and a plain text
+   *   `<input>` constrained to `HH:MM` format for the time portion.  This
+   *   avoids the inconsistent native `datetime-local` picker behaviour across
+   *   platforms and gives full control over visual styling.
+   *   `fieldsToIso` assembles these into an ISO 8601 string for the backend;
+   *   `isoToFields` decomposes an existing ISO string back into the field
+   *   values when loading an entry for editing.
+   *
+   * Validation rules (checked in `validate()`):
+   *   - A plan must be selected (in create mode).
+   *   - Start date and time must be provided and in `HH:MM` 24h format.
+   *   - End date and time must be provided and in `HH:MM` 24h format.
+   *   - End timestamp must be strictly after start timestamp.
+   *
+   * Delete confirmation uses the same two-step inline pattern as TimeTracking:
+   *   first click arms the row; "Sure?" / "Cancel" appear in place of the
+   *   action buttons.  Deleting an entry that is currently open in the form
+   *   also resets the form via `resetForm()`.
+   */
   import { onMount } from "svelte";
 
   import {
@@ -10,7 +42,7 @@
   import Button from "$lib/components/ui/Button.svelte";
   import EmptyState from "$lib/components/ui/EmptyState.svelte";
   import Spinner from "$lib/components/ui/Spinner.svelte";
-  import Select from "$lib/components/ui/Select.svelte";
+  import SearchableSelect from "$lib/components/ui/SearchableSelect.svelte";
   import { addError, addSuccess } from "$lib/stores/notifications";
   import {
     plans,
@@ -36,10 +68,13 @@
   );
   const taskOptions = $derived(
     selectedPlanId
-      ? ($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
-          value: t.id,
-          label: t.title,
-        }))
+      ? [
+          { value: "", label: "No specific task" },
+          ...($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
+            value: t.id,
+            label: t.title,
+          })),
+        ]
       : [],
   );
 
@@ -60,13 +95,6 @@
     }
     loadEntries();
   }
-
-  $effect(() => {
-    selectedPlanId = $selectedPlan?.id ?? "";
-  });
-  $effect(() => {
-    selectedTaskId = $selectedTask?.id ?? "";
-  });
 
   // ---------------------------------------------------------------------------
   // Form state
@@ -93,7 +121,7 @@
 
   let startError = $state("");
   let endError = $state("");
-  let taskError = $state("");
+  let planError = $state("");
 
   const isEditing = $derived(editingId !== null);
 
@@ -106,7 +134,7 @@
     editingId = null;
     startError = "";
     endError = "";
-    taskError = "";
+    planError = "";
   }
 
   /** Returns true if time is a valid 24h HH:MM string. */
@@ -133,12 +161,12 @@
 
   function validate(): boolean {
     let ok = true;
-    taskError = "";
+    planError = "";
     startError = "";
     endError = "";
 
-    if (!selectedTaskId) {
-      taskError = "Please select a task";
+    if (!selectedPlanId && !isEditing) {
+      planError = "Please select a plan";
       ok = false;
     }
     if (!startDate) {
@@ -194,7 +222,8 @@
         addSuccess("Entry updated");
       } else {
         await createManualEntry({
-          taskId: selectedTaskId,
+          planId: selectedPlanId,
+          taskId: selectedTaskId || undefined,
           startTime: startIso,
           endTime: endIso,
           notes: notes || undefined,
@@ -287,26 +316,25 @@
       <div class="row-2">
         <div class="field">
           <label class="label" for="plan-select">Plan</label>
-          <Select
+          <SearchableSelect
             id="plan-select"
             options={planOptions}
             bind:value={selectedPlanId}
             placeholder="Select a plan…"
             onchange={onPlanChange}
           />
-          {#if taskError && !selectedTaskId}
-            <span class="error-msg">{taskError}</span>
+          {#if planError}
+            <span class="error-msg">{planError}</span>
           {/if}
         </div>
         <div class="field">
           <label class="label" for="task-select">Task</label>
-          <Select
+          <SearchableSelect
             id="task-select"
             options={taskOptions}
             bind:value={selectedTaskId}
-            placeholder={selectedPlanId
-              ? "Select a task…"
-              : "Select a plan first"}
+            placeholder={selectedPlanId ? undefined : "Select a plan first"}
+            disabled={!selectedPlanId}
             onchange={onTaskChange}
           />
         </div>
@@ -415,12 +443,12 @@
           </thead>
           <tbody>
             {#each entries as entry (entry.id)}
-              {@const task = taskById[entry.taskId]}
-              {@const planTitle = task ? planById[task.planId] : "—"}
+              {@const task = entry.taskId ? taskById[entry.taskId] : null}
+              {@const planTitle = planById[entry.planId] ?? "—"}
               {@const dur = entryDurationSeconds(entry)}
               <tr class:editing-row={editingId === entry.id}>
-                <td>{task?.title ?? entry.taskId}</td>
-                <td class="muted">{planTitle ?? "—"}</td>
+                <td>{task?.title ?? "No specific task"}</td>
+                <td class="muted">{planTitle}</td>
                 <td class="muted">{formatDateTime(entry.startTime)}</td>
                 <td class="muted"
                   >{entry.endTime ? formatDateTime(entry.endTime) : "—"}</td

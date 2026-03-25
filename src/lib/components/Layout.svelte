@@ -1,4 +1,26 @@
 <script lang="ts">
+  /**
+   * Main application shell rendered after the user is authenticated.
+   *
+   * Provides a narrow icon-only sidebar for view navigation and a scrollable
+   * main content area.  View routing is handled entirely client-side via the
+   * `activeView` state variable — there is no URL-based router.
+   *
+   * Views:
+   * | id               | Component        | Icon        |
+   * |------------------|------------------|-------------|
+   * | `time-tracking`  | TimeTracking     | Timer       |
+   * | `manual-entry`   | ManualEntry      | PencilLine  |
+   * | `reports`        | Reports          | BarChart2   |
+   * | `settings`       | Settings         | Settings    |
+   *
+   * The sidebar bottom area shows a circular avatar with the user's initials
+   * (derived from `userDisplayName`) and a sign-out button.
+   *
+   * `initials` derivation: splits the display name on spaces, takes the first
+   * character of each word, joins them, and truncates to 2 characters.  Falls
+   * back to `"?"` when no display name is available.
+   */
   import TimeTracking from "../../views/TimeTracking.svelte";
   import ManualEntry from "../../views/ManualEntry.svelte";
   import Reports from "../../views/Reports.svelte";

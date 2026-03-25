@@ -1,12 +1,23 @@
+spec:
+  inputs:
+    build_docs:
+      type: boolean
+      default: false
+      description: "Build project docs and deploy them to gitlab pages (manual web trigger only)"
+---
+
+image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
+
 workflow:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_TAG'
 
 stages:
+  - test
   - build
   - release
+  - docs
 
 variables:
   SQLX_OFFLINE: "true"
@@ -21,15 +32,35 @@ cache:
     - ~/.cargo/git/
     - node_modules/
 
+test:
+  stage: test
+  rules:
+    - if: $[[ inputs.build_docs ]] == true
+      when: never
+    - when: on_success
+  variables:
+    SQLX_OFFLINE: "true"
+    VITE_AZURE_CLIENT_ID: "test-client-id"
+    VITE_AZURE_TENANT_ID: "test-tenant-id"
+  script:
+    - just ci-test
+  coverage: '/^TOTAL\s+\S+\s+\S+\s+(\d+\.?\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 1 day
+
 build:
   stage: build
-  image: registry.gitlab.com/family-treasure/plantracker/linux-build:latest
   variables:
     VITE_AZURE_CLIENT_ID: $VITE_AZURE_CLIENT_ID
     VITE_AZURE_TENANT_ID: $VITE_AZURE_TENANT_ID
+  rules:
+    - if: '$CI_COMMIT_TAG'
   script:
     - just ci-build
-    - just build-windows
   artifacts:
     name: "platracker-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -70,4 +101,15 @@ upload-release:
            --header "Content-Type: application/json" \
            --data "{\"name\":\"PlanTracker ${CI_COMMIT_TAG}\",\"tag_name\":\"${CI_COMMIT_TAG}\",\"assets\":{\"links\":[${LINKS_JSON}]}}" \
            "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/releases"
+
+docs:
+  stage: docs
+  rules:
+    - if: $[[ inputs.build_docs ]] == true
+  script:
+    - just check
+    - just docs-ci
+  artifacts:
+    paths:
+      - public
 

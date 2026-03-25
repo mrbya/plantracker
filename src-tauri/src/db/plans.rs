@@ -2,6 +2,26 @@ use sqlx::SqlitePool;
 
 use crate::models::Plan;
 
+/// Inserts a new plan row, or updates an existing one if the `graph_id` already exists.
+///
+/// The upsert uses `ON CONFLICT(graph_id)`, which means the conflict key is the
+/// Microsoft Graph plan ID, not the local UUID. When a conflict occurs, only `title`
+/// and `synced_at` are updated; the local `id` (primary key) is preserved. This
+/// ensures that foreign-key references from the `tasks` and `time_entries` tables
+/// remain valid across repeated syncs.
+///
+/// If the plan is genuinely new (no row with the same `graph_id` exists), the full
+/// row is inserted verbatim, including the locally generated UUID in `id`.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `plan`: The [`Plan`] to insert or update. `plan.graph_id` is the conflict key.
+///
+/// # Errors
+///
+/// Returns an error if the `SQLite` statement fails (e.g. a constraint other than
+/// the `graph_id` unique index is violated).
 pub async fn upsert_plan(pool: &SqlitePool, plan: &Plan) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
@@ -21,6 +41,24 @@ pub async fn upsert_plan(pool: &SqlitePool, plan: &Plan) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Returns all plans currently stored in the local database, ordered alphabetically by title.
+///
+/// This function reads entirely from `SQLite` — no network request is made. It is called
+/// by [`crate::commands::sync::list_plans`] to hydrate the frontend plan dropdown after
+/// the app starts and after each sync completes.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+///
+/// # Returns
+///
+/// `Ok(plans)` — a `Vec<Plan>` sorted by `title ASC`, possibly empty if no plans have
+/// been synced yet.
+///
+/// # Errors
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn list_plans(pool: &SqlitePool) -> anyhow::Result<Vec<Plan>> {
     let rows = sqlx::query_as!(
         Plan,
@@ -31,6 +69,24 @@ pub async fn list_plans(pool: &SqlitePool) -> anyhow::Result<Vec<Plan>> {
     Ok(rows)
 }
 
+/// Looks up a plan by its Microsoft Graph ID.
+///
+/// Used during sync to resolve the local UUID of a plan that was just upserted,
+/// so that task rows can be created with the correct `plan_id` foreign key.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `graph_id`: The Microsoft Graph plan ID to look up.
+///
+/// # Returns
+///
+/// - `Ok(Some(plan))` if a row with the given `graph_id` exists.
+/// - `Ok(None)` if no such row is found.
+///
+/// # Errors
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn get_plan_by_graph_id(
     pool: &SqlitePool,
     graph_id: &str,
@@ -45,6 +101,24 @@ pub async fn get_plan_by_graph_id(
     Ok(row)
 }
 
+/// Looks up a plan by its local `SQLite` primary key (UUID).
+///
+/// Used in report generation to resolve the display title of a plan when building
+/// [`crate::commands::reports::ReportEntry`] rows from raw `time_entries` data.
+///
+/// # Arguments
+///
+/// - `pool`: Reference to the shared `SQLite` connection pool.
+/// - `id`: The local UUID primary key of the plan to fetch.
+///
+/// # Returns
+///
+/// - `Ok(Some(plan))` if a plan with the given local `id` exists.
+/// - `Ok(None)` if no plan with that `id` is found.
+///
+/// # Errors
+///
+/// Returns an error if the `SQLite` query fails.
 pub async fn get_plan(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Plan>> {
     let row = sqlx::query_as!(
         Plan,
@@ -54,4 +128,86 @@ pub async fn get_plan(pool: &SqlitePool, id: &str) -> anyhow::Result<Option<Plan
     .fetch_optional(pool)
     .await?;
     Ok(row)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::test_helpers::test_pool;
+    use crate::models::Plan;
+    use uuid::Uuid;
+
+    fn make_plan(graph_id: &str, title: &str) -> Plan {
+        Plan {
+            id: Uuid::new_v4().to_string(),
+            graph_id: graph_id.to_owned(),
+            title: title.to_owned(),
+            synced_at: "2024-01-01T00:00:00Z".to_owned(),
+        }
+    }
+
+    #[tokio::test]
+    async fn upsert_plan_insert() {
+        let pool = test_pool().await;
+        let plan = make_plan("g1", "My Plan");
+        upsert_plan(&pool, &plan).await.expect("upsert plan");
+
+        let fetched = get_plan(&pool, &plan.id).await.expect("get plan");
+        assert!(fetched.is_some());
+        assert_eq!(fetched.expect("plan should be Some").graph_id, "g1");
+    }
+
+    #[tokio::test]
+    async fn upsert_plan_update() {
+        let pool = test_pool().await;
+        let plan = make_plan("g1", "Original Title");
+        upsert_plan(&pool, &plan).await.expect("upsert plan");
+
+        // Re-upsert same graph_id with a new title and synced_at
+        let updated = Plan {
+            id: Uuid::new_v4().to_string(), // different local id — conflict is on graph_id
+            graph_id: "g1".to_owned(),
+            title: "Updated Title".to_owned(),
+            synced_at: "2024-06-01T00:00:00Z".to_owned(),
+        };
+        upsert_plan(&pool, &updated)
+            .await
+            .expect("upsert updated plan");
+
+        let fetched = get_plan_by_graph_id(&pool, "g1")
+            .await
+            .expect("get plan by graph id")
+            .expect("plan should exist");
+        assert_eq!(fetched.title, "Updated Title");
+        assert_eq!(fetched.synced_at, "2024-06-01T00:00:00Z");
+    }
+
+    #[tokio::test]
+    async fn list_plans_empty() {
+        let pool = test_pool().await;
+        let plans = list_plans(&pool).await.expect("list plans");
+        assert!(plans.is_empty());
+    }
+
+    #[tokio::test]
+    async fn list_plans_multiple() {
+        let pool = test_pool().await;
+        let p1 = make_plan("g1", "Alpha");
+        let p2 = make_plan("g2", "Beta");
+        upsert_plan(&pool, &p1).await.expect("upsert p1");
+        upsert_plan(&pool, &p2).await.expect("upsert p2");
+
+        let plans = list_plans(&pool).await.expect("list plans");
+        assert_eq!(plans.len(), 2);
+        let ids: Vec<&str> = plans.iter().map(|p| p.id.as_str()).collect();
+        assert!(ids.contains(&p1.id.as_str()));
+        assert!(ids.contains(&p2.id.as_str()));
+    }
+
+    #[tokio::test]
+    async fn get_plan_missing() {
+        let pool = test_pool().await;
+        let result = get_plan(&pool, "nonexistent-id").await.expect("get plan");
+        assert!(result.is_none());
+    }
 }
