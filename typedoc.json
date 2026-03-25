@@ -9,8 +9,10 @@
   ],
   "entryPointStrategy": "expand",
   "tsconfig": "tsconfig.json",
-  "out": "docs-site/frontend-api",
-  "readme": "README.md",
+  "out": "docs-page/frontend-api",
+  "readme": "docs/frontend-api/index.md",
+  "projectDocuments": ["docs/frontend-api/guides/*.md"],
+  "searchInDocuments": true,
   "exclude": [
     "**/*.svelte",
     "**/*.stories.*",

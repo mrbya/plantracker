@@ -15,4 +15,4 @@ vite.config.ts.timestamp-*
 .bordel
 *storybook.log
 storybook-static
-/docs-site
+/docs-page

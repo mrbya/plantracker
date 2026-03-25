@@ -163,6 +163,10 @@ docs:
 
 # Runs and opens generated project docs in a http server.
 docs-show:
+    #!/usr/bin/env bash
+    if [ ! -f docs-page/index.html ]; then
+        just docs
+    fi
     pnpm docs:show
 
 # Runs formating, tests and checks necessary before a commit.

@@ -22,10 +22,10 @@
     "lint": "eslint .",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "docs:api": "typedoc --options typedoc.json",
-    "docs:ui": "storybook build --output-dir docs-site/frontend-ui",
+    "docs:api": "typedoc",
+    "docs:ui": "storybook build --output-dir docs-page/frontend-ui",
     "docs:build": "node scripts/build-docs.mjs",
-    "docs:show": "http-server docs-site -o"
+    "docs:show": "http-server docs-page -o"
   },
   "license": "MIT",
   "dependencies": {
