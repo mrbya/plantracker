@@ -76,6 +76,7 @@ audit:
 # Runs rust unit tests.
 [working-directory: 'src-tauri']
 test-rs *FLAGS:
+    SQLX_OFFLINE=true cargo test --workspace --doc
     SQLX_OFFLINE=true cargo test {{FLAGS}}
 
 # Runs frontend unit tests.
@@ -87,9 +88,19 @@ test:
     @just test-rs
     @just test-js
 
-# Runs frontend unit tests with coverage report.
-test-js-coverage:
+# Runs tests with a coverage report for js/ts/svelte sources.
+test-cov-js:
     pnpm test:coverage
+
+# Runs tests with a coverage report for rs sources.
+[working-directory: 'src-tauri']
+test-cov-rs *FLAGS:
+    cargo llvm-cov nextest --all-features --workspace {{FLAGS}}
+
+# Runs tests with a coverage report for rs sources.
+test-cov:
+    @just test-cov-js
+    @just test-cov-rs
 
 # Pre caches db queries.
 [working-directory: 'src-tauri']
@@ -122,8 +133,7 @@ build:
 build-windows:
     cargo tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc
 
-# A thorough codebase check ran before
-# commiting and ci builds.
+# A thorough codebase check ran before running ci-builds.
 thorough-check:
     @just fmt-js-check
     @just fmt-rs --check
@@ -134,13 +144,18 @@ thorough-check:
 index:
     pnpm index README.md
 
-# Runs all checks neccesary before a commit.
-# Checks formatting, code quality, and more
+# Generates documentation for rs sources.
+[working-directory: 'src-tauri']
+doc-rs *FLAGS:
+    RUSTDOCFLAGS="--default-theme ayu" cargo doc --no-deps --all-features --document-private-items --workspace {{FLAGS}}
+
+# Runs formating, tests and checks necessary before a commit.
 pre-commit:
+    @just fmt
     @just thorough-check
     @just unused
     @just audit
-    @just precache-check
+    @just precache
     @just test
     @just build
     @just index
@@ -152,12 +167,13 @@ test-ci:
     @just precache-check
     @just unused
     @just audit
-    @just test
+    @just test-cov
 
 # Full app build used by ci.
 ci-build:
     @just deps-ci
     @just build
+    @just build-windows
 
 # Generate SBOM for rs sources.
 [working-directory: 'src-tauri']
@@ -195,7 +211,7 @@ docker-linux:
     sudo docker push "${IMAGE}"
     sudo docker push "${IMAGE_LATEST}"
 
-# Initializes the project, installing all necessary tooling. Should be run once before beginning of development.
+# Initializes the project by installing all necessary tooling. Should be run once before beginning of development.
 init:
     echo # installing nightly, windows-msvc target and xwin
     rustup install nightly
@@ -214,7 +230,10 @@ init:
     echo # Installing sqlx cli for db migrations and pre-caching 
     cargo sqlx -V || cargo binstall sqlx-cli --no-confirm
 
-    echo # Installing things required by `just pre-commit` and other utilities
+    echo # Installing test, coverage, lint, audit and other utilities
+    rustup component add llvm-tools-preview
+    cargo binstall cargo-llvm-cov --no-confirm
+    cargo nextest -V || cargo binstall nextest --no-confirm
     cargo udeps -V || cargo binstall cargo-udeps --no-confirm
     cargo audit fix -V || cargo install cargo-audit --locked --features=fix
     cargo sbom -V || cargo binstall cargo-sbom --no-confirm

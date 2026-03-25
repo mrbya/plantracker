@@ -49,7 +49,6 @@ build:
     - if: '$CI_COMMIT_TAG'
   script:
     - just ci-build
-    - just build-windows
   artifacts:
     name: "platracker-$CI_COMMIT_SHORT_SHA"
     paths:

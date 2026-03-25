@@ -40,4 +40,8 @@ RUN cargo install cargo-sbom && \
     cargo install cargo-udeps && \
     cargo install cargo-audit --locked --features=fix
 
+RUN rustup component add llvm-tools-preview && \
+    cargo install cargo-llvm-cov && \
+    cargo install cargo-nextest --locked
+
 CMD ["bash"]
