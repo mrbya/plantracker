@@ -205,6 +205,7 @@ docs-ci:
 # Runs formating, tests and checks necessary before a commit.
 pre-commit:
     @just fmt
+    @just i18n
     @just thorough-check
     @just unused
     @just audit
