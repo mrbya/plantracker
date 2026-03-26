@@ -197,8 +197,9 @@ docs-show:
     fi
     pnpm docs:show
 
-docs-ci:
+ci-docs:
     @just deps-ci
+    @just check
     @just docs
     mv ./docs-page ./public
 
@@ -206,10 +207,10 @@ docs-ci:
 pre-commit:
     @just fmt
     @just i18n
+    @just precache
     @just thorough-check
     @just unused
     @just audit
-    @just precache
     @just test
     @just index
 

@@ -11,7 +11,7 @@
     "format-check": "prettier --check ./src/.",
     "unused": "knip --production --dependencies",
     "index": "markdown-toc -i",
-    "check:eslint": "eslint ./src --fix",
+    "check:eslint": "eslint ./src",
     "check:svelte": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check": "pnpm check:eslint && pnpm check:svelte",
     "check:watch": "check:eslint && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

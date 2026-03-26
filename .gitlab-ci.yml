@@ -12,6 +12,7 @@ workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_TAG'
+    - if: $[[ inputs.build_docs ]] == true
 
 stages:
   - test
@@ -108,9 +109,6 @@ docs:
   rules:
     - if: $[[ inputs.build_docs ]] == true
   script:
-    - just check
-    - just docs-ci
-  artifacts:
-    paths:
-      - public
+    - just ci-docs
+  pages: true
 
