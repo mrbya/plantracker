@@ -23,6 +23,7 @@
    */
   import Button from "$lib/components/ui/Button.svelte";
   import { login } from "$lib/stores/auth";
+  import * as m from "$lib/paraglide/messages";
 
   let loading = $state(false);
 
@@ -38,8 +39,8 @@
 
 <div class="login-shell">
   <div class="login-card">
-    <h1 class="app-name">PlanTracker</h1>
-    <p class="tagline">Track time spent on Microsoft Planner tasks.</p>
+    <h1 class="app-name">{m.login_title()}</h1>
+    <p class="tagline">{m.login_tagline()}</p>
 
     <Button
       variant="primary"
@@ -47,7 +48,7 @@
       disabled={loading}
       onclick={handleLogin}
     >
-      Sign in with Microsoft
+      {m.login_sign_in_btn()}
     </Button>
   </div>
 </div>

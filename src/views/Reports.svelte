@@ -45,6 +45,7 @@
   import type { ReportResult } from "$lib/types";
   import { formatDateTime } from "$lib/utils/datetime";
   import { formatDuration } from "$lib/utils/duration";
+  import * as m from "$lib/paraglide/messages";
 
   // ---------------------------------------------------------------------------
   // Month helpers
@@ -83,13 +84,13 @@
   let selectedTaskId = $state($selectedTask?.id ?? "");
 
   const planOptions = $derived([
-    { value: "", label: "All plans" },
+    { value: "", label: m.reports_all_plans() },
     ...$plans.map((p) => ({ value: p.id, label: p.title })),
   ]);
   const taskOptions = $derived(
     selectedPlanId
       ? [
-          { value: "", label: "All tasks" },
+          { value: "", label: m.reports_all_tasks() },
           ...($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
             value: t.id,
             label: t.title,
@@ -148,7 +149,7 @@
     exporting = true;
     try {
       const path = await exportReportCsv(report);
-      addSuccess("Exported to " + path);
+      addSuccess(m.toast_export_saved({ path }));
     } catch (e) {
       const msg = String(e);
       if (!msg.includes("Export cancelled")) {
@@ -165,7 +166,7 @@
   <section class="controls">
     <!-- Date range -->
     <div class="range-group">
-      <span class="range-label">From</span>
+      <span class="range-label">{m.reports_from()}</span>
       <div class="range-fields">
         <Select
           options={MONTH_OPTIONS}
@@ -177,7 +178,7 @@
     </div>
 
     <div class="range-group">
-      <span class="range-label">To</span>
+      <span class="range-label">{m.reports_to()}</span>
       <div class="range-fields">
         <Select
           options={MONTH_OPTIONS}
@@ -191,7 +192,7 @@
     <!-- Plan / task filter -->
     <div class="filter-group">
       <div class="field">
-        <label class="label" for="plan-select">Plan</label>
+        <label class="label" for="plan-select">{m.label_plan()}</label>
         <SearchableSelect
           id="plan-select"
           options={planOptions}
@@ -200,12 +201,14 @@
         />
       </div>
       <div class="field">
-        <label class="label" for="task-select">Task</label>
+        <label class="label" for="task-select">{m.label_task()}</label>
         <SearchableSelect
           id="task-select"
           options={taskOptions}
           bind:value={selectedTaskId}
-          placeholder={selectedPlanId ? undefined : "Select a plan first"}
+          placeholder={selectedPlanId
+            ? undefined
+            : m.placeholder_select_plan_first()}
           disabled={!selectedPlanId}
           onchange={onTaskChange}
         />
@@ -220,7 +223,7 @@
         disabled={generating}
         onclick={handleGenerate}
       >
-        Generate
+        {m.reports_generate()}
       </Button>
       <Button
         variant="ghost"
@@ -228,7 +231,7 @@
         disabled={exporting || !report}
         onclick={handleExport}
       >
-        Export CSV
+        {m.reports_export_csv()}
       </Button>
     </div>
   </section>
@@ -240,21 +243,22 @@
         <h3 class="subject-label">{report.subjectLabel}</h3>
 
         {#if report.entries.length === 0}
-          <EmptyState message="No entries found for this period." />
+          <EmptyState message={m.reports_empty()} />
         {:else}
           <div class="grand-total">
-            Total: <strong>{formatDuration(report.grandTotalSeconds)}</strong>
+            {m.reports_grand_total()}:
+            <strong>{formatDuration(report.grandTotalSeconds)}</strong>
           </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Task</th>
-                  <th>Plan</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th class="num-col">Duration</th>
-                  <th>Notes</th>
+                  <th>{m.label_task()}</th>
+                  <th>{m.label_plan()}</th>
+                  <th>{m.label_start()}</th>
+                  <th>{m.label_end()}</th>
+                  <th class="num-col">{m.label_duration()}</th>
+                  <th>{m.label_notes()}</th>
                 </tr>
               </thead>
               <tbody>

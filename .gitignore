@@ -17,3 +17,4 @@ vite.config.ts.timestamp-*
 storybook-static
 /docs-page
 /public
+/src/lib/paraglide

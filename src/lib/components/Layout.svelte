@@ -32,19 +32,23 @@
     BarChart2,
     Settings as SettingsIcon,
     LogOut,
-    Icon,
   } from "lucide-svelte";
+  import * as m from "$lib/paraglide/messages";
 
   type View = "time-tracking" | "manual-entry" | "reports" | "settings";
 
   let activeView = $state<View>("time-tracking");
 
-  const navItems: { id: View; icon: typeof Icon; label: string }[] = [
-    { id: "time-tracking", icon: Timer, label: "Time Tracking" },
-    { id: "manual-entry", icon: PencilLine, label: "Manual Entry" },
-    { id: "reports", icon: BarChart2, label: "Reports" },
-    { id: "settings", icon: SettingsIcon, label: "Settings" },
-  ];
+  const navItems = $derived([
+    { id: "time-tracking" as View, icon: Timer, label: m.nav_time_tracking() },
+    {
+      id: "manual-entry" as View,
+      icon: PencilLine,
+      label: m.nav_manual_entry(),
+    },
+    { id: "reports" as View, icon: BarChart2, label: m.nav_reports() },
+    { id: "settings" as View, icon: SettingsIcon, label: m.nav_settings() },
+  ]);
 
   const initials = $derived(
     $userDisplayName
@@ -81,7 +85,11 @@
       <div class="avatar" title={$userDisplayName ?? "User"}>
         {initials}
       </div>
-      <button class="nav-btn sign-out" title="Sign out" onclick={logout}>
+      <button
+        class="nav-btn sign-out"
+        title={m.nav_sign_out()}
+        onclick={logout}
+      >
         <span class="icon">
           <LogOut size={20} strokeWidth={1.75} />
         </span>

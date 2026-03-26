@@ -1,0 +1,102 @@
+{
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+
+    "nav_time_tracking":  "Sledovanie času",
+    "nav_manual_entry":   "Manuálny záznam",
+    "nav_reports":        "Reporty",
+    "nav_settings":       "Nastavenia",
+    "nav_sign_out":       "Odhlásiť sa",
+
+    "login_title":        "PlanTracker",
+    "login_tagline":      "Sledujte čas na úlohách Microsoft Planner",
+    "login_sign_in_btn":  "Prihlásiť sa cez Microsoft",
+
+    "timer_start":        "Spustiť časovač",
+    "timer_stop":         "Zastaviť — {elapsed}",
+    "timer_running":      "Beží…",
+
+    "label_plan":         "Plán",
+    "label_task":         "Úloha",
+    "label_start":        "Začiatok",
+    "label_end":          "Koniec",
+    "label_duration":     "Trvanie",
+    "label_notes":        "Poznámky",
+    "label_no_task":      "Bez konkrétnej úlohy",
+
+    "placeholder_select_plan":       "Vyberte plán…",
+    "placeholder_select_task":       "Vyberte úlohu…",
+    "placeholder_select_plan_first": "Najprv vyberte plán",
+
+    "entries_title":          "Posledné záznamy",
+    "entries_empty":          "Zatiaľ žiadne záznamy. Vyberte plán a spustite časovač.",
+    "entries_loading":        "Načítavanie…",
+    "entries_delete_confirm": "Naozaj?",
+    "entries_delete_cancel":  "Zrušiť",
+
+    "manual_new_entry":  "Nový záznam",
+    "manual_edit_entry": "Upraviť záznam",
+    "manual_save":       "Uložiť záznam",
+    "manual_cancel":     "Zrušiť",
+    "manual_update":     "Aktualizovať záznam",
+
+    "reports_title":       "Reporty",
+    "reports_from":        "Od",
+    "reports_to":          "Do",
+    "reports_generate":    "Generovať",
+    "reports_export_csv":  "Exportovať CSV",
+    "reports_col_month":   "Mesiac",
+    "reports_col_hours":   "Hodiny",
+    "reports_col_minutes": "Minúty",
+    "reports_grand_total": "Celkový súčet",
+    "reports_empty":       "Pre zvolený rozsah neboli nájdené žiadne záznamy.",
+    "reports_all_plans":   "Všetky plány",
+    "reports_all_tasks":   "Všetky úlohy",
+
+    "settings_title":              "Nastavenia",
+    "settings_section_entries":    "Záznamy",
+    "settings_section_sync":       "Synchronizácia",
+    "settings_section_storage":    "Úložisko",
+    "settings_section_account":    "Účet",
+    "settings_section_appearance": "Vzhľad",
+    "settings_section_language":   "Jazyk",
+
+    "settings_entries_limit_label": "Limit posledných záznamov",
+    "settings_entries_limit_desc":  "Maximálny počet záznamov zobrazených v sledovacích pohľadoch.",
+
+    "settings_sync_frequency_label": "Frekvencia synchronizácie",
+    "settings_sync_frequency_desc":  "Ako často automaticky synchronizovať plány a úlohy z Microsoftu.",
+    "settings_sync_now":             "Synchronizovať",
+    "settings_sync_last":            "Posledná synchronizácia: {time}",
+    "settings_sync_never":           "Ešte nesynchronizované",
+    "settings_sync_manual":          "Len manuálne",
+    "settings_sync_30min":           "Každých 30 minút",
+    "settings_sync_1hour":           "Každú hodinu",
+
+    "settings_storage_label": "Dátový adresár",
+    "settings_storage_desc":  "Umiestnenie lokálnej databázy a konfiguračných súborov.",
+    "settings_open_folder":   "Otvoriť priečinok",
+
+    "settings_account_signed_in_as": "Prihlásený ako",
+    "settings_sign_out":             "Odhlásiť sa",
+
+    "settings_theme_label":  "Motív",
+    "settings_theme_desc":   "Farebná schéma aplikácie.",
+    "settings_theme_dark":   "Tmavý",
+    "settings_theme_light":  "Svetlý",
+    "settings_theme_system": "Podľa systému",
+
+    "settings_language_label": "Jazyk",
+    "settings_language_desc":  "Jazyk používaný v celej aplikácii.",
+
+    "toast_entry_saved":     "Záznam uložený",
+    "toast_entry_updated":   "Záznam aktualizovaný",
+    "toast_entry_deleted":   "Záznam vymazaný",
+    "toast_sync_success":    "Synchronizácia dokončená",
+    "toast_export_saved":    "Report exportovaný do {path}",
+    "toast_sign_out_failed": "Odhlásenie zlyhalo: {error}",
+    "toast_sign_in_failed":  "Prihlásenie zlyhalo: {error}",
+    "toast_sync_failed":     "Synchronizácia zlyhala: {error}",
+    "toast_load_failed":     "Načítanie záznamov zlyhalo: {error}",
+    "toast_delete_failed":   "Vymazanie záznamu zlyhalo: {error}",
+    "toast_timer_restored":  "Časovač obnovený z predchádzajúcej relácie"
+}

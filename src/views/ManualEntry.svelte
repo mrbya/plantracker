@@ -55,6 +55,7 @@
   import type { TimeEntry } from "$lib/types";
   import { formatDateTime } from "$lib/utils/datetime";
   import { formatDuration } from "$lib/utils/duration";
+  import * as m from "$lib/paraglide/messages";
 
   // ---------------------------------------------------------------------------
   // Dropdown state
@@ -69,7 +70,7 @@
   const taskOptions = $derived(
     selectedPlanId
       ? [
-          { value: "", label: "No specific task" },
+          { value: "", label: m.label_no_task() },
           ...($tasksByPlan[selectedPlanId] ?? []).map((t) => ({
             value: t.id,
             label: t.title,
@@ -219,7 +220,7 @@
           endTime: endIso,
           notes: notes || undefined,
         });
-        addSuccess("Entry updated");
+        addSuccess(m.toast_entry_updated());
       } else {
         await createManualEntry({
           planId: selectedPlanId,
@@ -228,7 +229,7 @@
           endTime: endIso,
           notes: notes || undefined,
         });
-        addSuccess("Entry saved");
+        addSuccess(m.toast_entry_saved());
       }
       resetForm();
       await loadEntries();
@@ -268,7 +269,7 @@
         limit: $entriesLimit,
       });
     } catch (e) {
-      addError("Failed to load entries: " + String(e));
+      addError(m.toast_load_failed({ error: String(e) }));
     } finally {
       loadingEntries = false;
     }
@@ -278,11 +279,11 @@
     confirmDeleteId = null;
     try {
       await deleteEntry(id);
-      addSuccess("Entry deleted");
+      addSuccess(m.toast_entry_deleted());
       if (editingId === id) resetForm();
       await loadEntries();
     } catch (e) {
-      addError("Failed to delete entry: " + String(e));
+      addError(m.toast_delete_failed({ error: String(e) }));
     }
   }
 
@@ -309,18 +310,20 @@
 <div class="view">
   <!-- Form -->
   <section class="form-section">
-    <h3 class="section-title">{isEditing ? "Edit Entry" : "New Entry"}</h3>
+    <h3 class="section-title">
+      {isEditing ? m.manual_edit_entry() : m.manual_new_entry()}
+    </h3>
 
     <div class="form">
       <!-- Plan / Task row -->
       <div class="row-2">
         <div class="field">
-          <label class="label" for="plan-select">Plan</label>
+          <label class="label" for="plan-select">{m.label_plan()}</label>
           <SearchableSelect
             id="plan-select"
             options={planOptions}
             bind:value={selectedPlanId}
-            placeholder="Select a plan…"
+            placeholder={m.placeholder_select_plan()}
             onchange={onPlanChange}
           />
           {#if planError}
@@ -328,12 +331,14 @@
           {/if}
         </div>
         <div class="field">
-          <label class="label" for="task-select">Task</label>
+          <label class="label" for="task-select">{m.label_task()}</label>
           <SearchableSelect
             id="task-select"
             options={taskOptions}
             bind:value={selectedTaskId}
-            placeholder={selectedPlanId ? undefined : "Select a plan first"}
+            placeholder={selectedPlanId
+              ? undefined
+              : m.placeholder_select_plan_first()}
             disabled={!selectedPlanId}
             onchange={onTaskChange}
           />
@@ -342,7 +347,7 @@
 
       <!-- Start -->
       <div class="picker-group">
-        <span class="picker-label">Start</span>
+        <span class="picker-label">{m.label_start()}</span>
         <div class="picker-row" class:has-error={!!startError}>
           <input
             class="picker-input date-input"
@@ -364,7 +369,7 @@
 
       <!-- End -->
       <div class="picker-group">
-        <span class="picker-label">End</span>
+        <span class="picker-label">{m.label_end()}</span>
         <div class="picker-row" class:has-error={!!endError}>
           <input
             class="picker-input date-input"
@@ -386,7 +391,7 @@
 
       <!-- Notes -->
       <div class="field">
-        <label class="label" for="notes-input">Notes (optional)</label>
+        <label class="label" for="notes-input">{m.label_notes()}</label>
         <textarea
           id="notes-input"
           class="notes-textarea"
@@ -404,11 +409,11 @@
           disabled={submitting}
           onclick={handleSubmit}
         >
-          {isEditing ? "Update Entry" : "Save Entry"}
+          {isEditing ? m.manual_update() : m.manual_save()}
         </Button>
         {#if isEditing}
           <Button variant="ghost" disabled={submitting} onclick={resetForm}>
-            Cancel
+            {m.manual_cancel()}
           </Button>
         {/if}
       </div>
@@ -417,27 +422,25 @@
 
   <!-- Recent entries -->
   <section class="entries-section">
-    <h3 class="section-title">Recent Entries</h3>
+    <h3 class="section-title">{m.entries_title()}</h3>
 
     {#if loadingEntries}
       <div class="loading-row">
         <Spinner size="sm" />
-        <span>Loading…</span>
+        <span>{m.entries_loading()}</span>
       </div>
     {:else if entries.length === 0}
-      <EmptyState
-        message="No entries yet. Fill in the form above to add one."
-      />
+      <EmptyState message={m.entries_empty()} />
     {:else}
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Task</th>
-              <th>Plan</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Duration</th>
+              <th>{m.label_task()}</th>
+              <th>{m.label_plan()}</th>
+              <th>{m.label_start()}</th>
+              <th>{m.label_end()}</th>
+              <th>{m.label_duration()}</th>
               <th></th>
             </tr>
           </thead>
@@ -447,7 +450,7 @@
               {@const planTitle = planById[entry.planId] ?? "—"}
               {@const dur = entryDurationSeconds(entry)}
               <tr class:editing-row={editingId === entry.id}>
-                <td>{task?.title ?? "No specific task"}</td>
+                <td>{task?.title ?? m.label_no_task()}</td>
                 <td class="muted">{planTitle}</td>
                 <td class="muted">{formatDateTime(entry.startTime)}</td>
                 <td class="muted"
@@ -460,11 +463,13 @@
                     <span class="confirm-row">
                       <button
                         class="text-btn danger"
-                        onclick={() => handleDelete(entry.id)}>Sure?</button
+                        onclick={() => handleDelete(entry.id)}
+                        >{m.entries_delete_confirm()}</button
                       >
                       <button
                         class="text-btn"
-                        onclick={() => (confirmDeleteId = null)}>Cancel</button
+                        onclick={() => (confirmDeleteId = null)}
+                        >{m.entries_delete_cancel()}</button
                       >
                     </span>
                   {:else}

@@ -21,6 +21,7 @@ import { listPlans, listTasksForPlan, syncPlansAndTasks } from "$lib/api";
 import { addError, addSuccess } from "$lib/stores/notifications";
 import { saveLastSyncedAt } from "$lib/stores/settings";
 import type { Plan, Task } from "$lib/types";
+import * as m from "$lib/paraglide/messages";
 
 /** All plans currently cached in the local SQLite database. */
 export const plans = writable<Plan[]>([]);
@@ -74,13 +75,11 @@ export function selectTask(task: Task): void {
  */
 export async function syncAndLoad(): Promise<void> {
   try {
-    const result = await syncPlansAndTasks();
-    addSuccess(
-      `Synced ${result.plansCount} plans and ${result.tasksCount} tasks`,
-    );
+    await syncPlansAndTasks();
+    addSuccess(m.toast_sync_success());
     saveLastSyncedAt(new Date().toISOString());
   } catch (e) {
-    addError("Sync failed: " + String(e));
+    addError(m.toast_sync_failed({ error: String(e) }));
     // Fall through to still load whatever is cached in SQLite.
   }
 

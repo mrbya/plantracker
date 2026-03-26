@@ -23,6 +23,7 @@ import {
 import { addError } from "$lib/stores/notifications";
 import { syncAndLoad } from "$lib/stores/planner";
 import type { AuthStatus } from "$lib/types";
+import * as m from "$lib/paraglide/messages";
 
 /** Internal store — not exported; use the derived stores below. */
 const authStatus = writable<AuthStatus | null>(null);
@@ -85,7 +86,7 @@ export async function login(): Promise<void> {
       syncAndLoad();
     }
   } catch (e) {
-    addError("Sign in failed: " + String(e));
+    addError(m.toast_sign_in_failed({ error: String(e) }));
   }
 }
 
@@ -101,6 +102,6 @@ export async function logout(): Promise<void> {
     await apiLogout();
     authStatus.set({ isAuthenticated: false, userDisplayName: null });
   } catch (e) {
-    addError("Sign out failed: " + String(e));
+    addError(m.toast_sign_out_failed({ error: String(e) }));
   }
 }

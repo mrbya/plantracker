@@ -2,7 +2,7 @@
   /**
    * Settings view — user preferences and account management.
    *
-   * Organised into five sections:
+   * Organised into six sections:
    *
    * | Section    | Controls                                              |
    * |------------|-------------------------------------------------------|
@@ -10,6 +10,7 @@
    * | Sync       | Auto-sync frequency (select); manual "Sync Now" button|
    * | Storage    | Data directory path display; "Open Folder" shortcut   |
    * | Appearance | Theme choice (dark / light / system)                  |
+   * | Language   | Language choice (en / sk / de)                        |
    * | Account    | Signed-in user name; "Sign Out" button                |
    *
    * Blur-vs-keystroke saving rationale:
@@ -40,7 +41,14 @@
     type SyncFrequency,
   } from "$lib/stores/settings";
   import { themeChoice, saveTheme, type ThemeChoice } from "$lib/stores/theme";
+  import {
+    saveLocale,
+    LOCALE_LABELS,
+    type AppLocale,
+  } from "$lib/stores/locale";
+  import { getLocale } from "$lib/paraglide/runtime";
   import { formatDateTime } from "$lib/utils/datetime";
+  import * as m from "$lib/paraglide/messages";
 
   // ---------------------------------------------------------------------------
   // Entries limit
@@ -61,11 +69,11 @@
   // Theme
   // ---------------------------------------------------------------------------
 
-  const THEME_OPTIONS = [
-    { value: "dark", label: "Dark" },
-    { value: "light", label: "Light" },
-    { value: "system", label: "System Default" },
-  ];
+  const THEME_OPTIONS = $derived([
+    { value: "dark", label: m.settings_theme_dark() },
+    { value: "light", label: m.settings_theme_light() },
+    { value: "system", label: m.settings_theme_system() },
+  ]);
 
   let themeValue = $state($themeChoice);
 
@@ -74,14 +82,29 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Language
+  // ---------------------------------------------------------------------------
+
+  const localeOptions = Object.entries(LOCALE_LABELS).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
+  let localeValue = $state(getLocale() as AppLocale);
+
+  async function onLocaleChange() {
+    await saveLocale(localeValue);
+  }
+
+  // ---------------------------------------------------------------------------
   // Sync frequency
   // ---------------------------------------------------------------------------
 
-  const SYNC_OPTIONS = [
-    { value: "manual", label: "Manual only" },
-    { value: "30min", label: "Every 30 minutes" },
-    { value: "1hour", label: "Every hour" },
-  ];
+  const SYNC_OPTIONS = $derived([
+    { value: "manual", label: m.settings_sync_manual() },
+    { value: "30min", label: m.settings_sync_30min() },
+    { value: "1hour", label: m.settings_sync_1hour() },
+  ]);
 
   let syncFreqValue = $state($syncFrequency);
 
@@ -106,8 +129,8 @@
   }
 
   function formatLastSynced(iso: string | null): string {
-    if (!iso) return "Never";
-    return formatDateTime(iso);
+    if (!iso) return m.settings_sync_never();
+    return m.settings_sync_last({ time: formatDateTime(iso) });
   }
 
   // ---------------------------------------------------------------------------
@@ -142,13 +165,11 @@
 <div class="view">
   <!-- Entries section -->
   <section class="settings-section">
-    <h3 class="section-title">Entries</h3>
+    <h3 class="section-title">{m.settings_section_entries()}</h3>
     <div class="setting-row">
       <div class="setting-info">
-        <span class="setting-label">Recent Entries Limit</span>
-        <span class="setting-desc"
-          >Number of entries shown in Time Tracking and Manual Entry</span
-        >
+        <span class="setting-label">{m.settings_entries_limit_label()}</span>
+        <span class="setting-desc">{m.settings_entries_limit_desc()}</span>
       </div>
       <div class="setting-control narrow">
         <Input type="number" bind:value={limitInput} onblur={onLimitBlur} />
@@ -158,14 +179,11 @@
 
   <!-- Sync section -->
   <section class="settings-section">
-    <h3 class="section-title">Sync</h3>
+    <h3 class="section-title">{m.settings_section_sync()}</h3>
     <div class="setting-row">
       <div class="setting-info">
-        <span class="setting-label">Sync Frequency</span>
-        <span class="setting-desc"
-          >How often to automatically sync plans and tasks from Microsoft
-          Planner</span
-        >
+        <span class="setting-label">{m.settings_sync_frequency_label()}</span>
+        <span class="setting-desc">{m.settings_sync_frequency_desc()}</span>
       </div>
       <div class="setting-control">
         <Select
@@ -178,10 +196,8 @@
 
     <div class="setting-row">
       <div class="setting-info">
-        <span class="setting-label">Manual Sync</span>
-        <span class="setting-desc"
-          >Last synced: {formatLastSynced($lastSyncedAt)}</span
-        >
+        <span class="setting-label">{m.settings_sync_now()}</span>
+        <span class="setting-desc">{formatLastSynced($lastSyncedAt)}</span>
       </div>
       <div class="setting-control">
         <Button
@@ -190,7 +206,7 @@
           disabled={syncing}
           onclick={handleSyncNow}
         >
-          Sync Now
+          {m.settings_sync_now()}
         </Button>
       </div>
     </div>
@@ -198,15 +214,15 @@
 
   <!-- Data directory section -->
   <section class="settings-section">
-    <h3 class="section-title">Storage</h3>
+    <h3 class="section-title">{m.settings_section_storage()}</h3>
     <div class="setting-row">
       <div class="setting-info">
-        <span class="setting-label">Data Directory</span>
+        <span class="setting-label">{m.settings_storage_label()}</span>
         <span class="setting-desc path-text">{dataDir || "—"}</span>
       </div>
       <div class="setting-control">
         <Button variant="ghost" disabled={!dataDir} onclick={handleOpenFolder}>
-          Open Folder
+          {m.settings_open_folder()}
         </Button>
       </div>
     </div>
@@ -214,13 +230,11 @@
 
   <!-- Appearance section -->
   <section class="settings-section">
-    <h3 class="section-title">Appearance</h3>
+    <h3 class="section-title">{m.settings_section_appearance()}</h3>
     <div class="setting-row">
       <div class="setting-info">
-        <span class="setting-label">Theme</span>
-        <span class="setting-desc"
-          >Controls the colour scheme of the application.</span
-        >
+        <span class="setting-label">{m.settings_theme_label()}</span>
+        <span class="setting-desc">{m.settings_theme_desc()}</span>
       </div>
       <div class="setting-control">
         <Select
@@ -232,16 +246,36 @@
     </div>
   </section>
 
-  <!-- Account section -->
+  <!-- Language section -->
   <section class="settings-section">
-    <h3 class="section-title">Account</h3>
+    <h3 class="section-title">{m.settings_section_language()}</h3>
     <div class="setting-row">
       <div class="setting-info">
-        <span class="setting-label">Signed in as</span>
+        <span class="setting-label">{m.settings_language_label()}</span>
+        <span class="setting-desc">{m.settings_language_desc()}</span>
+      </div>
+      <div class="setting-control">
+        <Select
+          options={localeOptions}
+          bind:value={localeValue}
+          onchange={onLocaleChange}
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Account section -->
+  <section class="settings-section">
+    <h3 class="section-title">{m.settings_section_account()}</h3>
+    <div class="setting-row">
+      <div class="setting-info">
+        <span class="setting-label">{m.settings_account_signed_in_as()}</span>
         <span class="setting-desc">{$userDisplayName ?? "—"}</span>
       </div>
       <div class="setting-control">
-        <Button variant="danger" onclick={logout}>Sign Out</Button>
+        <Button variant="danger" onclick={logout}
+          >{m.settings_sign_out()}</Button
+        >
       </div>
     </div>
   </section>

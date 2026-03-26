@@ -128,8 +128,14 @@ icons:
 dev *FLAGS:
     cargo tauri dev {{FLAGS}}
 
+# Compile Paraglide message files to src/lib/paraglide/ (run after adding new keys).
+i18n:
+    pnpx @inlang/paraglide-js compile \
+        --project ./project.inlang \
+        --outdir ./src/lib/paraglide
+
 # Builds app release.
-build:
+build: i18n
     cargo tauri build
 
 # Build app release setup for windows.

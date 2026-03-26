@@ -1,0 +1,102 @@
+{
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+
+    "nav_time_tracking":  "Zeiterfassung",
+    "nav_manual_entry":   "Manueller Eintrag",
+    "nav_reports":        "Berichte",
+    "nav_settings":       "Einstellungen",
+    "nav_sign_out":       "Abmelden",
+
+    "login_title":        "PlanTracker",
+    "login_tagline":      "Zeit für Microsoft Planner-Aufgaben erfassen",
+    "login_sign_in_btn":  "Mit Microsoft anmelden",
+
+    "timer_start":        "Timer starten",
+    "timer_stop":         "Stopp — {elapsed}",
+    "timer_running":      "Läuft…",
+
+    "label_plan":         "Plan",
+    "label_task":         "Aufgabe",
+    "label_start":        "Start",
+    "label_end":          "Ende",
+    "label_duration":     "Dauer",
+    "label_notes":        "Notizen",
+    "label_no_task":      "Keine spezifische Aufgabe",
+
+    "placeholder_select_plan":       "Plan auswählen…",
+    "placeholder_select_task":       "Aufgabe auswählen…",
+    "placeholder_select_plan_first": "Zuerst Plan auswählen",
+
+    "entries_title":          "Letzte Einträge",
+    "entries_empty":          "Noch keine Einträge. Plan auswählen und Timer starten.",
+    "entries_loading":        "Wird geladen…",
+    "entries_delete_confirm": "Sicher?",
+    "entries_delete_cancel":  "Abbrechen",
+
+    "manual_new_entry":  "Neuer Eintrag",
+    "manual_edit_entry": "Eintrag bearbeiten",
+    "manual_save":       "Eintrag speichern",
+    "manual_cancel":     "Abbrechen",
+    "manual_update":     "Eintrag aktualisieren",
+
+    "reports_title":       "Berichte",
+    "reports_from":        "Von",
+    "reports_to":          "Bis",
+    "reports_generate":    "Generieren",
+    "reports_export_csv":  "CSV exportieren",
+    "reports_col_month":   "Monat",
+    "reports_col_hours":   "Stunden",
+    "reports_col_minutes": "Minuten",
+    "reports_grand_total": "Gesamtsumme",
+    "reports_empty":       "Für den gewählten Zeitraum wurden keine Einträge gefunden.",
+    "reports_all_plans":   "Alle Pläne",
+    "reports_all_tasks":   "Alle Aufgaben",
+
+    "settings_title":              "Einstellungen",
+    "settings_section_entries":    "Einträge",
+    "settings_section_sync":       "Synchronisierung",
+    "settings_section_storage":    "Speicher",
+    "settings_section_account":    "Konto",
+    "settings_section_appearance": "Erscheinungsbild",
+    "settings_section_language":   "Sprache",
+
+    "settings_entries_limit_label": "Limit für letzte Einträge",
+    "settings_entries_limit_desc":  "Maximale Anzahl der in den Tracking-Ansichten angezeigten Einträge.",
+
+    "settings_sync_frequency_label": "Synchronisierungsintervall",
+    "settings_sync_frequency_desc":  "Wie oft Pläne und Aufgaben automatisch aus Microsoft synchronisiert werden.",
+    "settings_sync_now":             "Jetzt synchronisieren",
+    "settings_sync_last":            "Zuletzt synchronisiert: {time}",
+    "settings_sync_never":           "Noch nicht synchronisiert",
+    "settings_sync_manual":          "Nur manuell",
+    "settings_sync_30min":           "Alle 30 Minuten",
+    "settings_sync_1hour":           "Jede Stunde",
+
+    "settings_storage_label": "Datenverzeichnis",
+    "settings_storage_desc":  "Speicherort der lokalen Datenbank und Konfigurationsdateien.",
+    "settings_open_folder":   "Ordner öffnen",
+
+    "settings_account_signed_in_as": "Angemeldet als",
+    "settings_sign_out":             "Abmelden",
+
+    "settings_theme_label":  "Design",
+    "settings_theme_desc":   "Farbschema der Anwendung.",
+    "settings_theme_dark":   "Dunkel",
+    "settings_theme_light":  "Hell",
+    "settings_theme_system": "Systemstandard",
+
+    "settings_language_label": "Sprache",
+    "settings_language_desc":  "In der gesamten Anwendung verwendete Sprache.",
+
+    "toast_entry_saved":     "Eintrag gespeichert",
+    "toast_entry_updated":   "Eintrag aktualisiert",
+    "toast_entry_deleted":   "Eintrag gelöscht",
+    "toast_sync_success":    "Synchronisierung abgeschlossen",
+    "toast_export_saved":    "Bericht exportiert nach {path}",
+    "toast_sign_out_failed": "Abmeldung fehlgeschlagen: {error}",
+    "toast_sign_in_failed":  "Anmeldung fehlgeschlagen: {error}",
+    "toast_sync_failed":     "Synchronisierung fehlgeschlagen: {error}",
+    "toast_load_failed":     "Einträge konnten nicht geladen werden: {error}",
+    "toast_delete_failed":   "Eintrag konnte nicht gelöscht werden: {error}",
+    "toast_timer_restored":  "Timer aus vorheriger Sitzung wiederhergestellt"
+}

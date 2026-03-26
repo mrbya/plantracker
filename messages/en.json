@@ -1,0 +1,102 @@
+{
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+
+    "nav_time_tracking":  "Time Tracking",
+    "nav_manual_entry":   "Manual Entry",
+    "nav_reports":        "Reports",
+    "nav_settings":       "Settings",
+    "nav_sign_out":       "Sign out",
+
+    "login_title":        "PlanTracker",
+    "login_tagline":      "Track time on Microsoft Planner tasks",
+    "login_sign_in_btn":  "Sign in with Microsoft",
+
+    "timer_start":        "Start Timer",
+    "timer_stop":         "Stop — {elapsed}",
+    "timer_running":      "Running…",
+
+    "label_plan":         "Plan",
+    "label_task":         "Task",
+    "label_start":        "Start",
+    "label_end":          "End",
+    "label_duration":     "Duration",
+    "label_notes":        "Notes",
+    "label_no_task":      "No specific task",
+
+    "placeholder_select_plan":       "Select a plan…",
+    "placeholder_select_task":       "Select a task…",
+    "placeholder_select_plan_first": "Select a plan first",
+
+    "entries_title":          "Recent Entries",
+    "entries_empty":          "No entries yet. Select a plan and start a timer.",
+    "entries_loading":        "Loading…",
+    "entries_delete_confirm": "Sure?",
+    "entries_delete_cancel":  "Cancel",
+
+    "manual_new_entry":  "New Entry",
+    "manual_edit_entry": "Edit Entry",
+    "manual_save":       "Save Entry",
+    "manual_cancel":     "Cancel",
+    "manual_update":     "Update Entry",
+
+    "reports_title":       "Reports",
+    "reports_from":        "From",
+    "reports_to":          "To",
+    "reports_generate":    "Generate",
+    "reports_export_csv":  "Export CSV",
+    "reports_col_month":   "Month",
+    "reports_col_hours":   "Hours",
+    "reports_col_minutes": "Minutes",
+    "reports_grand_total": "Grand Total",
+    "reports_empty":       "No entries found for the selected range.",
+    "reports_all_plans":   "All plans",
+    "reports_all_tasks":   "All tasks",
+
+    "settings_title":              "Settings",
+    "settings_section_entries":    "Entries",
+    "settings_section_sync":       "Sync",
+    "settings_section_storage":    "Storage",
+    "settings_section_account":    "Account",
+    "settings_section_appearance": "Appearance",
+    "settings_section_language":   "Language",
+
+    "settings_entries_limit_label": "Recent Entries Limit",
+    "settings_entries_limit_desc":  "Maximum number of entries shown in the tracking views.",
+
+    "settings_sync_frequency_label": "Sync Frequency",
+    "settings_sync_frequency_desc":  "How often to automatically sync plans and tasks from Microsoft.",
+    "settings_sync_now":             "Sync Now",
+    "settings_sync_last":            "Last synced: {time}",
+    "settings_sync_never":           "Never synced",
+    "settings_sync_manual":          "Manual only",
+    "settings_sync_30min":           "Every 30 minutes",
+    "settings_sync_1hour":           "Every hour",
+
+    "settings_storage_label": "Data Directory",
+    "settings_storage_desc":  "Location of the local database and configuration files.",
+    "settings_open_folder":   "Open Folder",
+
+    "settings_account_signed_in_as": "Signed in as",
+    "settings_sign_out":             "Sign Out",
+
+    "settings_theme_label":  "Theme",
+    "settings_theme_desc":   "Controls the colour scheme of the application.",
+    "settings_theme_dark":   "Dark",
+    "settings_theme_light":  "Light",
+    "settings_theme_system": "System Default",
+
+    "settings_language_label": "Language",
+    "settings_language_desc":  "Language used throughout the application.",
+
+    "toast_entry_saved":     "Entry saved",
+    "toast_entry_updated":   "Entry updated",
+    "toast_entry_deleted":   "Entry deleted",
+    "toast_sync_success":    "Sync complete",
+    "toast_export_saved":    "Report exported to {path}",
+    "toast_sign_out_failed": "Sign out failed: {error}",
+    "toast_sign_in_failed":  "Sign in failed: {error}",
+    "toast_sync_failed":     "Sync failed: {error}",
+    "toast_load_failed":     "Failed to load entries: {error}",
+    "toast_delete_failed":   "Failed to delete entry: {error}",
+    "toast_timer_restored":  "Timer restored from previous session"
+}
