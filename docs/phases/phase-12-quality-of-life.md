@@ -947,33 +947,213 @@ script:
 ### Verification checklist
 
 **Locale switching**
-- [ ] Changing the language in Settings → Language immediately updates all visible strings without a page reload or app restart
-- [ ] The selected language persists across app restarts (stored under key `"locale"` in `config.json`)
-- [ ] First launch with no saved locale defaults to English
-- [ ] All three locales (EN / SK / DE) are selectable and render correctly
+- [x] Changing the language in Settings → Language immediately updates all visible strings without a page reload or app restart
+- [x] The selected language persists across app restarts (stored under key `"locale"` in `config.json`)
+- [x] First launch with no saved locale defaults to English
+- [x] All three locales (EN / SK / DE) are selectable and render correctly
 
 **String coverage**
-- [ ] No hardcoded English strings remain in any `.svelte` file or store
-- [ ] All toast messages respect the active locale
-- [ ] All table column headers respect the active locale
-- [ ] All button labels, placeholders, and section titles respect the active locale
-- [ ] The interpolated strings (`timer_stop`, `settings_sync_last`, `toast_export_saved`, error toasts) render the dynamic values correctly in all three locales
+- [x] No hardcoded English strings remain in any `.svelte` file or store
+- [x] All toast messages respect the active locale
+- [x] All table column headers respect the active locale
+- [x] All button labels, placeholders, and section titles respect the active locale
+- [x] The interpolated strings (`timer_stop`, `settings_sync_last`, `toast_export_saved`, error toasts) render the dynamic values correctly in all three locales
 
 **Slovak locale spot-check**
-- [ ] Login screen shows "Prihlásiť sa cez Microsoft"
-- [ ] Time Tracking shows "Sledovanie času" in the sidebar tooltip
-- [ ] Settings sync section shows "Synchronizovať" on the button
-- [ ] A delete confirmation shows "Naozaj?"
+- [x] Login screen shows "Prihlásiť sa cez Microsoft"
+- [x] Time Tracking shows "Sledovanie času" in the sidebar tooltip
+- [x] Settings sync section shows "Synchronizovať" on the button
+- [x] A delete confirmation shows "Naozaj?"
 
 **German locale spot-check**
-- [ ] Login screen shows "Mit Microsoft anmelden"
-- [ ] Time Tracking shows "Zeiterfassung" in the sidebar tooltip
-- [ ] Reports grand total shows "Gesamtsumme"
-- [ ] A delete confirmation shows "Sicher?"
+- [x] Login screen shows "Mit Microsoft anmelden"
+- [x] Time Tracking shows "Zeiterfassung" in the sidebar tooltip
+- [x] Reports grand total shows "Gesamtsumme"
+- [x] A delete confirmation shows "Sicher?"
 
 **Build**
-- [ ] `just i18n` runs without errors and regenerates `src/lib/paraglide/`
-- [ ] `pnpm tsc --noEmit` passes — Paraglide's generated types are present
-- [ ] `pnpm svelte-check` passes with no errors or warnings
-- [ ] `cargo tauri build` succeeds end-to-end (Paraglide is frontend-only; Rust is unaffected)
-- [ ] CI `build` job runs `just i18n` before compiling
+- [x] `just i18n` runs without errors and regenerates `src/lib/paraglide/`
+- [x] `pnpm tsc --noEmit` passes — Paraglide's generated types are present
+- [x] `pnpm svelte-check` passes with no errors or warnings
+- [x] `cargo tauri build` succeeds end-to-end (Paraglide is frontend-only; Rust is unaffected)
+- [?] CI `build` job runs `just i18n` before compiling
+
+---
+
+## 12.3 App version info
+
+> Minimal change: one new Rust command, one API wrapper, and a footer line at
+> the bottom of `Settings.svelte`. No new stores, no migrations, no new
+> components. The version is read from the Tauri `AppHandle` at runtime so
+> `Cargo.toml` remains the single source of truth.
+
+---
+
+### Why a Rust command instead of the JS `@tauri-apps/api/app` package
+
+`@tauri-apps/api/app` exposes `getVersion()` on the frontend directly, which
+seems simpler. However, the project rule is that all IPC goes through
+`src/lib/api/index.ts` — the JS package is itself an `invoke()` wrapper, it
+just bypasses the typed boundary. Using a Rust command keeps the API surface
+consistent and means the Storybook mock in `tauri-api-core.ts` can provide a
+predictable version string without adding a second mock target.
+
+---
+
+### 12.3.1 Rust command
+
+Add to `src-tauri/src/commands/settings.rs` alongside the existing
+`get_data_dir`:
+
+```rust
+/// Returns the application version string from `tauri.conf.json` / `Cargo.toml`.
+///
+/// Tauri reads the version from `Cargo.toml` at build time and exposes it on
+/// the `AppHandle`. This command surfaces it to the frontend so the Settings
+/// view can display it without hardcoding.
+///
+/// # Returns
+/// Version string in SemVer format, e.g. `"0.1.2"`.
+#[tauri::command]
+pub async fn get_app_version(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(app.package_info().version.to_string())
+}
+```
+
+Register in `src-tauri/src/lib.rs` invoke handler:
+
+```rust
+tauri::generate_handler![
+    // ... existing commands ...
+    commands::settings::get_data_dir,
+    commands::settings::get_app_version,   // ← add
+]
+```
+
+No new capability or permission entry is required — this command reads only
+from the already-resolved `AppHandle` metadata, not from the filesystem or
+network.
+
+---
+
+### 12.3.2 API wrapper
+
+Add to `src/lib/api/index.ts` in the Settings section:
+
+```typescript
+/**
+ * Returns the application version string as declared in `Cargo.toml`.
+ *
+ * Example return value: `"0.1.2"`.
+ * The version is read from the Tauri `AppHandle` at runtime, so it always
+ * reflects the built binary's version without any frontend hardcoding.
+ */
+export async function getAppVersion(): Promise<string> {
+    return invoke<string>('get_app_version');
+}
+```
+
+---
+
+### 12.3.3 Storybook mock
+
+Add a default handler to `src/stories/__mocks__/tauri-api-core.ts`:
+
+```typescript
+const DEFAULTS: Record<string, InvokeHandler> = {
+    // ... existing handlers ...
+    get_app_version: () => '0.0.0-storybook',
+};
+```
+
+This keeps Settings stories rendering correctly without a running Tauri
+process.
+
+---
+
+### 12.3.4 `Settings.svelte` — version footer
+
+The version is loaded in `onMount` alongside `dataDir`, stored in a local
+`$state` variable, and rendered as a footer line below the Account section.
+It is not a full `settings-section` — it is a subtle attribution line.
+
+**Script additions:**
+
+```typescript
+import { getAppVersion } from '$lib/api';
+
+let appVersion = $state<string | null>(null);
+
+// Inside onMount, alongside the existing getDataDir() call:
+onMount(async () => {
+    try {
+        dataDir = await getDataDir();
+    } catch (e) {
+        addError('Could not get data directory: ' + String(e));
+    }
+    try {
+        appVersion = await getAppVersion();
+    } catch {
+        // Non-critical — silently ignore; footer simply won't render.
+    }
+});
+```
+
+**Template addition** — append after the closing `</section>` of the Account
+section, still inside the `.view` wrapper:
+
+```svelte
+{#if appVersion}
+    <footer class="version-footer">
+        v{appVersion} · PlanTracker
+    </footer>
+{/if}
+```
+
+**CSS addition** inside the `<style>` block:
+
+```css
+.version-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    text-align: center;
+    user-select: text;   /* allow copying the version string */
+}
+```
+
+`user-select: text` is the one exception to the no-inline-styles rule — it is
+a static value in a `<style>` block, so it is fine. It makes the version
+string copyable for bug reports without making it look like a button.
+
+The `{#if appVersion}` guard means the footer simply does not render if the
+command fails (e.g., in a development build where the command is not yet
+registered), avoiding a visible `vnull` or `vundefined` in the UI.
+
+---
+
+### 12.3.5 i18n — no new keys needed
+
+The footer text `v{appVersion} · PlanTracker` is an identifier, not a
+translatable sentence. Version strings and the app name are proper nouns that
+do not change across locales. Do not add a message key for it.
+
+---
+
+### Verification checklist
+
+- [ ] Version string displayed in Settings matches the `version` field in
+  `Cargo.toml`
+- [ ] Bumping the version in `Cargo.toml` and rebuilding updates the displayed
+  version without any frontend change
+- [ ] Footer renders in both Mocha (dark) and Latte (light) themes with muted
+  text colour
+- [ ] Version string is selectable (copyable) with the cursor
+- [ ] Footer does not render if `getAppVersion()` throws (guard confirmed by
+  temporarily removing the command registration and verifying no visible error)
+- [ ] Storybook Settings story renders `v0.0.0-storybook` in the footer without
+  a console error
+- [ ] `pnpm tsc --noEmit` passes — no type errors introduced
+- [ ] `cargo clippy -- -D warnings` passes — no new Rust warnings
