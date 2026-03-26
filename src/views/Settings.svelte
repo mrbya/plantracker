@@ -24,7 +24,7 @@
   import { onMount } from "svelte";
   import { openPath } from "@tauri-apps/plugin-opener";
 
-  import { getDataDir } from "$lib/api";
+  import { getDataDir, getAppVersion } from "$lib/api";
   import Button from "$lib/components/ui/Button.svelte";
   import Input from "$lib/components/ui/Input.svelte";
   import Select from "$lib/components/ui/Select.svelte";
@@ -138,6 +138,7 @@
   // ---------------------------------------------------------------------------
 
   let dataDir = $state("");
+  let appVersion = $state<string | null>(null);
 
   async function handleOpenFolder() {
     if (dataDir) {
@@ -159,10 +160,19 @@
     } catch (e) {
       addError("Could not get data directory: " + String(e));
     }
+    try {
+      appVersion = await getAppVersion();
+    } catch {
+      // Non-critical — footer simply won't render.
+    }
   });
 </script>
 
 <div class="view">
+  {#if appVersion}
+    <header class="version-header">PlanTracker · v{appVersion}</header>
+  {/if}
+
   <!-- Entries section -->
   <section class="settings-section">
     <h3 class="section-title">{m.settings_section_entries()}</h3>
@@ -279,6 +289,7 @@
       </div>
     </div>
   </section>
+
 </div>
 
 <style>
@@ -357,5 +368,14 @@
   /* Remove the inner .field wrapper margin from Input */
   .setting-control :global(.field) {
     gap: 0;
+  }
+
+  .version-header {
+    margin-bottom: 0.5rem;
+    padding-bottom: 1rem;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    text-align: center;
+    user-select: text;
   }
 </style>

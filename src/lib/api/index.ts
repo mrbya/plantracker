@@ -324,6 +324,20 @@ export async function generateReport(params: {
 // ---------------------------------------------------------------------------
 
 /**
+ * Returns the application version string as declared in `Cargo.toml`.
+ *
+ * Example return value: `"0.1.2"`.
+ * The version is read from the Tauri `AppHandle` at runtime, so it always
+ * reflects the built binary's version without any frontend hardcoding.
+ *
+ * @returns Version string in SemVer format.
+ * @throws If the backend command fails (should not happen in practice).
+ */
+export async function getAppVersion(): Promise<string> {
+  return invoke<string>("get_app_version");
+}
+
+/**
  * Returns the absolute path of the directory where PlanTracker stores its
  * database and configuration files.
  *

@@ -73,6 +73,7 @@ const DEFAULTS: Record<string, InvokeHandler> = {
   export_report_csv: () => "/tmp/report.csv",
 
   get_data_dir: () => "/home/user/.local/share/PlanTracker",
+  get_app_version: () => "0.0.0-storybook",
 };
 
 export async function invoke<T>(

@@ -219,6 +219,7 @@ pub fn run() {
             commands::reports::generate_report,
             commands::reports::export_report_csv,
             commands::settings::get_data_dir,
+            commands::settings::get_app_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

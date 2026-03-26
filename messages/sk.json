@@ -8,7 +8,7 @@
     "nav_sign_out":       "Odhlásiť sa",
 
     "login_title":        "PlanTracker",
-    "login_tagline":      "Sledujte čas na úlohách Microsoft Planner",
+    "login_tagline":      "Sleduj čas na úlohách Microsoft Planner-u",
     "login_sign_in_btn":  "Prihlásiť sa cez Microsoft",
 
     "timer_start":        "Spustiť časovač",
@@ -23,12 +23,12 @@
     "label_notes":        "Poznámky",
     "label_no_task":      "Bez konkrétnej úlohy",
 
-    "placeholder_select_plan":       "Vyberte plán…",
-    "placeholder_select_task":       "Vyberte úlohu…",
-    "placeholder_select_plan_first": "Najprv vyberte plán",
+    "placeholder_select_plan":       "Vyber plán…",
+    "placeholder_select_task":       "Vyber úlohu…",
+    "placeholder_select_plan_first": "Najprv vyber plán",
 
     "entries_title":          "Posledné záznamy",
-    "entries_empty":          "Zatiaľ žiadne záznamy. Vyberte plán a spustite časovač.",
+    "entries_empty":          "Zatiaľ žiadne záznamy. Vyber plán a spusti časovač.",
     "entries_loading":        "Načítavanie…",
     "entries_delete_confirm": "Naozaj?",
     "entries_delete_cancel":  "Zrušiť",
@@ -81,8 +81,8 @@
 
     "settings_theme_label":  "Motív",
     "settings_theme_desc":   "Farebná schéma aplikácie.",
-    "settings_theme_dark":   "Tmavý",
-    "settings_theme_light":  "Svetlý",
+    "settings_theme_dark":   "Tmavá",
+    "settings_theme_light":  "Svetlá",
     "settings_theme_system": "Podľa systému",
 
     "settings_language_label": "Jazyk",

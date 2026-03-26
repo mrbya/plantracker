@@ -1,5 +1,24 @@
 use tauri::Manager;
 
+/// Returns the application version string as declared in `Cargo.toml`.
+///
+/// Tauri reads the version from `Cargo.toml` at build time and exposes it on the
+/// [`tauri::AppHandle`]. This command surfaces it to the frontend so the Settings view can
+/// display it without any frontend hardcoding — `Cargo.toml` remains the single source of truth.
+///
+/// # Returns
+///
+/// `Ok(version)` — the version string in `SemVer` format, e.g. `"0.1.2"`.
+///
+/// # Errors
+///
+/// This command is infallible in practice; the `Result` wrapper exists only to satisfy the
+/// uniform Tauri command boundary convention used across this codebase.
+#[tauri::command]
+pub async fn get_app_version(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(app.package_info().version.to_string())
+}
+
 /// Returns the platform-specific data directory path used by `PlanTracker`.
 ///
 /// This path is displayed in the Settings view so users can locate their `SQLite`
