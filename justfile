@@ -130,9 +130,7 @@ dev *FLAGS:
 
 # Compile Paraglide message files to src/lib/paraglide/ (run after adding new keys).
 i18n:
-    pnpx @inlang/paraglide-js compile \
-        --project ./project.inlang \
-        --outdir ./src/lib/paraglide
+    pnpx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
 
 # Builds app release.
 build: i18n
@@ -217,6 +215,7 @@ pre-commit:
 # Runs checks and tests run by ci.
 ci-test:
     @just deps-ci
+    @just i18n
     @just thorough-check
     @just precache-check
     @just clean-rs
@@ -228,6 +227,7 @@ ci-test:
 # Full app build used by ci.
 ci-build:
     @just deps-ci
+    @just i18n
     @just build
     @just build-windows
 

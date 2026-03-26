@@ -12,10 +12,16 @@
    * - `getDataDir` is mocked via the global `@tauri-apps/api/core` mock to
    *   return a fake path so the Storage section renders a path string.
    * - `@tauri-apps/plugin-store` is mocked globally, so settings load/save
-   *   use an in-memory map instead of a real config file.
+   *   use an in-memory map instead of a real config file.  This also means
+   *   `loadLocale()` finds no persisted value, so Paraglide falls back to the
+   *   base locale (`"en"`) for all stories.
    * - `userDisplayName` comes from the private `authStatus` in the auth store
    *   which is not hydrated in these isolated stories — the Account section
    *   shows "—" as the fallback.
+   * - Button text (e.g. "Sync Now") is produced by Paraglide message functions.
+   *   All `getByRole` / `getByText` selectors in play functions below match the
+   *   English labels.  If you add locale-switching stories, call `setLocale()`
+   *   before querying the DOM.
    */
   const { Story } = defineMeta({
     title: "PlanTracker/Views/Settings",

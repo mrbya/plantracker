@@ -50,6 +50,56 @@ export interface ReportResult { entries: ReportEntry[]; grandTotalSeconds: numbe
 
 Do not inline type definitions in component files.
 
+## Internationalisation (i18n)
+
+The app uses **Paraglide JS** (via `@inlang/paraglide-sveltekit`) for compile-time i18n. Three locales are supported: `en` (base, default), `sk`, `de`.
+
+### Message files
+
+Translation keys live in `messages/{locale}.json` at the project root. The generated runtime is emitted to `src/lib/paraglide/` by the Paraglide Vite plugin — never edit that directory by hand.
+
+### Consuming translations
+
+Import the generated message module in components and stores:
+
+```typescript
+import * as m from '$lib/paraglide/messages';
+
+// Static key
+m.timer_start()               // "Start Timer"
+
+// Key with interpolation placeholder
+m.timer_stop({ elapsed: '1h 23m' })   // "Stop — 1h 23m"
+```
+
+The call signature is always `m.key_name()` or `m.key_name({ param })`. TypeScript enforces that the correct parameters are supplied.
+
+Never hard-code user-visible strings in components or stores. Every string that appears in the UI must have a key in `messages/en.json` (and matching keys in `messages/sk.json` / `messages/de.json`).
+
+### Locale store
+
+`src/lib/stores/locale.ts` manages locale persistence. It is **not** a Svelte writable store — it is a plain async module that wraps `tauri-plugin-store` (`config.json`, key `"locale"`).
+
+```typescript
+import { loadLocale, saveLocale, type AppLocale, LOCALE_LABELS } from '$lib/stores/locale';
+
+// On app startup (called in +page.svelte onMount, before other init):
+await loadLocale();   // reads config.json and calls setLocale() if a saved value exists
+
+// When the user picks a new locale in Settings:
+await saveLocale('sk');  // calls setLocale() immediately, then persists to config.json
+```
+
+`LOCALE_LABELS` maps each code to its display name: `{ en: 'English', sk: 'Slovenčina', de: 'Deutsch' }`.
+
+To read the current locale at runtime (e.g., to pre-select the dropdown):
+```typescript
+import { getLocale } from '$lib/paraglide/runtime';
+const current = getLocale(); // 'en' | 'sk' | 'de'
+```
+
+`loadLocale()` must be called **first** in the `+page.svelte` startup sequence, before `initAuth()` and other init functions, to minimise the flash of the default locale on non-English sessions.
+
 ## Stores
 
 Stores live in `src/lib/stores/`, one file per domain:
@@ -60,6 +110,7 @@ Stores live in `src/lib/stores/`, one file per domain:
 | `planner.ts` | `plans`, `tasksByPlan`, `selectedPlan`, `selectedTask`, `selectTask()` |
 | `timer.ts` | `isRunning`, `elapsedSeconds`, `activeEntry`, `start()`, `stop()` |
 | `notifications.ts` | `notifications`, `addError()`, `addSuccess()`, `addWarning()` |
+| `locale.ts` | `loadLocale()`, `saveLocale()`, `AppLocale`, `LOCALE_LABELS` |
 
 Stores are the only place allowed to call `src/lib/api/index.ts` functions. Views bind to stores — they do not fetch data themselves.
 

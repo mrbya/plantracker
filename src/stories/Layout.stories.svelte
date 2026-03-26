@@ -16,6 +16,13 @@
    * Each view component mounted inside `Layout` uses the `@tauri-apps/api/core`
    * mock (configured in `.storybook/main.ts`) so `invoke()` calls return safe
    * empty defaults without a running Tauri process.
+   *
+   * i18n: Nav button `title` attributes are generated from Paraglide message
+   * functions (e.g. `m.nav_manual_entry()`).  Storybook runs without a persisted
+   * locale, so Paraglide falls back to the base locale (`"en"`).  The
+   * `getByTitle` selectors in the play functions below match the English labels.
+   * If you add a locale-switching story, call `setLocale()` inside the play
+   * function before querying the DOM.
    */
   const { Story } = defineMeta({
     title: "PlanTracker/Components/Layout",

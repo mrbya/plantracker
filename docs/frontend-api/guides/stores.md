@@ -6,6 +6,28 @@ All reactive state is owned by the six stores in `src/lib/stores/`. Stores are t
 
 ## Store inventory
 
+### `locale.ts`
+
+**File:** `src/lib/stores/locale.ts`
+
+**Note:** This is not a Svelte reactive store. It is a plain async module that wraps `tauri-plugin-store`. There is no writable to subscribe to; locale changes propagate immediately through Paraglide's `setLocale()` call, which triggers reactive re-renders of any component reading from `$lib/paraglide/messages`.
+
+**Owns:**
+- `AppLocale` type alias — `"en" | "sk" | "de"`
+- `LOCALE_LABELS` constant — `{ en: "English", sk: "Slovenčina", de: "Deutsch" }`
+
+**Exports (actions):**
+- `loadLocale()` — reads the `"locale"` key from `config.json` and calls Paraglide's `setLocale()` if a saved value exists. No-op when no value has been persisted (Paraglide defaults to `"en"`). Call once at the very start of the `+page.svelte` startup sequence, before `initAuth()`.
+- `saveLocale(value: AppLocale)` — calls `setLocale(value)` immediately (synchronous), then writes the value to `config.json` and flushes to disk.
+
+**Dependencies:** `@tauri-apps/plugin-store` (via a lazy `Store.load("config.json")` singleton), `$lib/paraglide/runtime` (`setLocale`).
+
+**Persistence:** `config.json` via `tauri-plugin-store`, key `"locale"`.
+
+**Consumed by:** `Settings.svelte` (language selector), `+page.svelte` (startup `loadLocale()` call).
+
+---
+
 ### `auth.ts`
 
 **File:** `src/lib/stores/auth.ts`
@@ -172,6 +194,7 @@ Both `start` and `stop` re-throw the backend error after surfacing it as a toast
 notifications   (leaf — no outbound deps)
 settings        (leaf — tauri-plugin-store only)
 theme           (leaf — tauri-plugin-store + DOM side effect)
+locale          (leaf — tauri-plugin-store + paraglide/runtime side effect)
 timer           <- api, notifications
 planner         <- api, settings, notifications
 auth            <- api, planner, notifications
@@ -191,6 +214,7 @@ Views and Layout are consumers only; they have no outbound store dependencies of
 | `notifications` | No | — | — |
 | `theme` | Yes | `tauri-plugin-store` | `theme` |
 | `settings` | Yes | `tauri-plugin-store` | `entriesLimit`, `syncFrequency`, `lastSyncedAt` |
+| `locale` | Yes | `tauri-plugin-store` | `locale` |
 
 "SQLite (backend)" means the data survives app restarts via the backend database; the store itself is just an in-session cache that is rehydrated on startup by `initTimer` / `initAuth` + `syncAndLoad`.
 
@@ -204,7 +228,9 @@ Views and Layout are consumers only; they have no outbound store dependencies of
 
 **Do not write `selectedTask` without also writing `selectedPlan`.** Use `selectTask()` to maintain the plan/task invariant. Views that update the task dropdown should call `selectTask(task)` from the planner store, not `selectedTask.set(task)`.
 
-**Do not read from `tauri-plugin-store` in views.** All config access must go through `settings.ts` or `theme.ts`. Direct `Store.load` calls outside of the store files are not permitted.
+**Do not read from `tauri-plugin-store` in views.** All config access must go through `settings.ts`, `theme.ts`, or `locale.ts`. Direct `Store.load` calls outside of the store files are not permitted.
+
+**Do not hard-code user-visible strings.** Every string rendered in a component or emitted in a toast must use a key from `$lib/paraglide/messages`. Hard-coded English strings bypass localisation and will not translate when the user switches locale.
 
 **Do not hold `setInterval` handles in component scope.** Timer ticking is owned by `timer.ts`. If a view needs to display elapsed time it subscribes to `$elapsedSeconds`.
 

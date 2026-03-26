@@ -327,10 +327,11 @@ User clicks "Sign In"
 
 - [x] Dark/light theme toggle (Catppuccin Latte)
 - [x] Task search / filter in dropdowns
-- [ ] Multi-lang localizations
+- [x] Multi-lang localizations
 - [ ] Idle detection (pause timer when system is idle)
 - [ ] System tray with quick start/stop
 - [ ] Sync time entries back to Planner task comments
+- [ ] Update management
 
 ---
 
