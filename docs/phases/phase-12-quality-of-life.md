@@ -266,7 +266,7 @@ export { default as SearchableSelect } from './SearchableSelect.svelte';
 
 ---
 
-#### Why Paraglide JS
+### Why Paraglide JS
 
 Paraglide 2.0 is SvelteKit's officially recommended i18n library. It is a
 compiler that turns message files into **tree-shakable TypeScript functions**,
@@ -285,7 +285,7 @@ required because Paraglide 2.0 supports reactive locale switching.
 
 ---
 
-#### 12.2.1 Install and initialise
+### 12.2.1 Install and initialise
 
 ```bash
 pnpm add @inlang/paraglide-js
@@ -309,7 +309,7 @@ This creates:
 
 ---
 
-#### 12.2.2 Wire the Vite plugin
+### 12.2.2 Wire the Vite plugin
 
 Update `vite.config.ts`:
 
@@ -341,7 +341,7 @@ There is no `url` strategy because PlanTracker has no URL routing.
 
 ---
 
-#### 12.2.3 Message files
+### 12.2.3 Message files
 
 All user-visible strings in the app are extracted into these three files.
 Keys use `snake_case` namespaced by feature area. Interpolation uses the
@@ -670,7 +670,7 @@ Keys use `snake_case` namespaced by feature area. Interpolation uses the
 
 ---
 
-#### 12.2.4 Locale store (`src/lib/stores/locale.ts`)
+### 12.2.4 Locale store (`src/lib/stores/locale.ts`)
 
 Wraps Paraglide's `setLocale` / `getLocale` with persistence to `config.json`.
 This store has no Svelte writable — `setLocale` is already reactive. The store
@@ -718,7 +718,7 @@ needed.
 
 ---
 
-#### 12.2.5 Startup wiring
+### 12.2.5 Startup wiring
 
 In `src/routes/+page.svelte`, add `loadLocale()` as the **first** call in
 `onMount`, before `loadTheme()`. Locale must be applied before any strings are
@@ -738,7 +738,7 @@ onMount(async () => {
 
 ---
 
-#### 12.2.6 Rework all views and components
+### 12.2.6 Rework all views and components
 
 Replace every hardcoded UI string with a `m.*` call. Import `m` from
 `$lib/paraglide/messages` at the top of each file.
@@ -859,7 +859,7 @@ notification helpers directly.
 
 ---
 
-#### 12.2.7 Language selector in Settings
+### 12.2.7 Language selector in Settings
 
 Add a new **Language** section to `src/views/Settings.svelte`, positioned after
 the Appearance section. Use the existing `setting-row` layout.
@@ -902,7 +902,7 @@ Template:
 
 ---
 
-#### 12.2.8 Justfile recipe
+### 12.2.8 Justfile recipe
 
 ```just
 # Extract and compile message files (run after adding new keys)
@@ -922,7 +922,7 @@ build: i18n
 
 ---
 
-#### 12.2.9 `.gitignore` addition
+### 12.2.9 `.gitignore` addition
 
 The compiled output in `src/lib/paraglide/` is **generated** — it should not
 be committed. Add to `.gitignore`:
